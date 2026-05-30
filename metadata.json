@@ -1,0 +1,8 @@
+{
+  "name": "Naxçıvan Turizm Portalı",
+  "description": "Naxçıvan Muxtar Respubikasının rəqəmsal turizm və tarixi gateway platforması.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
