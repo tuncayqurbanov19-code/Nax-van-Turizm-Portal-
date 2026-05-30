@@ -1,0 +1,22 @@
+# Naxçıvan Turizm Portalı - Render Deployment Orchestration Configuration
+# This file is custom-configured for this full-stack Node.js + React/Vite application.
+
+previews:
+  generation: automatic # Enable automatic preview environments for pull requests
+
+services:
+  - type: web
+    name: naxcivan-tourism-portal
+    runtime: node
+    plan: starter # Can be changed to "free" or customized in the Render Dashboard
+    region: frankfurt # Preferred high-performance region for Azerbaijan/Europe
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    autoDeployTrigger: 'on' # Automatically deploy changes on git push
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GEMINI_API_KEY
+        sync: false # Render dashboard will prompt the user to securely input their Gemini API Key
+      - key: APP_URL
+        sync: false # The actual deployment URL on Render (e.g., https://your-app.onrender.com)
