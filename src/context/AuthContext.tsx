@@ -13,7 +13,7 @@ interface AuthContextType {
   user: UserSession | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string, adminCode?: string) => Promise<boolean>;
+  login: (email: string, password: string, adminCode?: string) => Promise<'admin' | 'user' | null>;
   register: (fullName: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAdmin: boolean;
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initSession();
   }, []);
 
-  const login = async (email: string, password: string, adminCode?: string): Promise<boolean> => {
+  const login = async (email: string, password: string, adminCode?: string): Promise<'admin' | 'user' | null> => {
     try {
       setLoading(true);
       const res = await api.auth.login({ email, password, adminCode });
@@ -68,12 +68,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(res.user);
         
         success(`Xoş gəldiniz, ${res.user.fullName}!`, 'Giriş Müvəffəqiyyətlidir');
-        return true;
+        return res.user.role;
       }
-      return false;
+      return null;
     } catch (err: any) {
       error(err.message || 'Məlumatlar yoxlanılarkən səhv yarandı.');
-      return false;
+      return null;
     } finally {
       setLoading(false);
     }

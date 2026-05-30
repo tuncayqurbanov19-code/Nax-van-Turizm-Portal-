@@ -85,6 +85,8 @@ export interface Tour {
     model: string;
     features: string[];
     model3D: string;
+    displayMode?: 'image' | '3d';
+    image?: string;
   };
   isActive: boolean;
   createdAt: string;

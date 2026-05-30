@@ -275,7 +275,7 @@ function getSeedData(): DatabaseSchema {
     {
       id: 'usr_admin',
       fullName: 'Tuncay Qurbanov',
-      email: 'admin@tourism.naxcivan',
+      email: 'tuncayqurbanov19@gmail.com',
       passwordHash: adminPasswordHash,
       role: 'admin',
       isBlocked: false,

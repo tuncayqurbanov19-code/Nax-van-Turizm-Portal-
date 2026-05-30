@@ -2,11 +2,53 @@ import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
+import { createServer } from 'http';
+import { WebSocketServer, WebSocket } from 'ws';
 import { db, hashPassword } from './server/db';
 import { signToken, verifyToken } from './server/auth';
 
 const app = express();
+const httpServer = createServer(app);
+const wss = new WebSocketServer({ noServer: true });
 const PORT = 3000;
+
+const adminClients = new Set<WebSocket>();
+
+wss.on('connection', (ws: WebSocket) => {
+  ws.on('message', (message) => {
+    try {
+      const data = JSON.parse(message.toString());
+      if (data.type === 'auth' && data.role === 'admin') {
+        adminClients.add(ws);
+      }
+    } catch (e) {
+      // ignore
+    }
+  });
+
+  ws.on('close', () => {
+    adminClients.delete(ws);
+  });
+});
+
+// Upgrade HTTP to WebSocket
+httpServer.on('upgrade', (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit('connection', ws, request);
+  });
+});
+
+function notifyAdminOfNewReservation(reservation: any) {
+  const payload = JSON.stringify({
+    type: 'new_reservation',
+    reservation
+  });
+  for (const client of adminClients) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+    }
+  }
+}
 
 app.use(express.json({ limit: '10mb' }));
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
@@ -128,18 +170,6 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
   if (user.passwordHash !== hashPassword(password)) {
     res.status(400).json({ message: 'Daxil edilən email və ya şifrə yanlışdır.' });
     return;
-  }
-
-  // Admin secret access code check
-  if (user.role === 'admin') {
-    if (!adminCode) {
-      res.status(400).json({ message: 'İdarəçi girişi üçün məxfi admin kodu daxil edilməlidir!' });
-      return;
-    }
-    if (adminCode !== 'naxcivan2026') {
-      res.status(401).json({ message: 'Giriş bloklandı: Daxil edilən məxfi admin kodu yanlışdır!' });
-      return;
-    }
   }
 
   const token = signToken({ id: user.id, email: user.email, role: user.role });
@@ -351,11 +381,35 @@ app.post('/api/reservations', authenticateToken, (req: Request, res: Response) =
   }
 
   // Validate date logic
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const checkInDate = new Date(checkIn);
   const checkOutDate = checkOut ? new Date(checkOut) : null;
-  if (checkOutDate && checkInDate >= checkOutDate) {
-    res.status(400).json({ message: 'Giriş tarixi çıxış tarixindən əvvəl olmalıdır.' });
+
+  if (isNaN(checkInDate.getTime())) {
+    res.status(400).json({ message: 'Düzgün giriş tarixi daxil edin.' });
     return;
+  }
+
+  if (checkInDate < today) {
+    res.status(400).json({ message: 'Sifariş tarixi keçmişdə ola bilməz.' });
+    return;
+  }
+
+  if (type === 'hotel') {
+    if (!checkOutDate || isNaN(checkOutDate.getTime())) {
+      res.status(400).json({ message: 'Düzgün çıxış tarixi daxil edin.' });
+      return;
+    }
+    if (checkInDate >= checkOutDate) {
+      res.status(400).json({ message: 'Giriş tarixi çıxış tarixindən əvvəl olmalıdır.' });
+      return;
+    }
+  } else {
+    if (checkOutDate && checkInDate > checkOutDate) {
+      res.status(400).json({ message: 'Çıxış tarixi giriş tarixindən əvvəl ola bilməz.' });
+      return;
+    }
   }
 
   try {
@@ -373,6 +427,8 @@ app.post('/api/reservations', authenticateToken, (req: Request, res: Response) =
       status: 'pending',
       totalPrice: Number(totalPrice) || 0
     });
+
+    notifyAdminOfNewReservation(reservation);
 
     res.status(201).json(reservation);
   } catch (error) {
@@ -874,7 +930,7 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
 }

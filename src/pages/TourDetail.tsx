@@ -236,7 +236,7 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
     };
   }, [activeTab, tour]);
 
-  // Form submit handling
+   // Form submit handling
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -247,6 +247,14 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
 
     if (!bookingDate) {
       error('Lütfən gedəcəyiniz tarixi seçin.');
+      return;
+    }
+
+    const checkInDateObj = new Date(bookingDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (checkInDateObj < today) {
+      error('Seçilmiş tarix keçmişdə ola bilməz.');
       return;
     }
 
@@ -266,8 +274,26 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
       });
 
       if (res && res.id) {
-        success('Sizin sifarişiniz uğurla qeydə alındı! Admin təsdiqi gözlənilir.', 'Sifariş qəbul olundu');
+        const text = `Salam! Mən Naxçıvan Rəqəmsal Turizm Bələdçisi üzərindən yeni tur rezervasiyası etmək istəyirəm.\n\n` +
+          `📋 Sifariş Məlumatları:\n` +
+          `• Tur: ${tour?.name || ''}\n` +
+          `• Müştəri: ${bookingFullName}\n` +
+          `• Telefon: ${bookingPhone}\n` +
+          `• E-poçt: ${bookingEmail}\n` +
+          `• Tarix: ${bookingDate}\n` +
+          `• İştirakçı sayı: ${guestsCount}\n` +
+          `• Ümumi Məbləğ: ${totalPrice} AZN\n` +
+          (bookingNotes.trim() ? `• Qeyd: ${bookingNotes}\n` : '');
+
+        const encodedText = encodeURIComponent(text);
+        const whatsappUrl = `https://wa.me/9940703538283?text=${encodedText}`;
+        
+        success('Sizin sifarişiniz qeydə alındı! WhatsApp-a yönləndirilirsiniz...', 'Sifariş qəbul olundu');
         setIsBookingModalOpen(false);
+        
+        setTimeout(() => {
+          window.location.href = whatsappUrl;
+        }, 1000);
       }
     } catch (e: any) {
       error(e.message || 'Sifariş zamanı rəsmi xəta yarandı.');
@@ -468,15 +494,32 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
                   </span>
                 </div>
 
-                {/* Interactive Three.js Viewport container */}
-                <div className="relative w-full h-[320px] bg-navy-deep rounded-2xl overflow-hidden border border-slate-700">
-                  <canvas ref={canvasRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
-                  
-                  {/* Drag hints label */}
-                  <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md text-white text-[10px] md:text-xs text-center py-2 px-3 rounded-xl pointer-events-none uppercase font-semibold font-sans tracking-wide">
-                    🎮 Nəqliyyatın 3D Görüntüsü — Sürükləyərək fırlada və ya yaxınlaşdıra bilərsiniz
+                {/* Interactive Three.js Viewport container OR Vehicle Image Showcase */}
+                {tour.transport.displayMode === 'image' ? (
+                  <div className="relative w-full h-[320px] bg-slate-900 rounded-2xl overflow-hidden border border-slate-200 shadow-inner flex items-center justify-center group">
+                    <img 
+                      src={tour.transport.image || 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800'} 
+                      alt={tour.transport.model} 
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800';
+                      }}
+                    />
+                    <div className="absolute top-4 left-4 bg-slate-905/80 backdrop-blur-md border border-gold-primary/30 text-gold-primary text-[10px] font-sans font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
+                      📸 Avtomobilin Real Şəkli
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="relative w-full h-[320px] bg-navy-deep rounded-2xl overflow-hidden border border-slate-700">
+                    <canvas ref={canvasRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
+                    
+                    {/* Drag hints label */}
+                    <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md text-white text-[10px] md:text-xs text-center py-2 px-3 rounded-xl pointer-events-none uppercase font-semibold font-sans tracking-wide">
+                      🎮 Nəqliyyatın 3D Görüntüsü — Sürükləyərək fırlada və ya yaxınlaşdıra bilərsiniz
+                    </div>
+                  </div>
+                )}
 
                 {/* Feature breakdown list */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
@@ -530,7 +573,7 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
                )}
                <div className="flex justify-between items-center">
                  <span className="text-slate-400 font-medium">Avto təminatı</span>
-                 <span className="font-bold text-navy-deep">{tour.transport.type} (360° 3D)</span>
+                 <span className="font-bold text-navy-deep">{tour.transport.type} ({tour.transport.displayMode === 'image' ? 'Şəkil' : '360° 3D'})</span>
                </div>
                <div className="flex justify-between items-center border-t border-dashed pt-2.5">
                  <span className="text-slate-400 font-medium">Tur Təşkilatçısı</span>

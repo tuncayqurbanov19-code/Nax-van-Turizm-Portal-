@@ -108,6 +108,8 @@ function AppContent() {
 
       {/* Unified footer linkboard */}
       <Footer onNavigate={handleNavigate} settings={settings} />
+
+
     </div>
   );
 }

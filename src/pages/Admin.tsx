@@ -44,6 +44,12 @@ export default function Admin({ onNavigate }: AdminProps) {
   const [newTourIncludedServices, setNewTourIncludedServices] = useState('Peşəkar bələdçi, kondisionerli nəqliyyat, muzey biletləri, otel binaları, dadlı milli səhər yeməyi');
   const [newTourPdfUrl, setNewTourPdfUrl] = useState('');
 
+  // Vehicle settings within Tour state
+  const [vehicleDisplayMode, setVehicleDisplayMode] = useState<'image' | '3d'>('3d');
+  const [vehicleImgUrl, setVehicleImgUrl] = useState('');
+  const [vehicleModelName, setVehicleModelName] = useState('Mercedes Sprinter VIP 2025');
+  const [vehicleFeatures, setVehicleFeatures] = useState('Kondisioner, Dəri oturacaqlar, USB şarj portları, Wi-Fi');
+
   // New Company Form state
   const [newCompName, setNewCompName] = useState('');
   const [newCompLogo, setNewCompLogo] = useState('');
@@ -254,6 +260,101 @@ export default function Admin({ onNavigate }: AdminProps) {
     loadData();
   }, [user]);
 
+  const playChime = () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const now = audioCtx.currentTime;
+      
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(880, now);
+      gain1.gain.setValueAtTime(0.08, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.2);
+      
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1318.51, now + 0.08);
+      gain2.gain.setValueAtTime(0.08, now + 0.08);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.start(now + 0.08);
+      osc2.stop(now + 0.4);
+    } catch (err) {
+      console.warn("Audio Context alert could not be played:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (!user || user.role !== 'admin') return;
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}`;
+    let socket: WebSocket | null = null;
+    let pingInterval: NodeJS.Timeout;
+
+    const connectWS = () => {
+      try {
+        socket = new WebSocket(wsUrl);
+
+        socket.onopen = () => {
+          socket?.send(JSON.stringify({ type: 'auth', role: 'admin' }));
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'new_reservation') {
+              const newRes = data.reservation;
+              
+              setReservations((prev) => {
+                if (prev.some((r) => r.id === newRes.id)) return prev;
+                return [newRes, ...prev];
+              });
+
+              success(`Yeni Rezervasiya daxil oldu! Qonaq: ${newRes.fullName}`, 'Yeni Sifariş');
+              playChime();
+            }
+          } catch (e) {
+            console.error('WebSocket message parsing error:', e);
+          }
+        };
+
+        socket.onclose = () => {
+          setTimeout(connectWS, 5000);
+        };
+
+        socket.onerror = (err) => {
+          console.warn('WebSocket encountering connection error:', err);
+        };
+      } catch (err) {
+        console.error('WebSocket connection setup error:', err);
+      }
+    };
+
+    connectWS();
+
+    pingInterval = setInterval(() => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'ping' }));
+      }
+    }, 25000);
+
+    return () => {
+      clearInterval(pingInterval);
+      if (socket) {
+        socket.onclose = null;
+        socket.close();
+      }
+    };
+  }, [user]);
+
   // Actions
   const handleApproveReservation = async (id: string) => {
     try {
@@ -311,9 +412,11 @@ export default function Admin({ onNavigate }: AdminProps) {
         },
         transport: {
           type: newTourVehicleType || 'VIP Mercedes Sprinter',
-          model: 'Sprinter Tourer 2024',
-          features: ['Kondisioner', 'Dəri Oturacaqlar', 'USB Şarj ports'],
-          model3D: 'VIP_BUS'
+          model: vehicleModelName || 'Sprinter Tourer 2024',
+          features: vehicleFeatures ? vehicleFeatures.split(',').map(f => f.trim()) : ['Kondisioner', 'Dəri Oturacaqlar', 'USB portları'],
+          model3D: 'VIP_BUS',
+          displayMode: vehicleDisplayMode,
+          image: vehicleImgUrl
         },
         createdAt: new Date().toISOString(),
         isActive: true,
@@ -546,13 +649,29 @@ export default function Admin({ onNavigate }: AdminProps) {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, onUploadSuccess: (url: string) => void, allowedTypes: string[] = ['image/jpeg', 'image/png']) => {
-    const file = e.target.files?.[0];
+  const handleFileUpload = async (
+    eOrFile: React.ChangeEvent<HTMLInputElement> | File,
+    onUploadSuccess: (url: string) => void,
+    allowedTypes: string[] = []
+  ) => {
+    let file: File | undefined;
+    if (eOrFile instanceof File) {
+      file = eOrFile;
+    } else if (eOrFile && 'target' in eOrFile) {
+      file = eOrFile.target.files?.[0];
+    }
     if (!file) return;
 
-    const fileReaderAllowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+    const fileReaderAllowedTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/webp',
+      'image/svg+xml',
+      'application/pdf'
+    ];
     if (!fileReaderAllowedTypes.includes(file.type)) {
-      error('Dəstəklənməyən fayl formatı. Yalnız JPG, JPEG, PNG və PDF faylları yüklənə bilər.');
+      error('Dəstəklənməyən fayl formatı. Yalnız JPG, JPEG, PNG, WEBP, SVG və PDF faylları yüklənə bilər.');
       return;
     }
 
@@ -677,12 +796,12 @@ export default function Admin({ onNavigate }: AdminProps) {
     }
   };
 
-  if (loading) {
+  if (loading || !user || user.role !== 'admin') {
     return (
       <div className="min-h-screen pt-32 pb-16 flex justify-center items-center font-sans">
         <div className="flex flex-col items-center gap-4">
           <span className="w-12 h-12 border-4 border-gold-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-500 text-sm font-sans">İnzibatçı paneli yoxlanılır və məlumatlar yüklənir...</p>
+          <p className="text-slate-500 text-sm font-sans">Giriş yoxlanılır...</p>
         </div>
       </div>
     );
@@ -909,93 +1028,222 @@ export default function Admin({ onNavigate }: AdminProps) {
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs text-slate-500">Paket təşkilatçısı (Şirkət)</label>
-                    <select
-                      required
-                      value={newTourCompanyId}
-                      onChange={(e) => setNewTourCompanyId(e.target.value)}
-                      className="p-2.5 bg-slate-50 border rounded-xl text-navy-deep font-semibold"
-                    >
-                      <option value="">-- Şirkət Seçin --</option>
-                      {companies.map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="flex flex-col gap-1 md:col-span-3">
-                    <label className="text-xs text-slate-500">Ana Şəkil URL (və ya Fayl Seçin)</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="url"
-                        placeholder="https://..."
-                        value={newTourImg}
-                        onChange={(e) => setNewTourImg(e.target.value)}
-                        className="flex-1 p-2.5 bg-slate-50 border rounded-xl"
-                      />
-                      <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-4 rounded-xl flex items-center justify-center cursor-pointer border border-gold-primary/30 transition-all shrink-0 select-none">
-                        Şəkil Yüklə
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => handleFileUpload(e, setNewTourImg, ['image/jpeg', 'image/png'])}
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1 md:col-span-3">
-                    <label className="text-xs text-slate-500">PDF Prospekt / Təfsilatlı Broşür URL (və ya PDF Yükləyin)</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="url"
-                        placeholder="https://..."
-                        value={newTourPdfUrl}
-                        onChange={(e) => setNewTourPdfUrl(e.target.value)}
-                        className="flex-1 p-2.5 bg-slate-50 border rounded-xl"
-                      />
-                      <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-4 rounded-xl flex items-center justify-center cursor-pointer border border-gold-primary/30 transition-all shrink-0 select-none">
-                        PDF Yüklə
-                        <input
-                          type="file"
-                          accept="application/pdf"
-                          className="hidden"
-                          onChange={(e) => handleFileUpload(e, setNewTourPdfUrl, ['application/pdf'])}
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1 md:col-span-3">
-                    <label className="text-xs text-slate-500">Daxil Olan Xidmətlər (Vergüllə ayıraraq yazın)</label>
-                    <input
-                      type="text"
-                      placeholder="Milli Bələdçi, Komfortlu Transfer, Dadlı səhər yeməyi, Giriş biletləri"
-                      value={newTourIncludedServices}
-                      onChange={(e) => setNewTourIncludedServices(e.target.value)}
-                      className="p-2.5 bg-slate-50 border rounded-xl font-medium"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1 md:col-span-3">
-                    <label className="text-xs text-slate-500">Qısa marşrut təsviri</label>
-                    <textarea
-                      rows={3}
-                      value={newTourDesc}
-                      onChange={(e) => setNewTourDesc(e.target.value)}
-                      placeholder="Ziyarətçilər üçün paket haqqında..."
-                      className="p-2.5 bg-slate-50 border rounded-xl leading-normal"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="md:col-span-3 bg-gold-primary hover:bg-gold-dark text-navy-deep font-bold py-3 rounded-xl flex items-center justify-center gap-2 mt-2 cursor-pointer transition-all"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Yeni Paket Yarat
-                  </button>
+                     <label className="text-xs text-slate-500">Paket təşkilatçısı (Şirkət)</label>
+                     <select
+                       required
+                       value={newTourCompanyId}
+                       onChange={(e) => setNewTourCompanyId(e.target.value)}
+                       className="p-2.5 bg-slate-50 border rounded-xl text-navy-deep font-semibold"
+                     >
+                       <option value="">-- Şirkət Seçin --</option>
+                       {companies.map(c => (
+                         <option key={c.id} value={c.id}>{c.name}</option>
+                       ))}
+                     </select>
+                   </div>
+ 
+                   <div className="flex flex-col gap-1 md:col-span-3">
+                     <label className="text-xs font-semibold text-slate-705">Ana Şəkil (Fayl Yükləyin və ya URL daxil edin)</label>
+                     <div className="flex items-center gap-4 bg-slate-50 p-3 border rounded-2xl w-full">
+                       {newTourImg ? (
+                         <div className="relative w-16 h-16 rounded-xl overflow-hidden border bg-white shrink-0">
+                           <img src={newTourImg} className="w-full h-full object-cover" alt="Preview" referrerPolicy="no-referrer" />
+                           <button
+                             type="button"
+                             onClick={() => setNewTourImg('')}
+                             className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-all cursor-pointer"
+                           >
+                             Sil
+                           </button>
+                         </div>
+                       ) : (
+                         <div className="w-16 h-16 rounded-xl border border-dashed bg-slate-200 flex items-center justify-center text-slate-400 text-xs text-center p-1 font-sans shrink-0">
+                           Şəkil yoxdur
+                         </div>
+                       )}
+                       <div className="flex-1 font-sans">
+                         <p className="text-[10px] text-slate-500 mb-1.5 font-sans">Optimum ölçü: 800x600 px (Maks. 10MB). JPG, JPEG, PNG, WEBP formatları.</p>
+                         <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-4 py-2 rounded-xl inline-flex items-center justify-center cursor-pointer border border-gold-primary/30 transition-all select-none">
+                           {newTourImg ? 'Yenisini Yüklə' : 'Kompüterdən Şəkil Seç / Yüklə'}
+                           <input
+                             type="file"
+                             accept="image/*"
+                             className="hidden"
+                             onChange={(e) => handleFileUpload(e, setNewTourImg)}
+                           />
+                         </label>
+                       </div>
+                     </div>
+                   </div>
+ 
+                   <div className="flex flex-col gap-1 md:col-span-3">
+                     <label className="text-xs font-semibold text-slate-705 mb-0.5">Təfsilatlı PDF Broşür / Prospekt</label>
+                     <div className="flex items-center gap-3 bg-slate-50 p-2.5 border rounded-xl">
+                       <div className="flex-1 truncate text-xs text-slate-600">
+                         {newTourPdfUrl ? (
+                           <span className="text-emerald-700 font-medium flex items-center gap-1.5">
+                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                             PDF Broşür Yükləndi: {newTourPdfUrl.split('/').pop()}
+                           </span>
+                         ) : (
+                           <span className="text-slate-400 font-medium text-[11px]">PDF Faylı Yüklənməyib (Məcburi deyil)</span>
+                         )}
+                       </div>
+                       
+                       {newTourPdfUrl && (
+                         <button
+                           type="button"
+                           onClick={() => setNewTourPdfUrl('')}
+                           className="text-red-500 hover:text-red-700 text-xs font-bold px-2 py-1.5 hover:bg-red-50 rounded-lg transition-all"
+                         >
+                           Sil
+                         </button>
+                       )}
+ 
+                       <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-4 py-2.5 rounded-lg flex items-center justify-center cursor-pointer border border-gold-primary/30 transition-all shrink-0 select-none">
+                         {newTourPdfUrl ? 'Faylı Dəyiş' : 'PDF Seç və Yüklə'}
+                         <input
+                           type="file"
+                           accept="application/pdf"
+                           className="hidden"
+                           onChange={(e) => handleFileUpload(e, setNewTourPdfUrl, ['application/pdf'])}
+                         />
+                       </label>
+                     </div>
+                   </div>
+ 
+                   {/* Requirement 5: Vehicle Selection Section */}
+                   <div className="md:col-span-3 border-t border-slate-100 pt-4 mt-2">
+                     <h4 className="font-serif text-sm font-bold text-navy-deep mb-3 uppercase tracking-wider">Ayrıca Nəqliyyat / Maşın Bölməsi</h4>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                       
+                       <div className="flex flex-col gap-1">
+                         <label className="text-xs text-slate-600 font-medium">Nəqliyyat Modeli / Adı</label>
+                         <input
+                           type="text"
+                           placeholder="Məsələn: Mercedes-Benz Sprinter Tourist"
+                           value={vehicleModelName}
+                           onChange={(e) => setVehicleModelName(e.target.value)}
+                           className="p-2.5 bg-white border rounded-xl"
+                         />
+                       </div>
+ 
+                       <div className="flex flex-col gap-1">
+                         <label className="text-xs text-slate-600 font-medium">Nəqliyyat Özəllikləri (Vergüllə ayırın)</label>
+                         <input
+                           type="text"
+                           placeholder="Kondisioner, Multi-Mediya, Dəri Oturacaqlar"
+                           value={vehicleFeatures}
+                           onChange={(e) => setVehicleFeatures(e.target.value)}
+                           className="p-2.5 bg-white border rounded-xl"
+                         />
+                       </div>
+ 
+                       <div className="flex flex-col gap-1 md:col-span-2">
+                         <label className="text-xs text-slate-700 font-bold mb-1">Görüntüləmə növü (Variant Seçin - Yalnız biri aktiv ola bilər)</label>
+                         <div className="flex gap-4">
+                           <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2.5 border rounded-xl hover:border-gold-primary/50 transition-colors select-none">
+                             <input
+                               type="radio"
+                               name="vehicleDisplayMode"
+                               value="image"
+                               checked={vehicleDisplayMode === 'image'}
+                               onChange={() => setVehicleDisplayMode('image')}
+                               className="accent-gold-primary w-4 h-4"
+                             />
+                             <span className="text-xs text-slate-700 font-semibold font-sans">Yalnız Şəkil</span>
+                           </label>
+                           <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2.5 border rounded-xl hover:border-gold-primary/50 transition-colors select-none">
+                             <input
+                               type="radio"
+                               name="vehicleDisplayMode"
+                               value="3d"
+                               checked={vehicleDisplayMode === '3d'}
+                               onChange={() => setVehicleDisplayMode('3d')}
+                               className="accent-gold-primary w-4 h-4"
+                             />
+                             <span className="text-xs text-slate-700 font-semibold font-sans">İnteraktiv 3D Model</span>
+                           </label>
+                         </div>
+                       </div>
+ 
+                       {/* Show conditional upload inputs based on the selected display variant */}
+                       {vehicleDisplayMode === 'image' ? (
+                         <div className="flex flex-col gap-1 md:col-span-2 animate-fadeIn">
+                           <label className="text-xs text-slate-600 font-medium">Maşın Şəkli Yükləyin</label>
+                           <div className="flex items-center gap-4 bg-white p-3 border rounded-2xl w-full">
+                             {vehicleImgUrl ? (
+                               <div className="relative w-16 h-16 rounded-xl overflow-hidden border bg-slate-50 shrink-0">
+                                 <img src={vehicleImgUrl} className="w-full h-full object-cover" alt="Preview" referrerPolicy="no-referrer" />
+                                 <button
+                                   type="button"
+                                   onClick={() => setVehicleImgUrl('')}
+                                   className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-all cursor-pointer"
+                                 >
+                                   Sil
+                                 </button>
+                               </div>
+                             ) : (
+                               <div className="w-16 h-16 rounded-xl border border-dashed bg-slate-100 flex items-center justify-center text-slate-400 text-xs text-center p-1 font-sans shrink-0">
+                                 Şəkil yoxdur
+                               </div>
+                             )}
+                             <div className="flex-1 font-sans">
+                               <p className="text-[10px] text-slate-500 mb-1.5 font-sans">Nəqliyyat vasitəsinin şəkli. WebP, JPG, PNG formatları.</p>
+                               <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-4 py-2 rounded-xl inline-flex items-center justify-center cursor-pointer border border-gold-primary/30 transition-all select-none">
+                                 {vehicleImgUrl ? 'Yenisini Yüklə' : 'Kompüterdən Şəkil Seç / Yüklə'}
+                                 <input
+                                   type="file"
+                                   accept="image/*"
+                                   className="hidden"
+                                   onChange={(e) => handleFileUpload(e, setVehicleImgUrl)}
+                                 />
+                               </label>
+                             </div>
+                           </div>
+                         </div>
+                       ) : (
+                         <div className="md:col-span-2 p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl flex items-center gap-3 animate-fadeIn">
+                           <span className="text-xl">🎮</span>
+                           <div className="text-xs text-slate-600">
+                             <span className="font-bold text-indigo-900 block mb-0.5">İnteraktiv 3D Üstünlüyü Seçildi</span>
+                             Sistem bu nəqliyyat vasitəsi üçün müasir daxili <b>Three.js salon dizaynını (3D)</b> avtomatik sintez edəcək və istifadəçilərə fırladıb-baxmaq imkanı verəcəkdir.
+                           </div>
+                         </div>
+                       )}
+ 
+                     </div>
+                   </div>
+ 
+                   <div className="flex flex-col gap-1 md:col-span-3">
+                     <label className="text-xs text-slate-500">Daxil Olan Xidmətlər (Vergüllə ayıraraq yazın)</label>
+                     <input
+                       type="text"
+                       placeholder="Milli Bələdçi, Komfortlu Transfer, Dadlı səhər yeməyi, Giriş biletləri"
+                       value={newTourIncludedServices}
+                       onChange={(e) => setNewTourIncludedServices(e.target.value)}
+                       className="p-2.5 bg-slate-50 border rounded-xl font-medium"
+                     />
+                   </div>
+ 
+                   <div className="flex flex-col gap-1 md:col-span-3">
+                     <label className="text-xs text-slate-500">Qısa marşrut təsviri</label>
+                     <textarea
+                       rows={3}
+                       value={newTourDesc}
+                       onChange={(e) => setNewTourDesc(e.target.value)}
+                       placeholder="Ziyarətçilər üçün paket haqqında..."
+                       className="p-2.5 bg-slate-50 border rounded-xl leading-normal"
+                     />
+                   </div>
+ 
+                   <button
+                     type="submit"
+                     className="md:col-span-3 bg-gold-primary hover:bg-gold-dark text-navy-deep font-bold py-3 rounded-xl flex items-center justify-center gap-2 mt-2 cursor-pointer transition-all"
+                   >
+                     <Plus className="w-4 h-4" />
+                     Yeni Paket Yarat
+                   </button>
                 </form>
               </div>
 
@@ -1093,23 +1341,35 @@ export default function Admin({ onNavigate }: AdminProps) {
 
                   <div className="flex flex-col gap-1 md:col-span-2">
                     <label className="text-xs text-slate-500">Şirkət Loqosu (URL və ya Fayl Yükləyin)</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="url"
-                        placeholder="https://..."
-                        value={newCompLogo}
-                        onChange={(e) => setNewCompLogo(e.target.value)}
-                        className="flex-1 p-2.5 bg-slate-50 border rounded-xl"
-                      />
-                      <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-4 rounded-xl flex items-center justify-center cursor-pointer border border-gold-primary/30 transition-all shrink-0">
-                        Loqo Seç
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => handleFileUpload(e, setNewCompLogo, ['image/jpeg', 'image/png'])}
-                        />
-                      </label>
+                    <div className="flex items-center gap-4 bg-slate-50 p-3 border rounded-2xl w-full">
+                      {newCompLogo ? (
+                        <div className="relative w-16 h-16 rounded-xl overflow-hidden border bg-white shrink-0">
+                          <img src={newCompLogo} className="w-full h-full object-cover" alt="Preview" referrerPolicy="no-referrer" />
+                          <button
+                            type="button"
+                            onClick={() => setNewCompLogo('')}
+                            className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-all cursor-pointer"
+                          >
+                            Sil
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 rounded-xl border border-dashed bg-slate-200 flex items-center justify-center text-slate-400 text-xs text-center p-1 font-sans shrink-0">
+                          Loqo daxil edilməyib
+                        </div>
+                      )}
+                      <div className="flex-1 font-sans">
+                        <p className="text-[10px] text-slate-500 mb-1.5 font-sans">Şirkət marka loqosu (PNG, JPG, SVG, WebP).</p>
+                        <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-4 py-2 rounded-xl inline-flex items-center justify-center cursor-pointer border border-gold-primary/30 transition-all select-none">
+                          {newCompLogo ? 'Yenisini Yüklə' : 'Kompüterdən Loqo Seç / Yüklə'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, setNewCompLogo)}
+                          />
+                        </label>
+                      </div>
                     </div>
                   </div>
 
@@ -1260,14 +1520,37 @@ export default function Admin({ onNavigate }: AdminProps) {
                   </div>
 
                   <div className="flex flex-col gap-1 md:col-span-2">
-                    <label className="text-xs text-slate-500">Otel Şəli URL</label>
-                    <input
-                      type="url"
-                      placeholder="https://..."
-                      value={newHotelImg}
-                      onChange={(e) => setNewHotelImg(e.target.value)}
-                      className="p-2.5 bg-slate-50 border rounded-xl"
-                    />
+                    <label className="text-xs text-slate-500">Otel Şəkli (Yalnız Yükləmə ilə)</label>
+                    <div className="flex items-center gap-4 bg-slate-50 p-3 border rounded-2xl w-full">
+                      {newHotelImg ? (
+                        <div className="relative w-16 h-16 rounded-xl overflow-hidden border bg-white shrink-0">
+                          <img src={newHotelImg} className="w-full h-full object-cover" alt="Preview" referrerPolicy="no-referrer" />
+                          <button
+                            type="button"
+                            onClick={() => setNewHotelImg('')}
+                            className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-all cursor-pointer"
+                          >
+                            Sil
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 rounded-xl border border-dashed bg-slate-200 flex items-center justify-center text-slate-400 text-xs text-center p-1 font-sans shrink-0">
+                          Şəkil yoxdur
+                        </div>
+                      )}
+                      <div className="flex-1 font-sans">
+                        <p className="text-[10px] text-slate-500 mb-1.5 font-sans">Otelin əsas şəkli (PNG, JPG, WebP).</p>
+                        <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-4 py-2 rounded-xl inline-flex items-center justify-center cursor-pointer border border-gold-primary/30 transition-all select-none">
+                          {newHotelImg ? 'Yenisini Yüklə' : 'Kompüterdən Şəkil Seç / Yüklə'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, setNewHotelImg)}
+                          />
+                        </label>
+                      </div>
+                    </div>
                   </div>
 
                   <button
@@ -1375,15 +1658,38 @@ export default function Admin({ onNavigate }: AdminProps) {
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs text-slate-500">Məkan Şəkli URL</label>
-                    <input
-                      type="url"
-                      placeholder="https://..."
-                      value={newPlaceImg}
-                      onChange={(e) => setNewPlaceImg(e.target.value)}
-                      className="p-2.5 bg-slate-50 border rounded-xl"
-                    />
+                  <div className="flex flex-col gap-1 md:col-span-2">
+                    <label className="text-xs text-slate-500">Məkan Şəkli (Yalnız Yükləmə ilə)</label>
+                    <div className="flex items-center gap-4 bg-slate-50 p-3 border rounded-2xl w-full">
+                      {newPlaceImg ? (
+                        <div className="relative w-16 h-16 rounded-xl overflow-hidden border bg-white shrink-0">
+                          <img src={newPlaceImg} className="w-full h-full object-cover" alt="Preview" referrerPolicy="no-referrer" />
+                          <button
+                            type="button"
+                            onClick={() => setNewPlaceImg('')}
+                            className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-all cursor-pointer"
+                          >
+                            Sil
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 rounded-xl border border-dashed bg-slate-200 flex items-center justify-center text-slate-400 text-xs text-center p-1 font-sans shrink-0">
+                          Şəkil yoxdur
+                        </div>
+                      )}
+                      <div className="flex-1 font-sans">
+                        <p className="text-[10px] text-slate-500 mb-1.5 font-sans">Abidə / məkan şəkli (PNG, JPG, WebP).</p>
+                        <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-4 py-2 rounded-xl inline-flex items-center justify-center cursor-pointer border border-gold-primary/30 transition-all select-none">
+                          {newPlaceImg ? 'Yenisini Yüklə' : 'Kompüterdən Şəkil Seç / Yüklə'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, setNewPlaceImg)}
+                          />
+                        </label>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="flex flex-col gap-1 md:col-span-3">
@@ -1536,15 +1842,38 @@ export default function Admin({ onNavigate }: AdminProps) {
                       className="p-2.5 bg-slate-50 border rounded-xl"
                     />
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs text-slate-500">Şəkil URL</label>
-                    <input
-                      type="url"
-                      placeholder="https://images.unsplash.com/..."
-                      value={newRestImg}
-                      onChange={(e) => setNewRestImg(e.target.value)}
-                      className="p-2.5 bg-slate-50 border rounded-xl"
-                    />
+                  <div className="flex flex-col gap-1 md:col-span-2">
+                    <label className="text-xs text-slate-500">Şəkil (Yalnız Yükləmə ilə)</label>
+                    <div className="flex items-center gap-4 bg-slate-50 p-3 border rounded-2xl w-full">
+                      {newRestImg ? (
+                        <div className="relative w-16 h-16 rounded-xl overflow-hidden border bg-white shrink-0">
+                          <img src={newRestImg} className="w-full h-full object-cover" alt="Preview" referrerPolicy="no-referrer" />
+                          <button
+                            type="button"
+                            onClick={() => setNewRestImg('')}
+                            className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-all cursor-pointer"
+                          >
+                            Sil
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 rounded-xl border border-dashed bg-slate-200 flex items-center justify-center text-slate-400 text-xs text-center p-1 font-sans shrink-0">
+                          Şəkil yoxdur
+                        </div>
+                      )}
+                      <div className="flex-1 font-sans">
+                        <p className="text-[10px] text-slate-500 mb-1.5 font-sans">Restoranın əsas şəkli (PNG, JPG, WebP).</p>
+                        <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-4 py-2 rounded-xl inline-flex items-center justify-center cursor-pointer border border-gold-primary/30 transition-all select-none">
+                          {newRestImg ? 'Yenisini Yüklə' : 'Kompüterdən Şəkil Seç / Yüklə'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, setNewRestImg)}
+                          />
+                        </label>
+                      </div>
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <label className="text-xs text-slate-500">İş Saatları</label>
@@ -1660,14 +1989,37 @@ export default function Admin({ onNavigate }: AdminProps) {
                     />
                   </div>
                   <div className="flex flex-col gap-1 md:col-span-2">
-                    <label className="text-xs text-slate-500">Karusel / Örtük Şəkli URL</label>
-                    <input
-                      type="url"
-                      placeholder="https://..."
-                      value={newBlogImg}
-                      onChange={(e) => setNewBlogImg(e.target.value)}
-                      className="p-2.5 bg-slate-50 border rounded-xl"
-                    />
+                    <label className="text-xs text-slate-500">Karusel / Örtük Şəkli (Yalnız Yükləmə ilə)</label>
+                    <div className="flex items-center gap-4 bg-slate-50 p-3 border rounded-2xl w-full">
+                      {newBlogImg ? (
+                        <div className="relative w-16 h-16 rounded-xl overflow-hidden border bg-white shrink-0">
+                          <img src={newBlogImg} className="w-full h-full object-cover" alt="Preview" referrerPolicy="no-referrer" />
+                          <button
+                            type="button"
+                            onClick={() => setNewBlogImg('')}
+                            className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-all cursor-pointer"
+                          >
+                            Sil
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 rounded-xl border border-dashed bg-slate-200 flex items-center justify-center text-slate-400 text-xs text-center p-1 font-sans shrink-0">
+                          Şəkil yoxdur
+                        </div>
+                      )}
+                      <div className="flex-1 font-sans">
+                        <p className="text-[10px] text-slate-500 mb-1.5 font-sans">Bloq məqaləsinin örtük şəkli (PNG, JPG, WebP).</p>
+                        <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-4 py-2 rounded-xl inline-flex items-center justify-center cursor-pointer border border-gold-primary/30 transition-all select-none">
+                          {newBlogImg ? 'Yenisini Yüklə' : 'Kompüterdən Şəkil Seç / Yüklə'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, setNewBlogImg)}
+                          />
+                        </label>
+                      </div>
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1 md:col-span-2">
                     <label className="text-xs text-slate-500">Məqalə Mətni (Tam məzmun)</label>
@@ -1767,93 +2119,108 @@ export default function Admin({ onNavigate }: AdminProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-sans">
                   {/* Light ve Dark Logo */}
                   <div className="flex flex-col gap-4">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex justify-between items-center">
-                        <label className="text-xs text-slate-500 font-semibold">Açıq Rəng Rejimi Loqosu (Light Mode Logo)</label>
+                    {/* Light Logo */}
+                    <div className="bg-slate-55 p-3 rounded-2xl border">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-xs font-semibold text-slate-700">Açıq Rejim Loqosu (Light Mode Logo)</span>
                         <button
                           type="button"
                           onClick={() => openMediaPicker(setCfgLogoLightUrl)}
-                          className="text-xs text-gold-primary hover:underline flex items-center gap-1 cursor-pointer"
+                          className="text-xs text-gold-primary hover:underline flex items-center gap-1 cursor-pointer font-sans"
                         >
                           <Image className="w-3 h-3" /> Kitabxanadan Seç
                         </button>
                       </div>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={cfgLogoLightUrl}
-                          onChange={(e) => setCfgLogoLightUrl(e.target.value)}
-                          className="flex-1 p-2.5 bg-slate-50 border rounded-xl"
-                        />
-                        <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 rounded-xl flex items-center cursor-pointer transition-all shrink-0">
-                          Yüklə
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleFileUpload(e, setCfgLogoLightUrl)}
-                          />
-                        </label>
+                      
+                      <div className="flex items-center gap-3">
+                        {cfgLogoLightUrl ? (
+                          <div className="w-14 h-14 rounded-lg bg-slate-100 border p-1 flex items-center justify-center shrink-0">
+                            <img src={cfgLogoLightUrl} alt="Light Logo" className="max-w-full max-h-full object-contain" referrerPolicy="no-referrer" />
+                          </div>
+                        ) : (
+                          <div className="w-14 h-14 rounded-lg border-2 border-dashed flex items-center justify-center text-[10px] text-slate-400 font-sans shrink-0">Yoxdur</div>
+                        )}
+                        <div className="flex-1">
+                          <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-3 py-1.5 rounded-lg inline-flex items-center cursor-pointer transition-all border border-gold-primary/20 select-none">
+                            Yüklə
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileUpload(e, setCfgLogoLightUrl)}
+                            />
+                          </label>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                      <div className="flex justify-between items-center">
-                        <label className="text-xs text-slate-500 font-semibold">Tünd Rəng Rejimi Loqosu (Dark Mode Logo)</label>
+                    {/* Dark Logo */}
+                    <div className="bg-slate-55 p-3 rounded-2xl border">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-xs font-semibold text-slate-700">Tünd Rejim Loqosu (Dark Mode Logo)</span>
                         <button
                           type="button"
                           onClick={() => openMediaPicker(setCfgLogoDarkUrl)}
-                          className="text-xs text-gold-primary hover:underline flex items-center gap-1 cursor-pointer"
+                          className="text-xs text-gold-primary hover:underline flex items-center gap-1 cursor-pointer font-sans"
                         >
                           <Image className="w-3 h-3" /> Kitabxanadan Seç
                         </button>
                       </div>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={cfgLogoDarkUrl}
-                          onChange={(e) => setCfgLogoDarkUrl(e.target.value)}
-                          className="flex-1 p-2.5 bg-slate-50 border rounded-xl"
-                        />
-                        <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 rounded-xl flex items-center cursor-pointer transition-all shrink-0">
-                          Yüklə
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleFileUpload(e, setCfgLogoDarkUrl)}
-                          />
-                        </label>
+                      
+                      <div className="flex items-center gap-3">
+                        {cfgLogoDarkUrl ? (
+                          <div className="w-14 h-14 rounded-lg bg-slate-900 border border-slate-800 p-1 flex items-center justify-center shrink-0">
+                            <img src={cfgLogoDarkUrl} alt="Dark Logo" className="max-w-full max-h-full object-contain" referrerPolicy="no-referrer" />
+                          </div>
+                        ) : (
+                          <div className="w-14 h-14 rounded-lg border-2 border-dashed flex items-center justify-center text-[10px] text-slate-400 font-sans shrink-0">Yoxdur</div>
+                        )}
+                        <div className="flex-1">
+                          <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-3 py-1.5 rounded-lg inline-flex items-center cursor-pointer transition-all border border-gold-primary/20 select-none">
+                            Yüklə
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileUpload(e, setCfgLogoDarkUrl)}
+                            />
+                          </label>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                      <div className="flex justify-between items-center">
-                        <label className="text-xs text-slate-500 font-semibold">Favikon URL (Favicon / 16x16 .ico, .png)</label>
+                    {/* Favikon */}
+                    <div className="bg-slate-55 p-3 rounded-2xl border">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-xs font-semibold text-slate-700">Sayt Favikonu (16x16 icon)</span>
                         <button
                           type="button"
                           onClick={() => openMediaPicker(setCfgFaviconUrl)}
-                          className="text-xs text-gold-primary hover:underline flex items-center gap-1 cursor-pointer"
+                          className="text-xs text-gold-primary hover:underline flex items-center gap-1 cursor-pointer font-sans"
                         >
                           <Image className="w-3 h-3" /> Kitabxanadan Seç
                         </button>
                       </div>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={cfgFaviconUrl}
-                          onChange={(e) => setCfgFaviconUrl(e.target.value)}
-                          className="flex-1 p-2.5 bg-slate-50 border rounded-xl"
-                        />
-                        <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 rounded-xl flex items-center cursor-pointer transition-all shrink-0">
-                          Yüklə
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleFileUpload(e, setCfgFaviconUrl)}
-                          />
-                        </label>
+                      
+                      <div className="flex items-center gap-3">
+                        {cfgFaviconUrl ? (
+                          <div className="w-14 h-14 rounded-lg bg-slate-100 border p-1 flex items-center justify-center shrink-0">
+                            <img src={cfgFaviconUrl} alt="Favicon" className="w-6 h-6 object-contain" referrerPolicy="no-referrer" />
+                          </div>
+                        ) : (
+                          <div className="w-14 h-14 rounded-lg border-2 border-dashed flex items-center justify-center text-[10px] text-slate-400 font-sans shrink-0">Yoxdur</div>
+                        )}
+                        <div className="flex-1">
+                          <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-3 py-1.5 rounded-lg inline-flex items-center cursor-pointer transition-all border border-gold-primary/20 select-none">
+                            Yüklə
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileUpload(e, setCfgFaviconUrl)}
+                            />
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2104,14 +2471,34 @@ export default function Admin({ onNavigate }: AdminProps) {
                     />
                   </div>
                   <div className="flex flex-col gap-1 text-left md:col-span-2">
-                    <label className="text-[10px] text-slate-400">Arxa fon şəkli URL</label>
-                    <input
-                      type="url"
-                      placeholder="https://..."
-                      value={newSliderImg}
-                      onChange={(e) => setNewSliderImg(e.target.value)}
-                      className="p-2 bg-white border rounded-lg text-xs"
-                    />
+                    <label className="text-[10px] text-slate-400">Arxa fon şəkli (Yalnız Yükləmə ilə)</label>
+                    <div className="flex items-center gap-3 bg-white p-2 border rounded-lg">
+                      {newSliderImg ? (
+                        <div className="relative w-10 h-10 rounded-md overflow-hidden border bg-slate-50 shrink-0">
+                          <img src={newSliderImg} className="w-full h-full object-cover" alt="Preview" referrerPolicy="no-referrer" />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-md border border-dashed bg-slate-100 flex items-center justify-center text-[10px] text-slate-400 font-sans shrink-0">Yoxdur</div>
+                      )}
+                      <div className="flex-1 flex gap-2 items-center">
+                        <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-[10px] font-bold px-3 py-1.5 rounded-md cursor-pointer border border-gold-primary/20 transition-all select-none">
+                          Şəkil Yüklə
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, setNewSliderImg)}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => openMediaPicker(setNewSliderImg)}
+                          className="text-[10px] text-gold-primary hover:underline font-sans cursor-pointer"
+                        >
+                          Kitabxanadan seç
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -2177,14 +2564,34 @@ export default function Admin({ onNavigate }: AdminProps) {
                     />
                   </div>
                   <div className="flex flex-col gap-1 text-left md:col-span-2">
-                    <label className="text-[10px] text-slate-400">Banner Şəkli URL</label>
-                    <input
-                      type="url"
-                      placeholder="https://..."
-                      value={newPromoImg}
-                      onChange={(e) => setNewPromoImg(e.target.value)}
-                      className="p-2 bg-white border rounded-lg text-xs"
-                    />
+                    <label className="text-[10px] text-slate-400">Banner Şəkli (Yalnız Yükləmə ilə)</label>
+                    <div className="flex items-center gap-3 bg-white p-2 border rounded-lg">
+                      {newPromoImg ? (
+                        <div className="relative w-10 h-10 rounded-md overflow-hidden border bg-slate-50 shrink-0">
+                          <img src={newPromoImg} className="w-full h-full object-cover" alt="Preview" referrerPolicy="no-referrer" />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-md border border-dashed bg-slate-100 flex items-center justify-center text-[10px] text-slate-400 font-sans shrink-0">Yoxdur</div>
+                      )}
+                      <div className="flex-1 flex gap-2 items-center">
+                        <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-[10px] font-bold px-3 py-1.5 rounded-md cursor-pointer border border-gold-primary/20 transition-all select-none">
+                          Şəkil Yüklə
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, setNewPromoImg)}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => openMediaPicker(setNewPromoImg)}
+                          className="text-[10px] text-gold-primary hover:underline font-sans cursor-pointer"
+                        >
+                          Kitabxanadan seç
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   <button
                     type="button"

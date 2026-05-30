@@ -1,0 +1,1055 @@
+{
+  "users": [
+    {
+      "id": "usr_admin",
+      "fullName": "Tuncay Qurbanov",
+      "email": "tuncayqurbanov19@gmail.com",
+      "passwordHash": "919b7ea344bc818b2be6f1b90f41ce0fff28d4f481fd429793419d10e5753eca",
+      "role": "admin",
+      "isBlocked": false,
+      "createdAt": "2026-05-01T00:00:00.000Z"
+    },
+    {
+      "id": "usr_demo",
+      "fullName": "Elnur Məmmədov",
+      "email": "turist@tourism.naxcivan",
+      "passwordHash": "919b7ea344bc818b2be6f1b90f41ce0fff28d4f481fd429793419d10e5753eca",
+      "role": "user",
+      "isBlocked": false,
+      "createdAt": "2026-05-15T00:00:00.000Z"
+    }
+  ],
+  "places": [
+    {
+      "id": "plc_1",
+      "name": "Möminə Xatun Türbəsi",
+      "category": "Türbələr",
+      "description": "Möminə Xatun Türbəsi 1186-cı ildə dahi memar Əcəmi Naxçıvani tərəfindən tikilmişdir. Azərbaycan memarlığının şah əsərlərindən biri hesab olunur və UNESCO Ümumdünya İrsi namizədidir. Türbə dayanıqlı kərpic naxışları, fəlsəfi kitabələri və həndəsi ornamentləri ilə məşhurdur. Şərq İntibahının Möminə Xatunun şərəfinə ucaldılmış bu abidəsi onun güclü xarakterini və dövlətçilikdəki rolunu əks etdirir.",
+      "entryFee": "₼ 2",
+      "workingHours": "09:00–18:00",
+      "images": [
+        "https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1608958416719-f81d19dcaece?q=80&w=600&auto=format&fit=crop"
+      ],
+      "location": {
+        "lat": 39.2065,
+        "lng": 45.4111
+      },
+      "historicalPeriod": "XII əsr (1186)",
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.716Z"
+    },
+    {
+      "id": "plc_2",
+      "name": "Əlincəqala",
+      "category": "Qalalar",
+      "description": "Əlincəqala Əlincə çayının sağ sahilində yerləşən və sıldırım dağ zirvəsində ucalan qədim hərbi qaladır (IV əsr). Bu qala monqol-tatarların, həmçinin Teymurilərin hücumlarına düz 14 il ərzində qəhrəmancasına müqavimət göstərərək Azərbaycan tarixində yenilməzlik rəmzi kimi qalmışdır. Deniz səviyyəsindən 1,800 metr yüksəklikdə yerləşən qalaya çıxan turistlərə möhtəşəm panorama açılır.",
+      "entryFee": "Pulsuz",
+      "workingHours": "Hər zaman açıq",
+      "images": [
+        "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=600&auto=format&fit=crop"
+      ],
+      "location": {
+        "lat": 39.193,
+        "lng": 45.698
+      },
+      "historicalPeriod": "Qədim Eranın IV əsri",
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.716Z"
+    },
+    {
+      "id": "plc_3",
+      "name": "Duzdağ Fizioterapiya Mərkəzi",
+      "category": "Təbiət Məkanları",
+      "description": "Duzdağ Fizioterapiya Mərkəzi Naxçıvan şəhərindən 10 km məsafədə yerləşən unikal təbii duz mağaralarıdır. Mağaralardakı natrium-xlorid ionları ilə zəngin olan mikroiqlim tənəffüs orqanları xəstəliklərindən (xüsusən də bronxial astma) əziyyət çəkənlər üçün əvəzedilməz sığınacaq və müalicə ocağıdır. İllik minlərlə xarici və yerli qonaq müalicə üçün duz şaxtalarına gəlir.",
+      "entryFee": "₼ 5",
+      "workingHours": "08:00–20:00",
+      "images": [
+        "https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=600&auto=format&fit=crop"
+      ],
+      "location": {
+        "lat": 39.25,
+        "lng": 45.38
+      },
+      "historicalPeriod": "Təbii Məkan (Qədim Dövr)",
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.716Z"
+    },
+    {
+      "id": "plc_4",
+      "name": "Xan Sarayı",
+      "category": "Muzeylər",
+      "description": "Xan Sarayı — XVIII əsrə aid olan və Naxçıvan xanlarının yaşayış iqamətgahı olmuş tarixi saraydır. Şərq memarlıq üslubunda tikilmiş bina hazırda Dövlət Tarix-Memarlıq Muzeyi kimi fəaliyyət göstərir. Muzeydə Naxçıvan xanlığına, xüsusən Kəngərlilər sülaləsinə aid nadir silahlar, qədim xalçalar, miniatürlər, məişət əşyaları və sənədlər qorunub saxlanılır.",
+      "entryFee": "₼ 3",
+      "workingHours": "10:00–17:00",
+      "images": [
+        "https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=600&auto=format&fit=crop"
+      ],
+      "location": {
+        "lat": 39.2085,
+        "lng": 45.405
+      },
+      "historicalPeriod": "XVIII əsr",
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.716Z"
+    },
+    {
+      "id": "plc_5",
+      "name": "Nuh Peyğəmbər Məqbərəsi",
+      "category": "Dini Yerlər",
+      "description": "Nuh Peyğəmbər Məqbərəsi qədim dini və tarixi əhəmiyyətə malik, Naxçıvan şəhərinin cənub hissəsində (Köhnəqala daxilində) ucalan ziyarətgahdır. İnanca görə Ümumdünya tufanından sağ çıxan Nuh Peyğəmbərin qəbri burada yerləşir. Hazırkı məqbərə qədim bünövrələr üzərində bərpa olunmuş, milli ornamentlərlə bəzədilmiş səkkizbucaqlı gümbəzlə örtülmüşdür.",
+      "entryFee": "Pulsuz",
+      "workingHours": "Hər zaman açıq",
+      "images": [
+        "https://images.unsplash.com/photo-1590073844006-33379778ae09?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=600&auto=format&fit=crop"
+      ],
+      "location": {
+        "lat": 39.2,
+        "lng": 45.415
+      },
+      "historicalPeriod": "Tunc Dövrü bünövrəsi",
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.716Z"
+    },
+    {
+      "id": "plc_6",
+      "name": "Batabat Gölü",
+      "category": "Təbiət Məkanları",
+      "description": "Batabat Gölü dəniz səviyyəsindən 2350 metr yüksəklikdə, Şahbuz Dövlət Təbiət Qoruğunun tərkibində yerləşən alp gölüdür. Gölün ən heyranedici xüsusiyyəti, suyun üzərində sərbəst hərəkət edən meşəlik torf adasıdır (üzən ada). Batabat zəngin florası, təmiz mineral bulaqları (Zor bulaq) və füsunkar mənzərəsi ilə ekoturizmin əsas ünvanlarından biridir.",
+      "entryFee": "Pulsuz",
+      "workingHours": "Hər zaman açıq",
+      "images": [
+        "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=600&auto=format&fit=crop"
+      ],
+      "location": {
+        "lat": 39.5333,
+        "lng": 45.7167
+      },
+      "historicalPeriod": "Təbii Alp Gölü",
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.716Z"
+    },
+    {
+      "id": "plc_7",
+      "name": "Aşağı Əylis Kilsəsi",
+      "category": "Tarixi Yerlər",
+      "description": "Aşağı Əylis kilsəsi Ordubad rayonunun tarixi Əylis kəndində yerləşən, qədim Qafqaz Albaniyası dövrünə və orta əsrlərə aid tarixi məbəd xarabalıqlarıdır. Bölgənin qədim xristian və daş memarlığını əks etdirən bu struktur, Naxçıvanın multikultural keçmişini və zəngin dini fərqliliyini nümayiş etdirir.",
+      "entryFee": "Pulsuz",
+      "workingHours": "Hər zaman açıq",
+      "images": [
+        "https://images.unsplash.com/photo-1548625361-155deee2627e?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600&auto=format&fit=crop"
+      ],
+      "location": {
+        "lat": 38.9317,
+        "lng": 45.9817
+      },
+      "historicalPeriod": "IV - XVII əsrlər",
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.716Z"
+    },
+    {
+      "id": "plc_8",
+      "name": "Naxçıvan Tarix Muzeyi",
+      "category": "Muzeylər",
+      "description": "Naxçıvan Tarix Muzeyi — bölgənin ən qədim muzeyidir (1924-cü ildə təsis olunub). Muzeydə paleolit dövründən tutmuş müasir dövrə qədər olan 48,000-dən çox nadir eksponat qorunub saxlanılır: tunc təkərlər, qədim naxışlı saxsı qablar, pullar, əlyazmalar və naxçıvanlı generalların şərəfli hərbi geyimləri.",
+      "entryFee": "₼ 2",
+      "workingHours": "09:00–17:00",
+      "images": [
+        "https://images.unsplash.com/photo-1566121318576-537f8d164530?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1447069387593-a5de0862481e?q=80&w=600&auto=format&fit=crop"
+      ],
+      "location": {
+        "lat": 39.205,
+        "lng": 45.41
+      },
+      "historicalPeriod": "XIX əsr binası (Muzey 1924)",
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.716Z"
+    }
+  ],
+  "hotels": [
+    {
+      "id": "htl_1",
+      "name": "Saat Meydanı Qonaq Evi",
+      "address": "Naxçıvan şəhəri, Saat Meydanı Kompleksi",
+      "stars": 4,
+      "rooms": [
+        {
+          "type": "Standart Otaq",
+          "price": 90,
+          "capacity": 2
+        },
+        {
+          "type": "Deluxe Suite",
+          "price": 150,
+          "capacity": 3
+        },
+        {
+          "type": "Ailəvi Otaq",
+          "price": 180,
+          "capacity": 4
+        }
+      ],
+      "amenities": [
+        "WiFi",
+        "Restoran",
+        "Parkinq",
+        "Otaq Xidməti",
+        "Kondisioner",
+        "Lift"
+      ],
+      "restaurant": {
+        "name": "Saat Cafe-Bistro",
+        "cuisine": "Avropa və Milli Mətbəx",
+        "hours": "08:00–23:00"
+      },
+      "phone": "+994 36 544 55 22",
+      "email": "info@saatmeydani.az",
+      "images": [
+        "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?q=80&w=600&auto=format&fit=crop"
+      ],
+      "location": {
+        "lat": 39.2105,
+        "lng": 45.4125
+      },
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.716Z"
+    },
+    {
+      "id": "htl_2",
+      "name": "Təbriz Premium Hotel",
+      "address": "Naxçıvan şəhəri, Heydər Əliyev prospekti 17",
+      "stars": 5,
+      "rooms": [
+        {
+          "type": "Executive Single",
+          "price": 120,
+          "capacity": 1
+        },
+        {
+          "type": "Premium Double",
+          "price": 160,
+          "capacity": 2
+        },
+        {
+          "type": "Presidential Suite",
+          "price": 320,
+          "capacity": 4
+        }
+      ],
+      "amenities": [
+        "WiFi",
+        "Hovuz",
+        "Restoran",
+        "Spa",
+        "Parkinq",
+        "Fitness",
+        "Otaq Xidməti",
+        "Lift"
+      ],
+      "restaurant": {
+        "name": "Panorama Roof Restoran",
+        "cuisine": "Füzyon, Azərbaycan, Türk mətbəxi",
+        "hours": "07:00–00:00"
+      },
+      "phone": "+994 36 550 40 40",
+      "email": "contact@tebrizhotel.az",
+      "images": [
+        "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=600&auto=format&fit=crop"
+      ],
+      "location": {
+        "lat": 39.2082,
+        "lng": 45.4085
+      },
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.716Z"
+    },
+    {
+      "id": "htl_3",
+      "name": "Duzdağ Sanatoriya Kompleksi",
+      "address": "Duzdağ Şaxtaları Ətrafı, Naxçıvan",
+      "stars": 5,
+      "rooms": [
+        {
+          "type": "Therapy Standard",
+          "price": 110,
+          "capacity": 2
+        },
+        {
+          "type": "Therapy Family",
+          "price": 170,
+          "capacity": 4
+        },
+        {
+          "type": "Salt View Suite",
+          "price": 230,
+          "capacity": 2
+        }
+      ],
+      "amenities": [
+        "WiFi",
+        "Hovuz",
+        "Restoran",
+        "Spa",
+        "Parkinq",
+        "Fitness",
+        "Müalicə Mərkəzi"
+      ],
+      "restaurant": {
+        "name": "Şəfa Salt Restaurant",
+        "cuisine": "Dietik və Milli Kulinariya",
+        "hours": "08:00–22:00"
+      },
+      "phone": "+994 36 544 01 02",
+      "email": "booking@duzdaghotel.az",
+      "images": [
+        "https://images.unsplash.com/photo-1517840901100-8179e982acb7?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1455587734955-081b22074882?q=80&w=600&auto=format&fit=crop"
+      ],
+      "location": {
+        "lat": 39.2482,
+        "lng": 45.385
+      },
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.716Z"
+    },
+    {
+      "id": "htl_4",
+      "name": "Ağbulaq Dağ İstirahət Mərkəzi",
+      "address": "Şahbuz rayonu, Ağbulaq Kənd Kurortu",
+      "stars": 3,
+      "rooms": [
+        {
+          "type": "Meşə kənar Kottec",
+          "price": 70,
+          "capacity": 2
+        },
+        {
+          "type": "Double Dağ mənzərə",
+          "price": 85,
+          "capacity": 2
+        },
+        {
+          "type": "İki Mərtəbəli Villa",
+          "price": 160,
+          "capacity": 6
+        }
+      ],
+      "amenities": [
+        "WiFi",
+        "Restoran",
+        "Kondisioner",
+        "Parkinq",
+        "Xizək İcarəsi",
+        "Uşaq Meydançası"
+      ],
+      "restaurant": {
+        "name": "YayLaq Qril Evi",
+        "cuisine": "Əsl Kənd Məhsulları, Manqal Xörəkləri",
+        "hours": "08:00–22:00"
+      },
+      "phone": "+994 36 554 11 99",
+      "email": "info@agbulaqski.az",
+      "images": [
+        "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600&auto=format&fit=crop"
+      ],
+      "location": {
+        "lat": 39.42,
+        "lng": 45.85
+      },
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.716Z"
+    }
+  ],
+  "tours": [
+    {
+      "id": "tour_1",
+      "name": "Naxçıvanın Tarixi Şah Əsərləri",
+      "category": "Tarixi",
+      "duration": 3,
+      "price": 250,
+      "shortDescription": "Memar Əcəminin şah əsərlərindən, yenilməz Əlincəqalaya və qədim Nuh məqbərəsinə qədər uzanan, zəngin tarixi bələdçi müşayiəti ilə möhtəşəm 3 günlük paket.",
+      "mainImage": "https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1200&auto=format&fit=crop",
+      "gallery": [
+        "https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=600&auto=format&fit=crop"
+      ],
+      "stops": [
+        {
+          "placeName": "Möminə Xatun Türbəsi",
+          "duration": "Day 1 - 2 saat",
+          "description": "Naxçıvan memarlıq məktəbinin ulduzu hesab olunan Mominə Xatun türbəsi ilə tura möhtəşəm başlanğıc.",
+          "image": "https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=400"
+        },
+        {
+          "placeName": "Xan Sarayı Dövlət Muzeyi",
+          "duration": "Day 1 - 1.5 saat",
+          "description": "Naxçıvan xanlarının taxt-tac otaqlarını və xanlığın fəaliyyətini göstərən orijinal eksponatları ziyarət edirik.",
+          "image": "https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=400"
+        },
+        {
+          "placeName": "Əlincəqala Zirvəsi",
+          "duration": "Day 2 - 4 saat",
+          "description": "Yenilməz qalanın yüzlərlə pilləkənli cığırı ilə zirvəyə qalxaraq möhtəşəm Naxçıvan mənzərəsini seyr edirik.",
+          "image": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=400"
+        },
+        {
+          "placeName": "Nuh Peyğəmbər Məqbərəsi",
+          "duration": "Day 3 - 1.5 saat",
+          "description": "Tufan öncəsi tarixin bünövrələrinə qonaq olaraq, Nuh peyğəmbərin qəbri üzərində qurulmuş məqbərədə dualar edirik.",
+          "image": "https://images.unsplash.com/photo-1590073844006-33379778ae09?q=80&w=400"
+        }
+      ],
+      "meals": {
+        "breakfast": {
+          "restaurantName": "Təbriz Səhər Süfrəsi",
+          "items": [
+            "Naxçıvan şoru",
+            "Kənd yumurtası",
+            "Qaymaq",
+            "Bal",
+            "Qoğal və isti təndir çörəyi"
+          ]
+        },
+        "lunch": {
+          "restaurantName": "Xanlıq Şərq Restoranı",
+          "items": [
+            "Naxçıvan Qovurması",
+            "Təzə kənd qatığı",
+            "Göyərti salatı",
+            "Ordubad limon şərbəti"
+          ]
+        },
+        "dinner": {
+          "restaurantName": "Millixan Təndir Evi",
+          "items": [
+            "Ordubad qayqanağı",
+            "Quzu basdırması",
+            "Sumaq salatı",
+            "Samovar çayı və şirniyyat"
+          ]
+        }
+      },
+      "accommodation": {
+        "hotelName": "Təbriz Premium Hotel",
+        "roomType": "Premium Double Room",
+        "amenities": [
+          "Premium WiFi",
+          "Hovuz",
+          "Fin Hamamı",
+          "Fitnes zalı",
+          "Səhər yeməyi"
+        ]
+      },
+      "transport": {
+        "type": "Mikroavtobus",
+        "model": "Mercedes-Benz Sprinter Tourist",
+        "features": [
+          "Wifi",
+          "Kondisioner",
+          "USB Şarj ports",
+          "Geniş Oturacaqlar",
+          "Su və Qəlyanaltı xidməti"
+        ],
+        "model3D": "mercedes_sprinter"
+      },
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.717Z"
+    },
+    {
+      "id": "tour_2",
+      "name": "Duzdağ Sağlamlıq və Təbiət Eko-Turu",
+      "category": "Eko-Turizm",
+      "duration": 2,
+      "price": 180,
+      "shortDescription": "Təbii duz mağaralarında unikal nəfəs müalicəsi və Batabat gölünün füsunkar alp təmiz havasının möhtəşəm vəhdəti.",
+      "mainImage": "https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?q=80&w=1200&auto=format&fit=crop",
+      "gallery": [
+        "https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=600&auto=format&fit=crop"
+      ],
+      "stops": [
+        {
+          "placeName": "Duzdağ Şor Şaxtaları",
+          "duration": "Day 1 - 4 saat müalicəvi seans",
+          "description": "Ağciyərlərin təmizlənməsi üçün duz mağarasının 300 metr dərinliyindəki salonlarda istirahət pansionatı.",
+          "image": "https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?q=80&w=400"
+        },
+        {
+          "placeName": "Batabat Gölü və Üzən Adalar",
+          "duration": "Day 2 - Gündüz pikniki və tracking",
+          "description": "Üzən adanı su üzərində izləyərək mineral su mənbələrindən buz kimi saf bulaq suları içirik.",
+          "image": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=400"
+        }
+      ],
+      "meals": {
+        "breakfast": {
+          "restaurantName": "Yaylaq Səhər Guşəsi",
+          "items": [
+            "Qatıq",
+            "Bal",
+            "Kərə yağı",
+            "Biz kənd pendiri",
+            "Təndirdə isti kətə"
+          ]
+        },
+        "lunch": {
+          "restaurantName": "Batabat Kənar Alagöz Restoranı",
+          "items": [
+            "Göl balığı kababı",
+            "Səbzi qovurma plov",
+            "Ağbulaq kəklikotu çayı"
+          ]
+        },
+        "dinner": {
+          "restaurantName": "Şəfa Salt Restoranı",
+          "items": [
+            "Yarpaq dolması",
+            "Badımcan və pomidor dolması",
+            "Duzdağ dietik salat"
+          ]
+        }
+      },
+      "accommodation": {
+        "hotelName": "Duzdağ Sanatoriya Kompleksi",
+        "roomType": "Therapy Standard Room",
+        "amenities": [
+          "Pulsuz astma otağı seansı",
+          "Qapalı hovuz",
+          "Mineral bulaq vannaları"
+        ]
+      },
+      "transport": {
+        "type": "Miniven Comfort",
+        "model": "Toyota Alphard Executive",
+        "features": [
+          "Baqaj yerləri",
+          "Kondisioner",
+          "USB Şüşə portları",
+          "Yatalaq oturacaqlar",
+          "Mineral duzlu sular"
+        ],
+        "model3D": "toyota_alphard"
+      },
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.717Z"
+    }
+  ],
+  "reservations": [
+    {
+      "id": "res_1",
+      "userId": "usr_demo",
+      "type": "tour",
+      "refId": "tour_1",
+      "fullName": "Elnur Məmmədov",
+      "email": "turist@tourism.naxcivan",
+      "phone": "+994 50 123 45 67",
+      "checkIn": "2026-05-30T21:04:59.717Z",
+      "checkOut": "2026-06-02T21:04:59.717Z",
+      "guests": 2,
+      "notes": "Bələdçinin ingilis dilli olması arzuolunandır.",
+      "status": "pending",
+      "totalPrice": 500,
+      "createdAt": "2026-05-30T21:04:59.717Z"
+    },
+    {
+      "id": "res_2",
+      "userId": "usr_demo",
+      "type": "hotel",
+      "refId": "htl_2",
+      "fullName": "Elnur Məmmədov",
+      "email": "turist@tourism.naxcivan",
+      "phone": "+994 50 123 45 67",
+      "checkIn": "2026-06-09T21:04:59.717Z",
+      "checkOut": "2026-06-11T21:04:59.717Z",
+      "guests": 2,
+      "notes": "Sakit, həyət mənzərəli premium otaq olsun.",
+      "status": "confirmed",
+      "totalPrice": 320,
+      "createdAt": "2026-05-30T21:04:59.717Z"
+    }
+  ],
+  "comments": [
+    {
+      "id": "comm_1",
+      "placeId": "plc_1",
+      "userName": "Arif Məmmədov",
+      "rating": 5,
+      "text": "Möminə Xatun türbəsi həqiqətən də memarlıq möcüzəsidir. Kərpic ornamentləri heyranedicidir.",
+      "createdAt": "2026-05-30T21:04:59.717Z"
+    },
+    {
+      "id": "comm_2",
+      "placeId": "plc_2",
+      "userName": "Günel Hüseynova",
+      "rating": 5,
+      "text": "Əlincə Qalasına qalxmaq çətin olsa da, yuxarıdan görünən mənzərə mütləq dəyər!",
+      "createdAt": "2026-05-30T21:04:59.717Z"
+    }
+  ],
+  "restaurants": [
+    {
+      "id": "rest_1",
+      "name": "Naxçıvan Xan Süfrəsi",
+      "description": "Tarixi Xan Sarayının yaxınlığında yerləşən, tamamilə milli üslubda dizayn edilmiş premium restoran. Naxçıvanın ən ləziz qutabları, dolmaları və kababları burada təqdim olunur.",
+      "address": "Heydər Əliyev Prospekti 12, Naxçıvan",
+      "phone": "+994 36 545 12 12",
+      "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=600",
+      "hours": "11:00 - 23:00",
+      "cuisine": "Milli Naxçıvan Mətbəxi",
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.717Z"
+    },
+    {
+      "id": "rest_2",
+      "name": "Batabat Göl Restoranı",
+      "description": "Batabat yaylağının mərkəzində, üzən adanın mənzərəsinə qarşı möhtəşəm bir təbiət restoranı. Təmiz dağ havası və təbii kənd məhsulları ilə hazırlanan yeməklər.",
+      "address": "Batabat Yaylağı, Şahbuz",
+      "phone": "+994 70 300 40 50",
+      "image": "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&q=80&w=600",
+      "hours": "09:00 - 21:00",
+      "cuisine": "Kabablar və Dağ Yeməkləri",
+      "isActive": true,
+      "createdAt": "2026-05-30T21:04:59.717Z"
+    }
+  ],
+  "blogs": [
+    {
+      "id": "blog_1",
+      "title": "Əshabi-Kəhf Mağarasının Sirləri",
+      "content": "Əshabi-Kəhf haqqında Qurani-Kərimdə \"Əl-Kəhf\" surəsində bəhs edilir. Naxçıvandakı bu müqəddəs və mistik məkan əsrlərdir ziyarət edilir. İnanclara görə, mağaradakı daşlardan damlayan su şəfavericidir.",
+      "image": "https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?auto=format&fit=crop&q=80&w=600",
+      "category": "Tarix və İnanc",
+      "createdAt": "2026-05-30T21:04:59.717Z",
+      "isActive": true,
+      "author": "Elnur Sadıqlı"
+    },
+    {
+      "id": "blog_2",
+      "title": "Naxçıvan Kulinariyası: Qabaq Aşı və Alana",
+      "content": "Naxçıvanın özünəməxsus kulinariya mədəniyyəti var. Alana daxili doldurulmuş qurudulmuş şaftalıdır və dadı misilsizdir. Qabaq aşı, fərqli düyü və balqabaq qarışımı ilə fərqli bir damaq dadı təqdim edir.",
+      "image": "https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&q=80&w=600",
+      "category": "Kulinariya",
+      "createdAt": "2026-05-30T21:04:59.717Z",
+      "isActive": true,
+      "author": "Günel Rzayeva"
+    }
+  ],
+  "settings": {
+    "heroSliders": [
+      {
+        "title": "Naxçıvanın Möhtəşəm Tarixi Dünyasını Kəşf Edin",
+        "subtitle": "Əsrlərin izi, sirli Əlincəqala və şəfa mənbəyi Duzdağ sizi gözləyir.",
+        "image": "https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?auto=format&fit=crop&q=80&w=1224"
+      },
+      {
+        "title": "Lüks Otellər və Komfortlu Səyahət Paketi",
+        "subtitle": "Naxçıvanda yerləşən 5 ulduzlu otellərdə unudulmaz gecələr keçirin.",
+        "image": "https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&q=80&w=1224"
+      }
+    ],
+    "testimonials": [
+      {
+        "name": "Aysel Abdullayeva",
+        "text": "Naxçıvan turları çox yüksək səviyyədə təşkil olunmuşdu. Xüsusilə Əlincəqalada gün batımı mənzərəsini heç vaxt unutmayacağam!",
+        "role": "Turist",
+        "rating": 5
+      },
+      {
+        "name": "Murad Qasımov",
+        "text": "Biz Batabat turuna qatıldıq, hər şey mükəmməl idi. Bələdçimiz hər tarixlə bağlı ətraflı məlumat verdi. Çox razı qaldıq.",
+        "role": "Səyahətçi",
+        "rating": 5
+      }
+    ],
+    "videos": [
+      {
+        "title": "Naxçıvanın Tanıtım Video Çarxı",
+        "url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        "description": "Böyük Naxçıvanın kəşf olunmamış gözəllikləri rəsmi video görüntüsü."
+      }
+    ],
+    "photoGalleries": [
+      "https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=800",
+      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=800",
+      "https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?q=80&w=800"
+    ],
+    "contactInfo": {
+      "phone": "+994 70 353 82 83",
+      "email": "info@naxcivan.travel",
+      "address": "Azərbaycan, Naxçıvan Muxtar Respublikası, Naxçıvan şəhəri"
+    },
+    "socialMediaLinks": {
+      "facebook": "https://facebook.com",
+      "instagram": "https://instagram.com",
+      "telegram": "https://telegram.org"
+    },
+    "seoSettings": {
+      "title": "Naxçıvan Turizm Portalı - Nakhchivan Travel",
+      "description": "Naxçıvanın tarixi, otelləri, turları, restoranları və kulinariyası haqqında rəsmi bələdçi.",
+      "keywords": "Naxçıvan, turizm, səyahət, Əlincəqala, Möminə Xatun, Batabat"
+    },
+    "headerFooter": {
+      "headerTitle": "NAXÇIVAN",
+      "footerText": "© 2026 Naxçıvan Turizm Platforması. Bütün hüquqlar qorunur."
+    },
+    "promoBanners": [
+      {
+        "title": "Yay Turlarına Xüsusi 20% Endirim!",
+        "text": "Bütün tarixi yerlər və Batabat turunda endirimlərdən indi yararlanın.",
+        "isActive": true,
+        "image": "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=800"
+      }
+    ],
+    "themeSettings": {
+      "primaryColor": "#F59E0B",
+      "darkScheme": true
+    },
+    "logoSettings": {
+      "logoLightUrl": "https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=150",
+      "logoDarkUrl": "https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=150",
+      "faviconUrl": "/favicon.ico",
+      "logoWidth": 150,
+      "logoHeight": 40,
+      "logoPositionX": 0,
+      "logoPositionY": 0
+    }
+  },
+  "companies": [
+    {
+      "id": "comp_1",
+      "name": "Naxçıvan Cahan Səyahət",
+      "logo": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=150",
+      "description": "Naxçıvan Muxtar Respublikasının aparıcı turizm agentliyi. 20 ildən artıq təcrübə ilə Batabat, Əlincəqala və Əshabi-Kəhf turlarının peşəkar təşkili.",
+      "phone": "+994 36 544 11 22",
+      "email": "cahan@naxcivan.travel",
+      "address": "Naxçıvan şəhəri, Heydər Əliyev prospekti 15",
+      "website": "https://cahan.naxcivan.travel",
+      "socialMedia": {
+        "facebook": "https://facebook.com/cahantravel",
+        "instagram": "https://instagram.com/cahantravel",
+        "telegram": "https://t.me/cahantravel"
+      },
+      "isActive": true,
+      "createdAt": "2026-04-10T00:00:00.000Z"
+    },
+    {
+      "id": "comp_2",
+      "name": "Baku Travel & Tours (Naxçıvan Filialı)",
+      "logo": "https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=150",
+      "description": "Azərbaycan üzrə geniş şəbəkəyə malik premium səyahət şirkəti. Naxçıvan filialımız qonaqlara ən yüksək səviyyədə nəqliyyat, bələdçi və otel rezervasiya xidmətləri göstərir.",
+      "phone": "+994 12 400 90 90",
+      "email": "baku@naxcivan.travel",
+      "address": "Bakı şəhəri, Nizami küçəsi 44 / Naxçıvan şəhər ofisi",
+      "website": "https://bakutravel.az",
+      "socialMedia": {
+        "facebook": "https://facebook.com/bakutravel",
+        "instagram": "https://instagram.com/bakutravel"
+      },
+      "isActive": true,
+      "createdAt": "2026-05-01T00:00:00.000Z"
+    }
+  ],
+  "media": [
+    {
+      "id": "med_gkoaav2c3",
+      "name": "Naxçıvanın Tarixi Şah Əsərləri",
+      "url": "https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1200&auto=format&fit=crop",
+      "category": "tour",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_fk3c215qu",
+      "name": "Naxçıvanın Tarixi Şah Əsərləri Qalereya",
+      "url": "https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=600&auto=format&fit=crop",
+      "category": "tour",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_8etua1spk",
+      "name": "Naxçıvanın Tarixi Şah Əsərləri Qalereya",
+      "url": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600&auto=format&fit=crop",
+      "category": "tour",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_s0vite1wh",
+      "name": "Naxçıvanın Tarixi Şah Əsərləri Qalereya",
+      "url": "https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=600&auto=format&fit=crop",
+      "category": "tour",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_d03urre0n",
+      "name": "Duzdağ Sağlamlıq və Təbiət Eko-Turu",
+      "url": "https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?q=80&w=1200&auto=format&fit=crop",
+      "category": "tour",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_tnyepvsdl",
+      "name": "Duzdağ Sağlamlıq və Təbiət Eko-Turu Qalereya",
+      "url": "https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?q=80&w=600&auto=format&fit=crop",
+      "category": "tour",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_5zoveqzp3",
+      "name": "Duzdağ Sağlamlıq və Təbiət Eko-Turu Qalereya",
+      "url": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=600&auto=format&fit=crop",
+      "category": "tour",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_0mx0p2fcc",
+      "name": "Saat Meydanı Qonaq Evi",
+      "url": "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1200&auto=format&fit=crop",
+      "category": "hotel",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_74zrodv3v",
+      "name": "Saat Meydanı Qonaq Evi",
+      "url": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=600&auto=format&fit=crop",
+      "category": "hotel",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_9g6gji1p3",
+      "name": "Saat Meydanı Qonaq Evi",
+      "url": "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?q=80&w=600&auto=format&fit=crop",
+      "category": "hotel",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_an2jsh99a",
+      "name": "Təbriz Premium Hotel",
+      "url": "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1200&auto=format&fit=crop",
+      "category": "hotel",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_6qq1fckoa",
+      "name": "Təbriz Premium Hotel",
+      "url": "https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=600&auto=format&fit=crop",
+      "category": "hotel",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_k4l2bwhpf",
+      "name": "Təbriz Premium Hotel",
+      "url": "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=600&auto=format&fit=crop",
+      "category": "hotel",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_9pczg7670",
+      "name": "Duzdağ Sanatoriya Kompleksi",
+      "url": "https://images.unsplash.com/photo-1517840901100-8179e982acb7?q=80&w=1200&auto=format&fit=crop",
+      "category": "hotel",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_yxacnhf3g",
+      "name": "Duzdağ Sanatoriya Kompleksi",
+      "url": "https://images.unsplash.com/photo-1455587734955-081b22074882?q=80&w=600&auto=format&fit=crop",
+      "category": "hotel",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_gxsyblmqr",
+      "name": "Ağbulaq Dağ İstirahət Mərkəzi",
+      "url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1200&auto=format&fit=crop",
+      "category": "hotel",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_6tn2ebw5t",
+      "name": "Ağbulaq Dağ İstirahət Mərkəzi",
+      "url": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600&auto=format&fit=crop",
+      "category": "hotel",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_ht2o49w7e",
+      "name": "Möminə Xatun Türbəsi",
+      "url": "https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1200&auto=format&fit=crop",
+      "category": "place",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_4f5q3zmgc",
+      "name": "Möminə Xatun Türbəsi",
+      "url": "https://images.unsplash.com/photo-1608958416719-f81d19dcaece?q=80&w=600&auto=format&fit=crop",
+      "category": "place",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_2oudukvxx",
+      "name": "Əlincəqala",
+      "url": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1200&auto=format&fit=crop",
+      "category": "place",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_9coaseia0",
+      "name": "Əlincəqala",
+      "url": "https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=600&auto=format&fit=crop",
+      "category": "place",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_8xmaem0yd",
+      "name": "Duzdağ Fizioterapiya Mərkəzi",
+      "url": "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=600&auto=format&fit=crop",
+      "category": "place",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_ao2en6zkn",
+      "name": "Xan Sarayı",
+      "url": "https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=1200&auto=format&fit=crop",
+      "category": "place",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_utcsww7du",
+      "name": "Xan Sarayı",
+      "url": "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=600&auto=format&fit=crop",
+      "category": "place",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_htltn1me3",
+      "name": "Nuh Peyğəmbər Məqbərəsi",
+      "url": "https://images.unsplash.com/photo-1590073844006-33379778ae09?q=80&w=1200&auto=format&fit=crop",
+      "category": "place",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_ibssogfev",
+      "name": "Nuh Peyğəmbər Məqbərəsi",
+      "url": "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=600&auto=format&fit=crop",
+      "category": "place",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_kd76f84rj",
+      "name": "Batabat Gölü",
+      "url": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1200&auto=format&fit=crop",
+      "category": "place",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_p3xj0z73u",
+      "name": "Batabat Gölü",
+      "url": "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=600&auto=format&fit=crop",
+      "category": "place",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_6ix1712us",
+      "name": "Aşağı Əylis Kilsəsi",
+      "url": "https://images.unsplash.com/photo-1548625361-155deee2627e?q=80&w=1200&auto=format&fit=crop",
+      "category": "place",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_eglss23wn",
+      "name": "Aşağı Əylis Kilsəsi",
+      "url": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600&auto=format&fit=crop",
+      "category": "place",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_ym9j1s1ot",
+      "name": "Naxçıvan Tarix Muzeyi",
+      "url": "https://images.unsplash.com/photo-1566121318576-537f8d164530?q=80&w=1200&auto=format&fit=crop",
+      "category": "place",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_6hv4lfzhf",
+      "name": "Naxçıvan Tarix Muzeyi",
+      "url": "https://images.unsplash.com/photo-1447069387593-a5de0862481e?q=80&w=600&auto=format&fit=crop",
+      "category": "place",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_bm2q7z1tj",
+      "name": "Naxçıvan Xan Süfrəsi",
+      "url": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=600",
+      "category": "restaurant",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_qk0gs4z45",
+      "name": "Batabat Göl Restoranı",
+      "url": "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&q=80&w=600",
+      "category": "restaurant",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.740Z"
+    },
+    {
+      "id": "med_2it3jbopw",
+      "name": "Əshabi-Kəhf Mağarasının Sirləri",
+      "url": "https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?auto=format&fit=crop&q=80&w=600",
+      "category": "blog",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.741Z"
+    },
+    {
+      "id": "med_hvq2437vl",
+      "name": "Naxçıvan Kulinariyası: Qabaq Aşı və Alana",
+      "url": "https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&q=80&w=600",
+      "category": "blog",
+      "fileSize": "124 KB",
+      "createdAt": "2026-05-30T21:06:56.741Z"
+    }
+  ]
+}
