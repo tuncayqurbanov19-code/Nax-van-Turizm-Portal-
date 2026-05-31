@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Lock, LogIn, ShieldAlert, AlertCircle } from 'lucide-react';
+import { Mail, Lock, LogIn, ShieldAlert, CircleAlert as AlertCircle } from 'lucide-react';
 import { useToast } from '../components/ui/Toast';
 import { api } from '../services/api';
 

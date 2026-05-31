@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, Calendar, Compass, Building, Landmark, MessageSquare, Users, Edit3, Trash2, Plus, Check, X, ShieldAlert, Award, TrendingUp, Utensils, BookOpen, Settings, Image, Video, Heart, Globe, FileText, Copy, ExternalLink, Search, Sliders, RotateCw, ZoomIn, Upload, QrCode, Printer } from 'lucide-react';
+import { ShieldCheck, Calendar, Compass, Building, Landmark, MessageSquare, Users, CreditCard as Edit3, Trash2, Plus, Check, X, ShieldAlert, Award, TrendingUp, Utensils, BookOpen, Settings, Image, Video, Heart, Globe, FileText, Copy, ExternalLink, Search, FileSliders as Sliders, RotateCw, ZoomIn, Upload, QrCode, Printer } from 'lucide-react';
 import { api } from '../services/api';
 import QRCode from 'qrcode';
 import { useAuth } from '../context/AuthContext';
