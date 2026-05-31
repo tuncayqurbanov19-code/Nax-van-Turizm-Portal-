@@ -50,6 +50,188 @@ function notifyAdminOfNewReservation(reservation: any) {
   }
 }
 
+async function sendWhatsAppNotification(reservationId: string): Promise<any> {
+  const reservation = db.reservations.findById(reservationId);
+  if (!reservation) {
+    throw new Error('Rezervasiya tapılmaddı.');
+  }
+
+  const settings = db.settings.get();
+  const waSettings = settings.whatsappSettings || {
+    phoneId: "1234567890",
+    accessToken: "META_ACCESS_TOKEN",
+    verifyToken: "naxcivan_verify_token_2026",
+    messageTemplate: "",
+    isRealMode: false
+  };
+
+  let tourName = '';
+  if (reservation.type === 'tour') {
+    const tour = db.tours.findById(reservation.refId);
+    tourName = tour ? tour.name : 'Naxçıvan Turu';
+  } else {
+    const hotel = db.hotels.findById(reservation.refId);
+    tourName = hotel ? hotel.name : 'Otel Rezervasiya';
+  }
+
+  // Format Check-In Date (e.g., 2026-06-15 -> 15.06.2026)
+  let tourDateStr = '';
+  try {
+    const d = new Date(reservation.checkIn);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      tourDateStr = `${day}.${month}.${year}`;
+    } else {
+      tourDateStr = reservation.checkIn;
+    }
+  } catch (e) {
+    tourDateStr = reservation.checkIn;
+  }
+
+  const tourTimeStr = '08:00'; // Default start time
+
+  let messageBody = waSettings.messageTemplate || `Hörmətli {Müştəri Adı},\n\nSifarişiniz uğurla qəbul edildi.\n\nTurunuz {Tur Tarixi} tarixində, saat {Tur Başlama Saatı}-da başlayacaq.\n\nSizə xoş və unudulmaz səyahət arzulayırıq. Bizi seçdiyiniz üçün təşəkkür edirik.`;
+
+  // Dynamically replace placeholders
+  messageBody = messageBody
+    .replace(/{Müştəri Adı}/g, reservation.fullName)
+    .replace(/{Customer Name}/g, reservation.fullName)
+    .replace(/{Tur Adı}/g, tourName)
+    .replace(/{Tur Tarixi}/g, tourDateStr)
+    .replace(/{Tur Başlama Saatı}/g, tourTimeStr)
+    .replace(/{Rezervasiya Nömrəsi}/g, reservation.id);
+
+  const cleanPhone = reservation.phone.replace(/\D/g, '');
+
+  if (waSettings.isRealMode && waSettings.phoneId && waSettings.accessToken && waSettings.accessToken !== 'META_ACCESS_TOKEN') {
+    // Send via Meta Web API
+    try {
+      const url = `https://graph.facebook.com/v19.0/${waSettings.phoneId}/messages`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${waSettings.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: cleanPhone,
+          type: 'text',
+          text: {
+            preview_url: false,
+            body: messageBody
+          }
+        })
+      });
+
+      const data: any = await response.json();
+
+      if (response.ok && data.messages && data.messages[0]) {
+        const messageId = data.messages[0].id;
+        const newLog = {
+          timestamp: new Date().toISOString(),
+          message: messageBody,
+          status: 'sent' as const,
+          messageId
+        };
+        const currentLogs = reservation.whatsappLogs || [];
+        db.reservations.findByIdAndUpdate(reservationId, {
+          whatsappStatus: 'sent',
+          whatsappLogs: [...currentLogs, newLog]
+        });
+        return { success: true, status: 'sent', messageId };
+      } else {
+        const errMsg = data.error?.message || JSON.stringify(data);
+        const newLog = {
+          timestamp: new Date().toISOString(),
+          message: messageBody,
+          status: 'failed' as const,
+          error: errMsg
+        };
+        const currentLogs = reservation.whatsappLogs || [];
+        db.reservations.findByIdAndUpdate(reservationId, {
+          whatsappStatus: 'failed',
+          whatsappLogs: [...currentLogs, newLog]
+        });
+        return { success: false, status: 'failed', error: errMsg };
+      }
+    } catch (err: any) {
+      const newLog = {
+        timestamp: new Date().toISOString(),
+        message: messageBody,
+        status: 'failed' as const,
+        error: err.message
+      };
+      const currentLogs = reservation.whatsappLogs || [];
+      db.reservations.findByIdAndUpdate(reservationId, {
+        whatsappStatus: 'failed',
+        whatsappLogs: [...currentLogs, newLog]
+      });
+      return { success: false, status: 'failed', error: err.message };
+    }
+  } else {
+    // Simulated Mode:
+    const mockMessageId = `wamid.HBgLOTk4NTUwMzM1Mzc1NjkxNjMWFjI4NUQwOUQ3MjcyRThDNEExQwA${Math.random().toString(36).substring(2, 8)}`;
+    const newLog = {
+      timestamp: new Date().toISOString(),
+      message: messageBody,
+      status: 'sent' as const,
+      messageId: mockMessageId
+    };
+    const currentLogs = reservation.whatsappLogs || [];
+    db.reservations.findByIdAndUpdate(reservationId, {
+      whatsappStatus: 'sent',
+      whatsappLogs: [...currentLogs, newLog]
+    });
+
+    // Simulate "delivered" (to show status change flow)
+    setTimeout(() => {
+      try {
+        const resObj = db.reservations.findById(reservationId);
+        if (resObj && resObj.whatsappLogs) {
+          const updatedLogs = resObj.whatsappLogs.map((l: any) => {
+            if (l.messageId === mockMessageId) {
+              return { ...l, status: 'delivered' as const };
+            }
+            return l;
+          });
+          db.reservations.findByIdAndUpdate(reservationId, {
+            whatsappLogs: updatedLogs
+          });
+        }
+      } catch (e) {
+        // ignore
+      }
+    }, 1500);
+
+    // Simulate "read" (Oxundu) after 3.5 seconds
+    setTimeout(() => {
+      try {
+        const resObj = db.reservations.findById(reservationId);
+        if (resObj && resObj.whatsappLogs) {
+          const updatedLogs = resObj.whatsappLogs.map((l: any) => {
+            if (l.messageId === mockMessageId) {
+              return { ...l, status: 'read' as const };
+            }
+            return l;
+          });
+          db.reservations.findByIdAndUpdate(reservationId, {
+            whatsappStatus: 'read',
+            whatsappLogs: updatedLogs
+          });
+        }
+      } catch (e) {
+        // ignore
+      }
+    }, 3500);
+
+    return { success: true, status: 'sent', messageId: mockMessageId, simulated: true };
+  }
+}
+
 app.use(express.json({ limit: '10mb' }));
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
@@ -148,8 +330,12 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
   });
 });
 
+const temp2faCodes = new Map<string, { code: string; expires: number }>();
+
 app.post('/api/auth/login', (req: Request, res: Response) => {
-  const { email, password, adminCode } = req.body;
+  const { email, password } = req.body;
+  const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+  const device = req.headers['user-agent'] || 'Bilinməyən Cihaz';
 
   if (!email || !password) {
     res.status(400).json({ message: 'Bu xanalar boş qala bilməz.' });
@@ -157,7 +343,20 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
   }
 
   const user = db.users.findOne({ email });
+
+  // If email matches any administrator email but login fails
+  const isAdminEmail = email.toLowerCase() === 'tuncayqurbanov19@gmail.com' || (user && user.role === 'admin');
+
   if (!user) {
+    if (isAdminEmail) {
+      db.adminLogins.create({
+        email,
+        ip,
+        device,
+        status: 'FAIL_EMAIL',
+        isSuspicious: true
+      });
+    }
     res.status(400).json({ message: 'Daxil edilən email və ya şifrə yanlışdır.' });
     return;
   }
@@ -168,8 +367,56 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
   }
 
   if (user.passwordHash !== hashPassword(password)) {
+    if (isAdminEmail) {
+      db.adminLogins.create({
+        email,
+        ip,
+        device,
+        status: 'FAIL_PASSWORD',
+        isSuspicious: true
+      });
+    }
     res.status(400).json({ message: 'Daxil edilən email və ya şifrə yanlışdır.' });
     return;
+  }
+
+  // Handle Admin distinct flows (with potential 2FA verify option)
+  if (user.role === 'admin') {
+    const settings = db.settings.get();
+    const is2FAEnabled = !!settings.twoFactorEnabled;
+
+    if (is2FAEnabled) {
+      const tempOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      temp2faCodes.set(email, {
+        code: tempOtp,
+        expires: Date.now() + 5 * 60000 // valid for 5 minutes
+      });
+
+      // Log attempt
+      db.adminLogins.create({
+        email,
+        ip,
+        device,
+        status: 'ATTEMPT',
+        isSuspicious: false
+      });
+
+      res.json({
+        require2FA: true,
+        twoFactorOtp: tempOtp, // Send down for simulation view
+        email
+      });
+      return;
+    }
+
+    // Standard Success for Admin if 2FA disabled
+    db.adminLogins.create({
+      email,
+      ip,
+      device,
+      status: 'SUCCESS',
+      isSuspicious: false
+    });
   }
 
   const token = signToken({ id: user.id, email: user.email, role: user.role });
@@ -183,6 +430,69 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
       role: user.role
     }
   });
+});
+
+app.post('/api/auth/verify-2fa', (req: Request, res: Response) => {
+  const { email, code } = req.body;
+  const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+  const device = req.headers['user-agent'] || 'Bilinməyən Cihaz';
+
+  if (!email || !code) {
+    res.status(400).json({ message: 'E-mail və iki mərhələli kod daxil edilməlidir.' });
+    return;
+  }
+
+  const record = temp2faCodes.get(email);
+  if (!record || record.code !== code || record.expires < Date.now()) {
+    db.adminLogins.create({
+      email,
+      ip,
+      device,
+      status: 'FAIL_2FA',
+      isSuspicious: true
+    });
+    res.status(400).json({ message: 'Daxil edilən 2FA kodu yanlışdır və ya vaxtı keçib.' });
+    return;
+  }
+
+  // Code validated! Clear OTP
+  temp2faCodes.delete(email);
+
+  const user = db.users.findOne({ email });
+  if (!user) {
+    res.status(400).json({ message: 'İstifadəçi tapılmadı.' });
+    return;
+  }
+
+  // Record successful login
+  db.adminLogins.create({
+    email,
+    ip,
+    device,
+    status: 'SUCCESS',
+    isSuspicious: false
+  });
+
+  const token = signToken({ id: user.id, email: user.email, role: user.role });
+
+  res.json({
+    token,
+    user: {
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role
+    }
+  });
+});
+
+app.get('/api/admin/logins', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+  res.json(db.adminLogins.find());
+});
+
+app.post('/api/admin/logins/clear', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+  db.adminLogins.clear();
+  res.json({ success: true, message: 'İnzibatçı giriş tarixçəsi rəsmən təmizləndi.' });
 });
 
 // Get currently logged-in user session
@@ -436,7 +746,7 @@ app.post('/api/reservations', authenticateToken, (req: Request, res: Response) =
   }
 });
 
-app.put('/api/reservations/:id/status', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+app.put('/api/reservations/:id/status', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   const { status } = req.body; // pending, confirmed, cancelled
   if (!status) {
     res.status(400).json({ message: 'Status daxil edilməlidir.' });
@@ -449,7 +759,104 @@ app.put('/api/reservations/:id/status', authenticateToken, requireAdmin, (req: R
     return;
   }
 
-  res.json(updated);
+  // Automatic WhatsApp notification if order is confirmed
+  if (status === 'confirmed') {
+    try {
+      await sendWhatsAppNotification(req.params.id);
+    } catch (e: any) {
+      console.error('Auto WhatsApp notification failed:', e);
+    }
+  }
+
+  // Reload reservation with updated logs/status
+  const finalReservation = db.reservations.findById(req.params.id);
+  res.json(finalReservation || updated);
+});
+
+// Manual resend / trigger WhatsApp
+app.post('/api/reservations/:id/whatsapp', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const result = await sendWhatsAppNotification(req.params.id);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ message: err.message || 'Göndərmə xətası baş verdi.' });
+  }
+});
+
+// GET: webhook verification
+app.get('/api/whatsapp/webhook', (req: Request, res: Response) => {
+  const settings = db.settings.get();
+  const verifyToken = settings.whatsappSettings?.verifyToken || 'naxcivan_verify_token_2026';
+  
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+
+  if (mode === 'subscribe' && token === verifyToken) {
+    console.log('WhatsApp Webhook verified successfully.');
+    res.status(200).send(challenge);
+  } else {
+    res.status(403).json({ message: 'Lisenziya xətası: Doğrulama tokeni qeyri-kafi və ya düzgün deyil.' });
+  }
+});
+
+// POST: webhook status reports
+app.post('/api/whatsapp/webhook', (req: Request, res: Response) => {
+  const body = req.body;
+
+  if (body.object === 'whatsapp_business_account') {
+    try {
+      const entries = body.entry;
+      for (const entry of entries) {
+        for (const change of entry.changes) {
+          const value = change.value;
+          if (value && value.statuses) {
+            for (const statusObj of value.statuses) {
+              const messageId = statusObj.id;
+              const statusName = statusObj.status; // sent, delivered, read, failed
+
+              const reservations = db.reservations.find();
+              for (const resItem of reservations) {
+                if (resItem.whatsappLogs) {
+                  const hasMessage = resItem.whatsappLogs.some((l: any) => l.messageId === messageId);
+                  if (hasMessage) {
+                    const updatedLogs = resItem.whatsappLogs.map((l: any) => {
+                      if (l.messageId === messageId) {
+                        return { 
+                          ...l, 
+                          status: statusName === 'delivered' ? 'delivered' : (statusName === 'read' ? 'read' : (statusName === 'failed' ? 'failed' : l.status)),
+                          error: statusObj.errors ? JSON.stringify(statusObj.errors) : l.error
+                        };
+                      }
+                      return l;
+                    });
+
+                    let mappedStatus = resItem.whatsappStatus;
+                    if (statusName === 'read') mappedStatus = 'read';
+                    else if (statusName === 'failed') mappedStatus = 'failed';
+                    else if (statusName === 'sent' || statusName === 'delivered') mappedStatus = 'sent';
+
+                    db.reservations.findByIdAndUpdate(resItem.id, {
+                      whatsappStatus: mappedStatus,
+                      whatsappLogs: updatedLogs
+                    });
+                    
+                    console.log(`Updated WhatsApp status for Reservation ${resItem.id} to ${mappedStatus} via Webhook`);
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (e: any) {
+      console.error('Error handling WhatsApp status webhook:', e);
+    }
+    res.status(200).send('EVENT_RECEIVED');
+  } else {
+    res.sendStatus(404);
+  }
 });
 
 // -------------------------------------------------------------------------

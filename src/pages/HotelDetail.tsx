@@ -67,7 +67,11 @@ export default function HotelDetail({ hotelId, onNavigate }: HotelDetailProps) {
     if (diff > 0) {
       calculatedNights = Math.ceil(diff / (1000 * 60 * 60 * 24));
       if (hotel && hotel.rooms[selectedRoomIdx]) {
-        totalPrice = hotel.rooms[selectedRoomIdx].price * calculatedNights;
+        const activeRoom = hotel.rooms[selectedRoomIdx];
+        const roomPrice = (activeRoom.discountPrice && activeRoom.discountPrice < activeRoom.price)
+          ? activeRoom.discountPrice
+          : activeRoom.price;
+        totalPrice = roomPrice * calculatedNights;
       }
     }
   }
@@ -228,43 +232,128 @@ export default function HotelDetail({ hotelId, onNavigate }: HotelDetailProps) {
               Mehmanxana haqqında
             </h3>
             <p className="text-sm md:text-base text-slate-600 font-sans leading-relaxed text-balance">
-              Naxçıvanın qədim qonaqpərvərlik adətlərinə əsaslanaraq qurulmuş bu mehmanxana binası, lüks xidmətləri, komfort otaqları və peşəkar işçi heyəti ilə tətilinizi unudulmaz edəcək. Səyahətiniz müddətində otel daxilindəki lüks SPA prosedurları, hovuzlar və möhtəşəm panoromik terrası ilə dincələ bilərsiniz.
+              {hotel.description || hotel.shortDescription || "Naxçıvanın qədim qonaqpərvərlik adətlərinə əsaslanaraq qurulmuş bu mehmanxana binası, lüks xidmətləri, komfort otaqları və peşəkar işçi heyəti ilə tətilinizi unudulmaz edəcək. Səyahətiniz müddətində otel daxilindəki lüks SPA prosedurları, hovuzlar və möhtəşəm panoromik terrası ilə dincələ bilərsiniz."}
             </p>
+
+            {/* Check-In / Check-Out Hours & Contact board */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-100 font-sans text-xs">
+              <div className="bg-slate-50 p-4 rounded-xl">
+                <p className="text-slate-450 font-bold uppercase tracking-wider mb-2">🕕 Qəbul Saatları (Hours)</p>
+                <div className="flex flex-col gap-1.5 text-slate-600">
+                  <div className="flex justify-between"><span>Giriş (Check-In):</span><span className="font-bold">{hotel.checkInTime || "14:00"}</span></div>
+                  <div className="flex justify-between"><span>Çıxış (Check-Out):</span><span className="font-bold">{hotel.checkOutTime || "12:00"}</span></div>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-xl">
+                <p className="text-slate-450 font-bold uppercase tracking-wider mb-2">📞 Birbaşa Əlaqə Kanalları</p>
+                <div className="flex flex-col gap-1 text-slate-600">
+                  <p>Telefon: <span className="font-bold text-navy-deep">{hotel.phone}</span></p>
+                  <p>E-poçt: <span className="font-bold text-navy-deep">{hotel.email}</span></p>
+                  {hotel.whatsapp && <p>WhatsApp: <span className="font-bold text-emerald-650">{hotel.whatsapp}</span></p>}
+                  {hotel.website && (
+                    <p className="mt-1">
+                      <a href={hotel.website} target="_blank" rel="noopener noreferrer" className="text-gold-primary font-bold hover:underline">
+                        Rəsmi Veb-saytını Ziyarət et ↗
+                      </a>
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Otaq Növləri ve Qiymətləri list */}
           <div className="bg-white border border-slate-100 p-6 md:p-8 rounded-3xl shadow-md">
-            <h3 className="font-serif text-xl font-bold text-navy-deep border-b border-slate-100 pb-3 mb-6 select-none">
-              Otaq Növləri və Qiymətlər
+            <h3 className="font-serif text-xl font-bold text-navy-deep border-b border-slate-100 pb-3 mb-6 select-none flex items-center justify-between">
+              <span>Otaq Növləri və Qiymətlər</span>
+              <span className="text-xs font-sans text-slate-400 font-normal">({hotel.rooms.length} növ otaq mövcuddur)</span>
             </h3>
             
-            <div className="flex flex-col gap-4 font-sans">
-              {hotel.rooms.map((room, idx) => (
-                <div 
-                  key={idx} 
-                  onClick={() => setSelectedRoomIdx(idx)}
-                  className={`border p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer transition-all ${
-                    selectedRoomIdx === idx 
-                      ? 'border-gold-primary bg-gold-primary/5 shadow-inner' 
-                      : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${selectedRoomIdx === idx ? 'bg-gold-primary text-navy-deep' : 'bg-slate-100 text-slate-500'}`}>
-                      <BedDouble className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-base text-navy-deep">{room.type}</h4>
-                      <p className="text-xs text-slate-400 mt-1">Maksimum tutum: {room.capacity} qonaq</p>
-                    </div>
-                  </div>
+            <div className="flex flex-col gap-5 font-sans">
+              {hotel.rooms.map((room, idx) => {
+                const isActive = selectedRoomIdx === idx;
+                return (
+                  <div 
+                    key={idx} 
+                    onClick={() => setSelectedRoomIdx(idx)}
+                    className={`border p-5 rounded-2xl flex flex-col gap-4 cursor-pointer transition-all ${
+                      isActive 
+                        ? 'border-gold-primary bg-gold-primary/5 shadow-sm' 
+                        : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex flex-col md:flex-row gap-5 items-start">
+                      {room.image && (
+                        <div className="w-full md:w-40 aspect-[4/3] rounded-xl overflow-hidden bg-slate-200 shrink-0 border">
+                          <img src={room.image} className="w-full h-full object-cover" alt={room.type} referrerPolicy="no-referrer" />
+                        </div>
+                      )}
+                      
+                      <div className="flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <h4 className="font-bold text-lg text-navy-deep flex items-center gap-2">
+                            <span>{room.name || room.type}</span>
+                            {room.discountPrice && room.discountPrice < room.price && (
+                              <span className="bg-gold-primary text-navy-deep text-[9px] uppercase font-bold px-2 py-0.5 rounded-full">Kampaniya</span>
+                            )}
+                          </h4>
+                          
+                          <div className="flex items-baseline gap-1">
+                            {room.discountPrice && room.discountPrice < room.price ? (
+                              <>
+                                <span className="text-xs text-slate-400 line-through">₼ {room.price}</span>
+                                <span className="text-xl font-mono font-bold text-gold-primary">₼ {room.discountPrice}</span>
+                              </>
+                            ) : (
+                              <span className="text-xl font-mono font-bold text-gold-primary">₼ {room.price}</span>
+                            )}
+                            <span className="text-xs text-slate-400">/ Gecə</span>
+                          </div>
+                        </div>
 
-                  <div className="flex items-baseline gap-1 sm:text-right">
-                    <span className="text-xl font-mono font-bold text-gold-primary">₼ {room.price}</span>
-                    <span className="text-xs text-slate-400">/ Gecə</span>
+                        {room.description && (
+                          <p className="text-xs text-slate-500 mt-2 leading-relaxed">{room.description}</p>
+                        )}
+
+                        {/* Room characteristics (area, beds, guests count) */}
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-xs text-slate-500 font-medium">
+                          {room.area && <span className="bg-white/80 border px-2.5 py-1 rounded-lg">📐 Sahə: {room.area} m²</span>}
+                          {room.bedType && <span className="bg-white/80 border px-2.5 py-1 rounded-lg">🛏️ Çarpayı: {room.bedType}</span>}
+                          <span className="bg-white/80 border px-2.5 py-1 rounded-lg">👥 Tutum: Maks. {room.capacity} nəfər</span>
+                        </div>
+
+                        {/* Room Amenities checklist */}
+                        {room.amenities && room.amenities.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-3">
+                            {room.amenities.map((amen, aIdx) => (
+                              <span key={aIdx} className="bg-white border text-slate-600 text-[10px] px-2 py-0.5 rounded font-semibold shadow-sm">
+                                ✓ {amen}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* Seasonal Pricing details if listed */}
+                        {room.seasonalPrices && room.seasonalPrices.length > 0 && (
+                          <div className="mt-3 bg-white/40 border border-slate-100 p-2.5 rounded-xl text-left">
+                            <span className="text-[10px] font-sans font-bold text-slate-400 uppercase tracking-wide">Mövsümi Tarif Cədvəli</span>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1 ">
+                              {room.seasonalPrices.map((sz, sIdx) => (
+                                <div key={sIdx} className="bg-white/80 border p-1 rounded-lg text-center text-[10px]">
+                                  <span className="text-slate-400 font-medium font-sans block">{sz.season}</span>
+                                  <span className="font-mono font-bold text-navy-deep">₼ {sz.price}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -288,14 +377,57 @@ export default function HotelDetail({ hotelId, onNavigate }: HotelDetailProps) {
             <h3 className="font-serif text-xl font-bold text-navy-deep border-b border-slate-100 pb-3 mb-6">
               Restoran və Qidalanma
             </h3>
-            <div className="bg-slate-50 border border-slate-150 p-5 rounded-2xl">
-              <h4 className="font-bold text-base text-navy-deep">{hotel.restaurant.name}</h4>
-              <p className="text-xs text-slate-500 font-sans mt-1">Mətbəx: {hotel.restaurant.cuisine}</p>
-              <p className="text-xs text-slate-500 font-sans mt-1">İş saatları: {hotel.restaurant.hours}</p>
-              <p className="text-xs font-sans text-slate-400 mt-4 leading-relaxed">
-                Yüksək peşəkar aşpazlar tərəfindən idarə olunan restoranda həm unikal Ordubad şirniyyatlarından dada, həm də ləziz bifştekslərdən sifariş edə bilərsiniz. Səhər yeməyi bütün qonaqlar üçün ödənişsizdir.
-              </p>
-            </div>
+            
+            {/* If our custom meals structure exists, render structured table/board */}
+            {hotel.meals && (hotel.meals.breakfast || hotel.meals.lunch || hotel.meals.dinner) ? (
+              <div className="flex flex-col gap-4 font-sans text-xs">
+                <div className="bg-slate-50 border p-5 rounded-2xl mb-4">
+                  <h4 className="font-bold text-base text-navy-deep">{hotel.restaurant.name || "Məkan Restoranı"}</h4>
+                  <p className="text-xs text-slate-505 font-sans mt-1">Mətbəx: {hotel.restaurant.cuisine || "Milli və Avropa mətbəxi"} • İş saatları: {hotel.restaurant.hours || "07:00 - 23:00"}</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  {[
+                    { label: "Səhər yeməyi", data: hotel.meals.breakfast, icon: "☕", fallbackName: "Şirin Səhər yeməyi" },
+                    { label: "Nahar yeməyi", data: hotel.meals.lunch, icon: "🍲", fallbackName: "Milli Nahar süfrəsi" },
+                    { label: "Axşam yeməyi", data: hotel.meals.dinner, icon: "🍢", fallbackName: "Qala Axşam süfrəsi" }
+                  ].map((catering, idc) => {
+                    if (!catering.data) return null;
+                    return (
+                      <div key={idc} className="bg-white border rounded-2xl overflow-hidden flex flex-col justify-between shadow-sm">
+                        {catering.data.image && (
+                          <div className="h-32 bg-slate-100 relative">
+                            <img src={catering.data.image} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
+                          </div>
+                        )}
+                        <div className="p-4 flex-1 flex flex-col justify-between gap-3">
+                          <div>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{catering.icon} {catering.label}</span>
+                            <p className="font-bold text-navy-deep text-sm mt-1">{catering.data.menu || catering.fallbackName}</p>
+                          </div>
+                          
+                          <div className="flex justify-between items-center border-t border-dashed pt-2.5 text-[11px]">
+                            <span className="text-slate-400">Statusu:</span>
+                            <span className={`font-bold ${catering.data.isIncluded ? 'text-emerald-600' : 'text-amber-600'}`}>
+                              {catering.data.isIncluded ? "Qiymətə daxildir" : `Əlavə - ₼ ${catering.data.price}`}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-slate-50 border border-slate-150 p-5 rounded-2xl">
+                <h4 className="font-bold text-base text-navy-deep">{hotel.restaurant.name}</h4>
+                <p className="text-xs text-slate-505 font-sans mt-1">Mətbəx: {hotel.restaurant.cuisine}</p>
+                <p className="text-xs text-slate-505 font-sans mt-1">İş saatları: {hotel.restaurant.hours}</p>
+                <p className="text-xs font-sans text-slate-400 mt-4 leading-relaxed">
+                  Yüksək peşəkar aşpazlar tərəfindən idarə olunan restoranda həm unikal Ordubad şirniyyatlarından dada, həm də ləziz bifştekslərdən sifariş edə bilərsiniz. Səhər yeməyi bütün qonaqlar üçün ödənişsizdir.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* 4. Map Section: Realistic satellite/road map */}

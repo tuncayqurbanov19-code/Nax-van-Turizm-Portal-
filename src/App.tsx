@@ -73,7 +73,7 @@ function AppContent() {
     if (currentPath === '/places') return <Places onNavigate={handleNavigate} />;
     if (currentPath === '/login') return <Login onNavigate={handleNavigate} />;
     if (currentPath === '/register') return <Register onNavigate={handleNavigate} />;
-    if (currentPath === '/admin') return <Admin onNavigate={handleNavigate} />;
+    if (currentPath === (settings?.adminPath || '/admin')) return <Admin onNavigate={handleNavigate} />;
 
     // Subpath matches e.g. /tours/:id, etc.
     const tourDetailMatch = currentPath.match(/^\/tours\/([a-zA-Z0-9_\-]+)$/);

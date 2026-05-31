@@ -560,7 +560,7 @@
       "checkOut": "2026-06-02T21:04:59.717Z",
       "guests": 2,
       "notes": "Bələdçinin ingilis dilli olması arzuolunandır.",
-      "status": "pending",
+      "status": "confirmed",
       "totalPrice": 500,
       "createdAt": "2026-05-30T21:04:59.717Z"
     },
@@ -648,18 +648,7 @@
     }
   ],
   "settings": {
-    "heroSliders": [
-      {
-        "title": "Naxçıvanın Möhtəşəm Tarixi Dünyasını Kəşf Edin",
-        "subtitle": "Əsrlərin izi, sirli Əlincəqala və şəfa mənbəyi Duzdağ sizi gözləyir.",
-        "image": "https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?auto=format&fit=crop&q=80&w=1224"
-      },
-      {
-        "title": "Lüks Otellər və Komfortlu Səyahət Paketi",
-        "subtitle": "Naxçıvanda yerləşən 5 ulduzlu otellərdə unudulmaz gecələr keçirin.",
-        "image": "https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&q=80&w=1224"
-      }
-    ],
+    "heroSliders": [],
     "testimonials": [
       {
         "name": "Aysel Abdullayeva",
@@ -725,6 +714,13 @@
       "logoHeight": 40,
       "logoPositionX": 0,
       "logoPositionY": 0
+    },
+    "whatsappSettings": {
+      "phoneId": "1234567890",
+      "accessToken": "META_ACCESS_TOKEN",
+      "verifyToken": "naxcivan_verify_token_2026",
+      "messageTemplate": "Hörmətli {Müştəri Adı},\n\nSifarişiniz uğurla qəbul edildi.\n\nTurunuz {Tur Tarixi} tarixində, saat {Tur Başlama Saatı}-da başlayacaq.\n\nSizə xoş və unudulmaz səyahət arzulayırıq. Bizi seçdiyiniz üçün təşəkkür edirik.\n\nHər hansı sualınız yaranarsa, bizimlə əlaqə saxlaya bilərsiniz.\n\nƏlaqə:\n📧 tourist@tourism.naxcivan\n📞 +994 60 237 71 37",
+      "isRealMode": false
     }
   },
   "companies": [
@@ -1050,6 +1046,14 @@
       "category": "blog",
       "fileSize": "124 KB",
       "createdAt": "2026-05-30T21:06:56.741Z"
+    },
+    {
+      "name": "cities-baku-azerbaijan-flame-towers-wallpaper-preview.jpg",
+      "url": "/uploads/cities-baku-azerbaijan-flame-towers-wallpaper-preview_jpg_1780227533560.jpg",
+      "category": "other",
+      "fileSize": "97 KB",
+      "id": "med_mptpic55",
+      "createdAt": "2026-05-31T11:38:53.561Z"
     }
   ]
 }

@@ -14,6 +14,7 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   login: (email: string, password: string, adminCode?: string) => Promise<'admin' | 'user' | null>;
+  verify2FA: (email: string, code: string) => Promise<'admin' | 'user' | null>;
   register: (fullName: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAdmin: boolean;
@@ -62,6 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       const res = await api.auth.login({ email, password, adminCode });
       
+      if (res && res.require2FA) {
+        // Returned 2FA setup requirement
+        return 'admin'; // caller can inspect require2FA separately or we can propagate response
+      }
+
       if (res && res.token && res.user) {
         localStorage.setItem('token', res.token);
         setToken(res.token);
@@ -73,6 +79,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return null;
     } catch (err: any) {
       error(err.message || 'Məlumatlar yoxlanılarkən səhv yarandı.');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verify2FA = async (email: string, code: string): Promise<'admin' | 'user' | null> => {
+    try {
+      setLoading(true);
+      const res = await api.auth.verify2FA({ email, code });
+      
+      if (res && res.token && res.user) {
+        localStorage.setItem('token', res.token);
+        setToken(res.token);
+        setUser(res.user);
+        
+        success(`Xoş gəldiniz, ${res.user.fullName}!`, 'Giriş Müvəffəqiyyətlidir');
+        return res.user.role;
+      }
+      return null;
+    } catch (err: any) {
+      error(err.message || '2FA təsdiqlənməsi alınmadı.');
       return null;
     } finally {
       setLoading(false);
@@ -109,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, isAdmin }}>
+    <AuthContext.Provider value={{ user, token, loading, login, verify2FA, register, logout, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

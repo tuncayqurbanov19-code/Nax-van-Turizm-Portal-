@@ -35,12 +35,23 @@ export default function Footer({ onNavigate, settings }: FooterProps) {
         {/* Column 1: Brand & Historical Description */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2 select-none">
-            <svg className="w-6 h-6 fill-gold-primary" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.5 6c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5z" />
-            </svg>
-            <span className="text-xl font-serif tracking-widest font-bold text-gold-primary">
-              {settings?.headerFooter?.headerTitle || 'NAXÇIVAN'}
-            </span>
+            {settings?.logoSettings?.logoFooterUrl ? (
+              <img 
+                src={settings.logoSettings.logoFooterUrl} 
+                alt="Footer Logo" 
+                className="max-h-12 w-auto object-contain"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <>
+                <svg className="w-6 h-6 fill-gold-primary" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.5 6c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5z" />
+                </svg>
+                <span className="text-xl font-serif tracking-widest font-bold text-gold-primary">
+                  {settings?.headerFooter?.headerTitle || 'NAXÇIVAN'}
+                </span>
+              </>
+            )}
           </div>
           <p className="text-sm text-slate-400 font-sans leading-relaxed mt-2">
             Naxçıvan Muxtar Respublikasının rəsmi rəqəmsal turizm portalı. 
@@ -118,14 +129,7 @@ export default function Footer({ onNavigate, settings }: FooterProps) {
               <Phone className="w-4 h-4 text-gold-primary shrink-0" />
               <span>{phoneText}</span>
             </li>
-            <li className="flex items-center gap-3">
-              <a href="https://wa.me/9940703538283" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:text-emerald-400 transition-colors cursor-pointer">
-                <svg className="w-4 h-4 text-emerald-500 fill-current shrink-0" viewBox="0 0 24 24">
-                  <path d="M12.031 7.24c-.221-.01-.433.048-.614.167s-.3.303-.321.52c-.042.433.167.854.52 1.096l.163.1c.42.27.734.693.856 1.189a2.531 2.531 0 0 1-1.025 2.651 2.508 2.508 0 0 1-2.736.143l-.151-.091a1.983 1.983 0 0 0-1.896-.062l-1.424.712a.991.991 0 0 0-.441 1.258c.203.447.698.694 1.178.583a4.512 4.512 0 0 0 2.92-1.921c1.196-1.543 1.01-3.738-.415-5.069a1.002 1.002 0 0 0-.649-.247zm-5.753-1.63L7.7 4.192c.32-.619.083-1.385-.532-1.71a1.205 1.205 0 0 0-1.254.075L4.49 3.63a3.529 3.529 0 0 0-1.353 3.987l1.015 3.32a15.352 15.352 0 0 0 7.828 9.387c1.3.565 2.766.452 3.974-.316l2.128-1.344c.594-.375.768-1.164.39-1.76l-1.812-2.859a1.288 1.288 0 0 0-1.802-.382l-1.455.932a.49.49 0 0 1-.58-.027 10.422 10.422 0 0 1-4.73-4.757.48.48 0 0 1 .012-.486l1.006-1.383a1.288 1.288 0 0 0-.17-1.815zm15.779 6.38a10.038 10.038 0 0 1-10.047 10.016 10.03 10.03 0 0 1-4.747-1.19l-5.69 1.493L3.1 15.688A10.035 10.035 0 0 1 1.991 12c0-5.54 4.51-10.016 10.066-10.016a10.038 10.038 0 0 1 10.0 10.016z" />
-                </svg>
-                <span className="hover:underline">WhatsApp: +994 70 353 82 83</span>
-              </a>
-            </li>
+
             <li className="flex items-center gap-3">
               <Mail className="w-4 h-4 text-gold-primary shrink-0" />
               <span>{emailText}</span>

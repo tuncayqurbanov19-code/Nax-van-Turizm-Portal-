@@ -28,6 +28,21 @@ export interface HotelRoom {
   type: string;
   price: number;
   capacity: number;
+  name?: string;
+  image?: string;
+  area?: number;
+  bedType?: string;
+  description?: string;
+  discountPrice?: number;
+  seasonalPrices?: { season: string; price: number }[];
+  amenities?: string[];
+}
+
+export interface HotelMeal {
+  menu: string;
+  image?: string;
+  price: number;
+  isIncluded: boolean;
 }
 
 export interface Hotel {
@@ -51,6 +66,28 @@ export interface Hotel {
   };
   isActive: boolean;
   createdAt: string;
+  logo?: string;
+  shortDescription?: string;
+  description?: string;
+  whatsapp?: string;
+  website?: string;
+  socialMedia?: {
+    facebook?: string;
+    instagram?: string;
+    telegram?: string;
+  };
+  checkInTime?: string;
+  checkOutTime?: string;
+  meals?: {
+    breakfast?: HotelMeal;
+    lunch?: HotelMeal;
+    dinner?: HotelMeal;
+  };
+  priceNightly?: number;
+  priceWeekly?: number;
+  priceMonthly?: number;
+  priceSeasonal?: string;
+  priceHoliday?: string;
 }
 
 export interface TourStop {
@@ -71,9 +108,9 @@ export interface Tour {
   gallery: string[];
   stops: TourStop[];
   meals: {
-    breakfast: { restaurantName: string; items: string[] };
-    lunch: { restaurantName: string; items: string[] };
-    dinner: { restaurantName: string; items: string[] };
+    breakfast: { restaurantName: string; items: string[]; image?: string };
+    lunch: { restaurantName: string; items: string[]; image?: string };
+    dinner: { restaurantName: string; items: string[]; image?: string };
   };
   accommodation: {
     hotelName: string;
@@ -115,6 +152,14 @@ export interface TourismCompany {
   createdAt: string;
 }
 
+export interface WhatsAppLog {
+  timestamp: string;
+  message: string;
+  status: 'sent' | 'read' | 'failed' | 'delivered';
+  error?: string;
+  messageId?: string;
+}
+
 export interface Reservation {
   id: string;
   userId: string;
@@ -130,6 +175,9 @@ export interface Reservation {
   status: 'pending' | 'confirmed' | 'cancelled';
   totalPrice: number;
   createdAt: string;
+  startTime?: string;
+  whatsappStatus?: 'pending_send' | 'sent' | 'read' | 'failed' | 'not_sent';
+  whatsappLogs?: WhatsAppLog[];
 }
 
 export interface Comment {
@@ -191,6 +239,14 @@ export interface PromoBanner {
   image: string;
 }
 
+export interface WhatsAppSettings {
+  phoneId: string;
+  accessToken: string;
+  verifyToken: string;
+  messageTemplate: string;
+  isRealMode: boolean;
+}
+
 export interface SettingsSchema {
   heroSliders: HeroSlider[];
   testimonials: Testimonial[];
@@ -223,12 +279,32 @@ export interface SettingsSchema {
   logoSettings?: {
     logoLightUrl: string;
     logoDarkUrl: string;
+    logoMobileUrl?: string;
+    logoFooterUrl?: string;
     faviconUrl: string;
     logoWidth: number;
     logoHeight: number;
     logoPositionX: number;
     logoPositionY: number;
+    logoVariant?: 'variant1' | 'variant2';
+    mobileWidth?: number;
+    mobileHeight?: number;
+    desktopWidth?: number;
+    desktopHeight?: number;
   };
+  whatsappSettings?: WhatsAppSettings;
+  adminPath?: string;
+  twoFactorEnabled?: boolean;
+}
+
+export interface AdminLogin {
+  id: string;
+  email: string;
+  timestamp: string;
+  ip: string;
+  device: string;
+  status: 'SUCCESS' | 'FAIL_PASSWORD' | 'FAIL_2FA' | 'FAIL_EMAIL' | 'ATTEMPT';
+  isSuspicious: boolean;
 }
 
 export interface MediaItem {

@@ -77,6 +77,22 @@ export default function Admin({ onNavigate }: AdminProps) {
   const [newHotelStars, setNewHotelStars] = useState(5);
   const [newHotelAddress, setNewHotelAddress] = useState('');
 
+  // New Tour Nutrition Plan States
+  const [newTourBreakfastRest, setNewTourBreakfastRest] = useState('Milli Səhər Restoranı');
+  const [newTourBreakfastImg, setNewTourBreakfastImg] = useState('');
+  const [newTourBreakfastItemInput, setNewTourBreakfastItemInput] = useState('');
+  const [newTourBreakfastItems, setNewTourBreakfastItems] = useState<string[]>(['Pendir', 'Kərə yağı', 'Bal', 'Çay']);
+
+  const [newTourLunchRest, setNewTourLunchRest] = useState('Kəklik Otu Restoranı');
+  const [newTourLunchImg, setNewTourLunchImg] = useState('');
+  const [newTourLunchItemInput, setNewTourLunchItemInput] = useState('');
+  const [newTourLunchItems, setNewTourLunchItems] = useState<string[]>(['Kabab', 'Toyuq salatı', 'Düşbərə']);
+
+  const [newTourDinnerRest, setNewTourDinnerRest] = useState('Kəklik Otu Restoranı');
+  const [newTourDinnerImg, setNewTourDinnerImg] = useState('');
+  const [newTourDinnerItemInput, setNewTourDinnerItemInput] = useState('');
+  const [newTourDinnerItems, setNewTourDinnerItems] = useState<string[]>(['Sac qovurma', 'Mövsümi salat', 'Ayran']);
+
   // New Restaurant Form
   const [newRestName, setNewRestName] = useState('');
   const [newRestDesc, setNewRestDesc] = useState('');
@@ -111,11 +127,18 @@ export default function Admin({ onNavigate }: AdminProps) {
   // Logo & favicon & Media state bindings
   const [cfgLogoLightUrl, setCfgLogoLightUrl] = useState('');
   const [cfgLogoDarkUrl, setCfgLogoDarkUrl] = useState('');
+  const [cfgLogoMobileUrl, setCfgLogoMobileUrl] = useState('');
+  const [cfgLogoFooterUrl, setCfgLogoFooterUrl] = useState('');
   const [cfgFaviconUrl, setCfgFaviconUrl] = useState('');
   const [cfgLogoWidth, setCfgLogoWidth] = useState(150);
   const [cfgLogoHeight, setCfgLogoHeight] = useState(40);
+  const [cfgMobileWidth, setCfgMobileWidth] = useState(120);
+  const [cfgMobileHeight, setCfgMobileHeight] = useState(30);
+  const [cfgDesktopWidth, setCfgDesktopWidth] = useState(150);
+  const [cfgDesktopHeight, setCfgDesktopHeight] = useState(40);
   const [cfgLogoPositionX, setCfgLogoPositionX] = useState(0);
   const [cfgLogoPositionY, setCfgLogoPositionY] = useState(0);
+  const [cfgLogoVariant, setCfgLogoVariant] = useState<'variant1' | 'variant2'>('variant2');
 
   const [mediaList, setMediaList] = useState<any[]>([]);
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
@@ -131,6 +154,28 @@ export default function Admin({ onNavigate }: AdminProps) {
   // QR Code Generation States & Logic
   const [selectedForQr, setSelectedForQr] = useState<{ id: string; name: string; category: string; type: 'tour' | 'place'; image: string } | null>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+
+  // Edit Dialog States
+  const [editingTour, setEditingTour] = useState<any | null>(null);
+  const [editingHotel, setEditingHotel] = useState<any | null>(null);
+
+  // WhatsApp States
+  const [selectedLogsRes, setSelectedLogsRes] = useState<any | null>(null);
+  const [isLogsModalOpen, setIsLogsModalOpen] = useState<boolean>(false);
+  const [waPhoneId, setWaPhoneId] = useState<string>('');
+  const [waAccessToken, setWaAccessToken] = useState<string>('');
+  const [waVerifyToken, setWaVerifyToken] = useState<string>('');
+  const [waMessageTemplate, setWaMessageTemplate] = useState<string>('');
+  const [waIsRealMode, setWaIsRealMode] = useState<boolean>(false);
+
+  // System & Security Settings States
+  const [adminPath, setAdminPath] = useState<string>('/admin');
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState<boolean>(false);
+  const [adminLoginsList, setAdminLoginsList] = useState<any[]>([]);
+  const [isCredentialModalOpen, setIsCredentialModalOpen] = useState<boolean>(false);
+  const [newAdminEmail, setNewAdminEmail] = useState<string>('tuncayqurbanov19@gmail.com');
+  const [newAdminPassword, setNewAdminPassword] = useState<string>('');
+  const [newAdminFullName, setNewAdminFullName] = useState<string>('');
 
   const generateQrCode = async (id: string, name: string, category: string, type: 'tour' | 'place', image: string) => {
     try {
@@ -238,11 +283,43 @@ export default function Admin({ onNavigate }: AdminProps) {
         // Load logo settings safely with beautiful defaults
         setCfgLogoLightUrl(cfg.logoSettings?.logoLightUrl || 'https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=150');
         setCfgLogoDarkUrl(cfg.logoSettings?.logoDarkUrl || 'https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=150');
+        setCfgLogoMobileUrl(cfg.logoSettings?.logoMobileUrl || '');
+        setCfgLogoFooterUrl(cfg.logoSettings?.logoFooterUrl || '');
         setCfgFaviconUrl(cfg.logoSettings?.faviconUrl || '/favicon.ico');
         setCfgLogoWidth(cfg.logoSettings?.logoWidth || 150);
         setCfgLogoHeight(cfg.logoSettings?.logoHeight || 40);
+        setCfgMobileWidth(cfg.logoSettings?.mobileWidth || 120);
+        setCfgMobileHeight(cfg.logoSettings?.mobileHeight || 30);
+        setCfgDesktopWidth(cfg.logoSettings?.desktopWidth || 150);
+        setCfgDesktopHeight(cfg.logoSettings?.desktopHeight || 40);
         setCfgLogoPositionX(cfg.logoSettings?.logoPositionX || 0);
         setCfgLogoPositionY(cfg.logoSettings?.logoPositionY || 0);
+        setCfgLogoVariant(cfg.logoSettings?.logoVariant || 'variant2');
+
+        // Hydrate Dynamic Security Settings
+        setAdminPath(cfg.adminPath || '/admin');
+        setTwoFactorEnabled(!!cfg.twoFactorEnabled);
+
+        // Fetch safety login history logs
+        try {
+          const logsRes = await api.admin.getLogins();
+          setAdminLoginsList(logsRes || []);
+        } catch (_) {}
+
+        // Hydrate WhatsApp configs
+        if (cfg.whatsappSettings) {
+          setWaPhoneId(cfg.whatsappSettings.phoneId || '');
+          setWaAccessToken(cfg.whatsappSettings.accessToken || '');
+          setWaVerifyToken(cfg.whatsappSettings.verifyToken || 'naxcivan_verify_token_2026');
+          setWaMessageTemplate(cfg.whatsappSettings.messageTemplate || '');
+          setWaIsRealMode(cfg.whatsappSettings.isRealMode ?? false);
+        } else {
+          setWaPhoneId('');
+          setWaAccessToken('');
+          setWaVerifyToken('naxcivan_verify_token_2026');
+          setWaMessageTemplate('Hörmətli {Müştəri Adı},\n\nSifarişiniz uğurla qəbul edildi.\n\nTurunuz {Tur Tarixi} tarixində, saat {Tur Başlama Saatı}-da başlayacaq.\n\nSizə xoş və unudulmaz səyahət arzulayırıq. Bizi seçdiyiniz üçün təşəkkür edirik.\n\nHər hansı sualınız yaranarsa, bizimlə əlaqə saxlaya bilərsiniz.\n\nƏlaqə:\n📧 tourist@tourism.naxcivan\n📞 +994 60 237 71 37');
+          setWaIsRealMode(false);
+        }
       }
     } catch (e: any) {
       error(e.message || 'Məlumatları oxuyan zaman xəta yarandı.');
@@ -360,6 +437,16 @@ export default function Admin({ onNavigate }: AdminProps) {
     try {
       const updated = await api.reservations.approve(id);
       success('Sifariş rəsmən təsdiq edildi!');
+      
+      // Automatically send the WhatsApp notification message
+      try {
+        await api.reservations.sendWhatsApp(id);
+        success('Təbrik edirik! Sifarişçi üçün fərdi WhatsApp təsdiq mesajı avtomatlaşdırılmış şəkildé göndərildi.');
+      } catch (waErr: any) {
+        console.error('Auto WhatsApp notification error:', waErr);
+        error('Sifariş təsdiqləndi, lakin WhatsApp bildirişi avtomatik göndərilə bilmədi: ' + (waErr.message || 'aktiv deyil.'));
+      }
+
       loadData();
     } catch (e: any) {
       error(e.message || 'Sifariş təsdiq edilə bilmədi.');
@@ -374,6 +461,21 @@ export default function Admin({ onNavigate }: AdminProps) {
     } catch (e: any) {
       error(e.message || 'Sifariş ləğv edilə bilmədi.');
     }
+  };
+
+  const handleSendWhatsApp = async (id: string) => {
+    try {
+      await api.reservations.sendWhatsApp(id);
+      success('WhatsApp mesajı uğurla göndərildi!');
+      loadData();
+    } catch (e: any) {
+      error(e.message || 'WhatsApp göndərilə bilmədi.');
+    }
+  };
+
+  const handleOpenLogs = (res: any) => {
+    setSelectedLogsRes(res);
+    setIsLogsModalOpen(true);
   };
 
   // Add Tour Form action
@@ -401,9 +503,21 @@ export default function Admin({ onNavigate }: AdminProps) {
           { placeName: 'Qədim Gəmiqaya', duration: '1/2 gün', description: 'Gəmiqaya təsvirlərinin rəsmi tədqiqi.', image: '' }
         ],
         meals: {
-          breakfast: { restaurantName: 'Milli Səhər Restoranı', items: ['Qaymaq', 'Bal', 'Lavaş'] },
-          lunch: { restaurantName: 'Əlincə Qala Restoranı', items: ['Ordubad Qaydısı', 'Sacüstü Kabab'] },
-          dinner: { restaurantName: 'Şuşa Lüks Restoran', items: ['Yarpaq dolması', 'Badamlı'] }
+          breakfast: { 
+            restaurantName: newTourBreakfastRest || 'Kəklik Otu Restoranı', 
+            items: newTourBreakfastItems.length > 0 ? newTourBreakfastItems : ['Pendir', 'Kərə yağı', 'Bal', 'Çay'],
+            image: newTourBreakfastImg || ''
+          },
+          lunch: { 
+            restaurantName: newTourLunchRest || 'Kəklik Otu Restoranı', 
+            items: newTourLunchItems.length > 0 ? newTourLunchItems : ['Kabab', 'Toyuq salatı', 'Düşbərə'],
+            image: newTourLunchImg || ''
+          },
+          dinner: { 
+            restaurantName: newTourDinnerRest || 'Kəklik Otu Restoranı', 
+            items: newTourDinnerItems.length > 0 ? newTourDinnerItems : ['Sac qovurma', 'Mövsümi salat', 'Ayran'],
+            image: newTourDinnerImg || ''
+          }
         },
         accommodation: {
           hotelName: 'Təbriz Premium Hotel',
@@ -437,6 +551,15 @@ export default function Admin({ onNavigate }: AdminProps) {
         setNewTourCompanyId('');
         setNewTourIncludedServices('Peşəkar bələdçi, kondisionerli nəqliyyat, muzey biletləri, otel binaları, dadlı milli səhər yeməyi');
         setNewTourPdfUrl('');
+        setNewTourBreakfastRest('');
+        setNewTourBreakfastImg('');
+        setNewTourBreakfastItems([]);
+        setNewTourLunchRest('');
+        setNewTourLunchImg('');
+        setNewTourLunchItems([]);
+        setNewTourDinnerRest('');
+        setNewTourDinnerImg('');
+        setNewTourDinnerItems([]);
         loadData();
       }
     } catch (err: any) {
@@ -522,6 +645,41 @@ export default function Admin({ onNavigate }: AdminProps) {
       }
     } catch (err: any) {
       error(err.message || 'Otel qeydə alınmadı.');
+    }
+  };
+
+  const handleEditTourSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTour) return;
+    try {
+      await api.tours.update(editingTour.id, editingTour);
+      success('Səyahət turunun məlumatları uğurla yeniləndi!');
+      setEditingTour(null);
+      loadData();
+    } catch (err: any) {
+      error(err.message || 'Yeniləmə xətası baş verdi.');
+    }
+  };
+
+  const handleEditHotelSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingHotel) return;
+    try {
+      if (!editingHotel.id) {
+        // Creating a new hotel profile!
+        const res = await api.hotels.create(editingHotel);
+        if (res) {
+          success(`"${res.name}" oteli və onun otaq növləri uğurla yaradıldı!`);
+        }
+      } else {
+        // Updating existing hotel profile!
+        await api.hotels.update(editingHotel.id, editingHotel);
+        success(`"${editingHotel.name}" məlumatları uğurla yeniləndi!`);
+      }
+      setEditingHotel(null);
+      loadData();
+    } catch (err: any) {
+      error(err.message || 'Mehmanxana qeydiyyatı/yenilənməsi alınmadı.');
     }
   };
 
@@ -780,12 +938,28 @@ export default function Admin({ onNavigate }: AdminProps) {
         logoSettings: {
           logoLightUrl: cfgLogoLightUrl,
           logoDarkUrl: cfgLogoDarkUrl,
+          logoMobileUrl: cfgLogoMobileUrl,
+          logoFooterUrl: cfgLogoFooterUrl,
           faviconUrl: cfgFaviconUrl,
           logoWidth: Number(cfgLogoWidth) || 150,
           logoHeight: Number(cfgLogoHeight) || 40,
           logoPositionX: Number(cfgLogoPositionX) || 0,
-          logoPositionY: Number(cfgLogoPositionY) || 0
-        }
+          logoPositionY: Number(cfgLogoPositionY) || 0,
+          logoVariant: cfgLogoVariant,
+          mobileWidth: Number(cfgMobileWidth) || 120,
+          mobileHeight: Number(cfgMobileHeight) || 30,
+          desktopWidth: Number(cfgDesktopWidth) || 150,
+          desktopHeight: Number(cfgDesktopHeight) || 40
+        },
+        whatsappSettings: {
+          phoneId: waPhoneId,
+          accessToken: waAccessToken,
+          verifyToken: waVerifyToken,
+          messageTemplate: waMessageTemplate,
+          isRealMode: waIsRealMode
+        },
+        adminPath,
+        twoFactorEnabled
       };
 
       await api.settings.update(payload);
@@ -920,31 +1094,78 @@ export default function Admin({ onNavigate }: AdminProps) {
                             <td className="p-4 font-mono font-bold text-gold-primary">₼ {res.totalPrice}</td>
                             <td className="p-4">
                               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                                res.status === 'approved' ? 'bg-emerald-100 text-emerald-800' :
-                                res.status === 'cancelled' ? 'bg-rose-100 text-rose-800' : 'bg-amber-105 text-amber-800 bg-amber-100'
+                                res.status === 'confirmed' || res.status === 'approved' ? 'bg-emerald-100 text-emerald-800' :
+                                res.status === 'cancelled' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
                               }`}>
-                                {res.status === 'approved' ? 'Təsdiqli' : res.status === 'cancelled' ? 'Ləğv' : 'Gözləmədə'}
+                                {res.status === 'confirmed' || res.status === 'approved' ? 'Təsdiqləndi' : 
+                                 res.status === 'cancelled' ? 'Ləğv edildi' : 'Gözləyir'}
                               </span>
+                              {res.whatsappStatus && (
+                                <div className="mt-1.5 flex" id={`wa-status-badge-${res.id}`}>
+                                  <span className={`text-[9px] font-mono font-medium px-1.5 py-0.5 rounded border flex items-center gap-1 ${
+                                    res.whatsappStatus === 'read' ? 'bg-sky-50 text-sky-600 border-sky-100' :
+                                    res.whatsappStatus === 'sent' || res.whatsappStatus === 'delivered' ? 'bg-green-50 text-green-600 border-green-100' :
+                                    res.whatsappStatus === 'failed' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-slate-50 text-slate-500 border-slate-100'
+                                  }`} title="WhatsApp Statusu">
+                                    <span className={`w-1 h-1 rounded-full ${
+                                      res.whatsappStatus === 'read' ? 'bg-sky-500 animate-pulse' :
+                                      res.whatsappStatus === 'sent' || res.whatsappStatus === 'delivered' ? 'bg-green-500' :
+                                      res.whatsappStatus === 'failed' ? 'bg-rose-500' : 'bg-slate-400'
+                                    }`} />
+                                    WA: {
+                                      res.whatsappStatus === 'read' ? 'Oxundu' :
+                                      res.whatsappStatus === 'sent' || res.whatsappStatus === 'delivered' ? 'Göndərildi' :
+                                      res.whatsappStatus === 'failed' ? 'Xəta baş verdi' : 'Gözləyir'
+                                    }
+                                  </span>
+                                </div>
+                              )}
                             </td>
                             <td className="p-4 text-right">
-                              {res.status === 'pending' && (
-                                <div className="flex gap-2 justify-end">
+                              <div className="flex gap-1.5 justify-end">
+                                {/* Confirm Reservation */}
+                                {(res.status === 'pending' || !res.status) && (
                                   <button
                                     onClick={() => handleApproveReservation(res.id)}
                                     className="p-1.5 bg-emerald-50 hover:bg-emerald-500 text-emerald-600 hover:text-white rounded-lg border border-emerald-100 transition-colors cursor-pointer"
-                                    title="Təsdiqlə"
+                                    title="Sifarişi Təsdiqlə"
+                                    id={`btn-approve-${res.id}`}
                                   >
                                     <Check className="w-3.5 h-3.5" />
                                   </button>
+                                )}
+                                {/* Cancel Reservation */}
+                                {(res.status === 'pending' || !res.status) && (
                                   <button
                                     onClick={() => handleCancelReservation(res.id)}
                                     className="p-1.5 bg-rose-50 hover:bg-rose-500 text-rose-600 hover:text-white rounded-lg border border-rose-100 transition-colors cursor-pointer"
-                                    title="İmtina et"
+                                    title="Sifarişi Ləğv Et"
+                                    id={`btn-cancel-${res.id}`}
                                   >
                                     <X className="w-3.5 h-3.5" />
                                   </button>
-                                </div>
-                              )}
+                                )}
+                                {/* Resend WhatsApp */}
+                                {(res.status === 'confirmed' || res.status === 'approved') && (
+                                  <button
+                                    onClick={() => handleSendWhatsApp(res.id)}
+                                    className="p-1.5 bg-indigo-50 hover:bg-indigo-500 text-indigo-600 hover:text-white rounded-lg border border-indigo-100 transition-colors cursor-pointer"
+                                    title="WhatsApp mesajını yenidən göndər"
+                                    id={`btn-resend-${res.id}`}
+                                  >
+                                    <RotateCw className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                                {/* View Logs history */}
+                                <button
+                                  onClick={() => handleOpenLogs(res)}
+                                  className="p-1.5 bg-slate-50 hover:bg-slate-500 text-slate-600 hover:text-white rounded-lg border border-slate-100 transition-colors cursor-pointer"
+                                  title="Mesaj tarixçəsinə bax"
+                                  id={`btn-logs-${res.id}`}
+                                >
+                                  <MessageSquare className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -1220,10 +1441,313 @@ export default function Admin({ onNavigate }: AdminProps) {
                      <input
                        type="text"
                        placeholder="Milli Bələdçi, Komfortlu Transfer, Dadlı səhər yeməyi, Giriş biletləri"
-                       value={newTourIncludedServices}
-                       onChange={(e) => setNewTourIncludedServices(e.target.value)}
-                       className="p-2.5 bg-slate-50 border rounded-xl font-medium"
-                     />
+                        value={newTourIncludedServices}
+                        onChange={(e) => setNewTourIncludedServices(e.target.value)}
+                        className="p-2.5 bg-slate-50 border rounded-xl font-medium"
+                      />
+                    </div>
+
+                    {/* 11. Tur Qidalanma və Restoran Məlumatları (Qidalanma Planı) */}
+                    <div className="md:col-span-3 border-t border-slate-100 pt-6 mt-4 select-none animate-fadeIn">
+                      <div className="flex items-center gap-2 mb-4 bg-amber-50/50 p-3 rounded-2xl border border-amber-100/50 justify-start">
+                        <Utensils className="w-5 h-5 text-gold-primary shrink-0 animate-pulse" />
+                        <div className="text-left font-sans">
+                          <h4 className="font-serif text-sm font-bold text-navy-deep">Tur Qidalanma və Restoran İdarəetməsi (Qidalanma Planı)</h4>
+                          <p className="text-[10px] text-slate-400 leading-none mt-0.5">Yemək, restoran şəkli və qonaqlara veriləcək milli nahar/səhər yeməyi menyusunu idarə edin.</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                        
+                        {/* 1. Səhər Yeməyi Roster */}
+                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col gap-3">
+                          <span className="text-xs font-bold text-navy-deep uppercase tracking-wider flex items-center gap-1">☕ Səhər Yeməyi</span>
+                          
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-slate-500 font-sans">Restoranın Adı</label>
+                            <input
+                              type="text"
+                              value={newTourBreakfastRest}
+                              onChange={(e) => setNewTourBreakfastRest(e.target.value)}
+                              placeholder="Kəklik Otu Restoranı"
+                              className="p-2 bg-white border rounded-xl text-xs"
+                            />
+                          </div>
+
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-slate-500 font-sans">Restoran Şəkli / Loqosu</label>
+                            <div className="flex items-center gap-2 bg-white p-2 border rounded-xl">
+                              {newTourBreakfastImg ? (
+                                <div className="relative w-10 h-10 rounded-lg overflow-hidden border shrink-0 bg-slate-100">
+                                  <img src={newTourBreakfastImg} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
+                                  <button
+                                    type="button"
+                                    onClick={() => setNewTourBreakfastImg('')}
+                                    className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-[8px] font-bold opacity-0 hover:opacity-100 transition-all cursor-pointer"
+                                  >
+                                    Sil
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="w-10 h-10 rounded-lg border border-dashed bg-slate-50 flex items-center justify-center text-[8px] text-slate-400 text-center shrink-0">Yoxdur</div>
+                              )}
+                              <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-[9px] font-bold px-2 py-1.5 rounded-lg cursor-pointer border select-none shrink-0 transition-all font-sans">
+                                Şəkil Yüklə
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => handleFileUpload(e, setNewTourBreakfastImg)}
+                                />
+                              </label>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] text-slate-500 font-sans">Menyu Siyahısı ({newTourBreakfastItems.length})</label>
+                            <div className="flex gap-1.5">
+                              <input
+                                type="text"
+                                placeholder="Məs. Bal, Pendir, Çay"
+                                value={newTourBreakfastItemInput}
+                                onChange={(e) => setNewTourBreakfastItemInput(e.target.value)}
+                                className="p-2 bg-white border rounded-xl text-xs flex-1"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    if (newTourBreakfastItemInput.trim()) {
+                                      setNewTourBreakfastItems([...newTourBreakfastItems, newTourBreakfastItemInput.trim()]);
+                                      setNewTourBreakfastItemInput('');
+                                    }
+                                  }
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (newTourBreakfastItemInput.trim()) {
+                                    setNewTourBreakfastItems([...newTourBreakfastItems, newTourBreakfastItemInput.trim()]);
+                                    setNewTourBreakfastItemInput('');
+                                  }
+                                }}
+                                className="bg-gold-primary text-navy-deep px-2 font-bold hover:bg-gold-dark rounded-xl text-[10px] shrink-0 font-sans cursor-pointer animate-fadeIn"
+                              >
+                                Əlavə et
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-1 max-h-24 overflow-y-auto p-1 border border-slate-100 rounded-lg bg-white/50">
+                              {newTourBreakfastItems.map((itm, index) => (
+                                <span key={index} className="bg-white border text-slate-755 text-[10px] py-0.5 px-2 rounded-lg flex items-center gap-1 font-semibold shadow-sm">
+                                  <span>{itm}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setNewTourBreakfastItems(newTourBreakfastItems.filter((_, i) => i !== index))}
+                                    className="text-rose-500 font-bold hover:text-rose-700 text-[11px] leading-none shrink-0 cursor-pointer"
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 2. Nahar Yeməyi Roster */}
+                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col gap-3">
+                          <span className="text-xs font-bold text-navy-deep uppercase tracking-wider flex items-center gap-1">🍲 Nahar Yeməyi</span>
+                          
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-slate-500 font-sans">Restoranın Adı</label>
+                            <input
+                              type="text"
+                              value={newTourLunchRest}
+                              onChange={(e) => setNewTourLunchRest(e.target.value)}
+                              placeholder="Kəklik Otu Restoranı"
+                              className="p-2 bg-white border rounded-xl text-xs"
+                            />
+                          </div>
+
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-slate-500 font-sans">Restoran Şəkli / Loqosu</label>
+                            <div className="flex items-center gap-2 bg-white p-2 border rounded-xl">
+                              {newTourLunchImg ? (
+                                <div className="relative w-10 h-10 rounded-lg overflow-hidden border shrink-0 bg-slate-100">
+                                  <img src={newTourLunchImg} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
+                                  <button
+                                    type="button"
+                                    onClick={() => setNewTourLunchImg('')}
+                                    className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-[8px] font-bold opacity-0 hover:opacity-100 transition-all cursor-pointer"
+                                  >
+                                    Sil
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="w-10 h-10 rounded-lg border border-dashed bg-slate-50 flex items-center justify-center text-[8px] text-slate-400 text-center shrink-0">Yoxdur</div>
+                              )}
+                              <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-[9px] font-bold px-2 py-1.5 rounded-lg cursor-pointer border select-none shrink-0 transition-all font-sans font-sans">
+                                Şəkil Yüklə
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => handleFileUpload(e, setNewTourLunchImg)}
+                                />
+                              </label>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] text-slate-500 font-sans">Menyu Siyahısı ({newTourLunchItems.length})</label>
+                            <div className="flex gap-1.5">
+                              <input
+                                type="text"
+                                placeholder="Məs. Kabab, Salat, Düşbərə"
+                                value={newTourLunchItemInput}
+                                onChange={(e) => setNewTourLunchItemInput(e.target.value)}
+                                className="p-2 bg-white border rounded-xl text-xs flex-1"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    if (newTourLunchItemInput.trim()) {
+                                      setNewTourLunchItems([...newTourLunchItems, newTourLunchItemInput.trim()]);
+                                      setNewTourLunchItemInput('');
+                                    }
+                                  }
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (newTourLunchItemInput.trim()) {
+                                    setNewTourLunchItems([...newTourLunchItems, newTourLunchItemInput.trim()]);
+                                    setNewTourLunchItemInput('');
+                                  }
+                                }}
+                                className="bg-gold-primary text-navy-deep px-2 font-bold hover:bg-gold-dark rounded-xl text-[10px] shrink-0 font-sans cursor-pointer font-sans h-full flex items-center"
+                              >
+                                Əlavə et
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-1 max-h-24 overflow-y-auto p-1 border border-slate-100 rounded-lg bg-white/50">
+                              {newTourLunchItems.map((itm, index) => (
+                                <span key={index} className="bg-white border text-slate-755 text-[10px] py-0.5 px-2 rounded-lg flex items-center gap-1 font-semibold shadow-sm">
+                                  <span>{itm}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setNewTourLunchItems(newTourLunchItems.filter((_, i) => i !== index))}
+                                    className="text-rose-500 font-bold hover:text-rose-700 text-[11px] leading-none shrink-0 cursor-pointer"
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 3. Axşam Yeməyi Roster */}
+                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col gap-3">
+                          <span className="text-xs font-bold text-navy-deep uppercase tracking-wider flex items-center gap-1">🍢 Axşam Yeməyi</span>
+                          
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-slate-500 font-sans">Restoranın Adı</label>
+                            <input
+                              type="text"
+                              value={newTourDinnerRest}
+                              onChange={(e) => setNewTourDinnerRest(e.target.value)}
+                              placeholder="Kəklik Otu Restoranı"
+                              className="p-2 bg-white border rounded-xl text-xs"
+                            />
+                          </div>
+
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-slate-500 font-sans">Restoran Şəkli / Loqosu</label>
+                            <div className="flex items-center gap-2 bg-white p-2 border rounded-xl">
+                              {newTourDinnerImg ? (
+                                <div className="relative w-10 h-10 rounded-lg overflow-hidden border shrink-0 bg-slate-100 flex items-center justify-center">
+                                  <img src={newTourDinnerImg} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
+                                  <button
+                                    type="button"
+                                    onClick={() => setNewTourDinnerImg('')}
+                                    className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-[8px] font-bold opacity-0 hover:opacity-100 transition-all cursor-pointer"
+                                  >
+                                    Sil
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="w-10 h-10 rounded-lg border border-dashed bg-slate-50 flex items-center justify-center text-[8px] text-slate-400 text-center shrink-0">Yoxdur</div>
+                              )}
+                              <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-[9px] font-bold px-2 py-1.5 rounded-lg cursor-pointer border select-none shrink-0 transition-all font-sans">
+                                Şəkil Yüklə
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => handleFileUpload(e, setNewTourDinnerImg)}
+                                />
+                              </label>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] text-slate-500 font-sans">Menyu Siyahısı ({newTourDinnerItems.length})</label>
+                            <div className="flex gap-1.5">
+                              <input
+                                type="text"
+                                placeholder="Məs. Sac, Ayran, Salat"
+                                value={newTourDinnerItemInput}
+                                onChange={(e) => setNewTourDinnerItemInput(e.target.value)}
+                                className="p-2 bg-white border rounded-xl text-xs flex-1"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    if (newTourDinnerItemInput.trim()) {
+                                      setNewTourDinnerItems([...newTourDinnerItems, newTourDinnerItemInput.trim()]);
+                                      setNewTourDinnerItemInput('');
+                                    }
+                                  }
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (newTourDinnerItemInput.trim()) {
+                                    setNewTourDinnerItems([...newTourDinnerItems, newTourDinnerItemInput.trim()]);
+                                    setNewTourDinnerItemInput('');
+                                  }
+                                }}
+                                className="bg-gold-primary text-navy-deep px-2 font-bold hover:bg-gold-dark rounded-xl text-[10px] shrink-0 font-sans cursor-pointer font-sans"
+                              >
+                                Əlavə et
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-1 max-h-24 overflow-y-auto p-1 border border-slate-100 rounded-lg bg-white/50">
+                              {newTourDinnerItems.map((itm, index) => (
+                                <span key={index} className="bg-white border text-slate-755 text-[10px] py-0.5 px-2 rounded-lg flex items-center gap-1 font-semibold shadow-sm">
+                                  <span>{itm}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setNewTourDinnerItems(newTourDinnerItems.filter((_, i) => i !== index))}
+                                    className="text-rose-500 font-bold hover:text-rose-700 text-[11px] leading-none shrink-0 cursor-pointer"
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1 md:col-span-3">
+                      <input
+                        type="text"
+                        value={newTourIncludedServices}
+                        onChange={(e) => setNewTourIncludedServices(e.target.value)}
+                        className="p-2.5 bg-slate-50 border rounded-xl font-medium"
+                      />
                    </div>
  
                    <div className="flex flex-col gap-1 md:col-span-3">
@@ -1268,6 +1792,14 @@ export default function Admin({ onNavigate }: AdminProps) {
                         >
                           <QrCode className="w-3.5 h-3.5" />
                           <span>QR Kod</span>
+                        </button>
+                        <button
+                          onClick={() => setEditingTour(tour)}
+                          className="py-1.5 px-3 bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white rounded-xl transition-all cursor-pointer flex items-center gap-1 font-semibold text-xs shrink-0"
+                          title="Turu Redaktə Et"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Redaktə</span>
                         </button>
                         <button
                           onClick={() => handleDeleteTour(tour.id)}
@@ -1479,88 +2011,80 @@ export default function Admin({ onNavigate }: AdminProps) {
           {activeTab === 'hotels' && (
             <div className="flex flex-col gap-8" id="panel-hotels">
               
-              <div className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm">
-                <h3 className="font-serif text-lg font-bold text-navy-deep border-b pb-2 mb-6">Yeni Otel Profili Yarat</h3>
-                
-                <form onSubmit={handleAddHotelSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 font-sans text-sm">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs text-slate-500">Otel Adı</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Duzdağ sanatoriya Oteli"
-                      value={newHotelName}
-                      onChange={(e) => setNewHotelName(e.target.value)}
-                      className="p-2.5 bg-slate-50 border rounded-xl"
-                    />
+              <div className="bg-gradient-to-br from-navy-deep to-navy-mid border-2 border-gold-primary/20 p-8 rounded-3xl shadow-sm text-center relative overflow-hidden group select-none">
+                <div className="absolute inset-0 bg-radial-gradient from-gold-primary/5 via-transparent to-transparent pointer-events-none opacity-40"></div>
+                <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-gold-primary/10 flex items-center justify-center border border-gold-primary/30 shadow-inner">
+                    <Building className="w-8 h-8 text-gold-primary" />
                   </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs text-slate-500">Yüksək Ulduz Sayı</label>
-                    <select
-                      value={newHotelStars}
-                      onChange={(e) => setNewHotelStars(Number(e.target.value))}
-                      className="p-2.5 bg-slate-50 border rounded-xl"
-                    >
-                      <option value="5">5 Ulduzlu Lüks</option>
-                      <option value="4">4 Ulduzlu Lüks</option>
-                      <option value="3">3 Ulduzlu Komfort</option>
-                    </select>
-                  </div>
-
-                  <div className="flex flex-col gap-1 md:col-span-2">
-                    <label className="text-xs text-slate-500">Ünvanı</label>
-                    <input
-                      type="text"
-                      placeholder="Ordubad rayonu, Duzdağ ərazisi"
-                      value={newHotelAddress}
-                      onChange={(e) => setNewHotelAddress(e.target.value)}
-                      className="p-2.5 bg-slate-50 border rounded-xl"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1 md:col-span-2">
-                    <label className="text-xs text-slate-500">Otel Şəkli (Yalnız Yükləmə ilə)</label>
-                    <div className="flex items-center gap-4 bg-slate-50 p-3 border rounded-2xl w-full">
-                      {newHotelImg ? (
-                        <div className="relative w-16 h-16 rounded-xl overflow-hidden border bg-white shrink-0">
-                          <img src={newHotelImg} className="w-full h-full object-cover" alt="Preview" referrerPolicy="no-referrer" />
-                          <button
-                            type="button"
-                            onClick={() => setNewHotelImg('')}
-                            className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-all cursor-pointer"
-                          >
-                            Sil
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="w-16 h-16 rounded-xl border border-dashed bg-slate-200 flex items-center justify-center text-slate-400 text-xs text-center p-1 font-sans shrink-0">
-                          Şəkil yoxdur
-                        </div>
-                      )}
-                      <div className="flex-1 font-sans">
-                        <p className="text-[10px] text-slate-500 mb-1.5 font-sans">Otelin əsas şəkli (PNG, JPG, WebP).</p>
-                        <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-4 py-2 rounded-xl inline-flex items-center justify-center cursor-pointer border border-gold-primary/30 transition-all select-none">
-                          {newHotelImg ? 'Yenisini Yüklə' : 'Kompüterdən Şəkil Seç / Yüklə'}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleFileUpload(e, setNewHotelImg)}
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
+                  <h3 className="font-serif text-2xl font-bold text-white tracking-wide">Hərtərəfli Otel İdarəetmə Paneli</h3>
+                  <p className="text-slate-300 text-sm leading-relaxed max-w-md font-sans">
+                    Yeni otel profilini dərhal bütün parametrləri ilə birlikdə bir mərkəzdən yaradın: Loqo, media qalereyaları, ətraflı xəritə koordinatları, restoran menyusu və fərqli otaq növləri (Standard, Deluxe, Suite, Presidential) üzrə fərdi gecəlik/mövsümi qiymət və qonaq say tənzimləmələri.
+                  </p>
+                  
                   <button
-                    type="submit"
-                    className="md:col-span-2 bg-gold-primary hover:bg-gold-dark text-navy-deep font-bold py-3 rounded-xl flex items-center justify-center gap-2 mt-2 cursor-pointer"
+                    type="button"
+                    onClick={() => {
+                      setEditingHotel({
+                        id: '',
+                        name: '',
+                        address: '',
+                        stars: 5,
+                        rooms: [
+                          {
+                            id: 'room-std-1',
+                            name: 'Standard Room',
+                            size: 28,
+                            bedType: '1 King Bed və ya 2 Single Beds',
+                            maxGuests: 2,
+                            description: 'Özəl dizayn, yüksək keyfiyyətli mebellər, düz ekran TV, mini-bar, seyf, kofe-cay dəsti və pulsuz sürətli Wi-Fi ilə təmin olunmuş lüks otaq.',
+                            basePrice: 90,
+                            discountPrice: 80,
+                            currency: 'AZN',
+                            image: 'https://images.unsplash.com/photo-1611891404106-a23bf045022d?q=80&w=350',
+                            seasonalPrice: { summer: 110, winter: 80 }
+                          },
+                          {
+                            id: 'room-dlx-2',
+                            name: 'Deluxe Suite',
+                            size: 45,
+                            bedType: '1 Super King Bed',
+                            maxGuests: 3,
+                            description: 'Muxtar Respublikamızın mənzərəsinə açılan panoramik şüşələr, geniş fərdi oturma sahəsi, xüsusi cakuzi xidməti, lüks vanna otağı ləvazimatları ilə premium lyuks xidməti.',
+                            basePrice: 170,
+                            discountPrice: 150,
+                            currency: 'AZN',
+                            image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=350',
+                            seasonalPrice: { summer: 210, winter: 150 }
+                          }
+                        ],
+                        amenities: [
+                          'WiFi', 'Kondisioner', 'Smart LCD TV', 'Hovuz', 'Səhər Yeməyi', 'Fitnes', 'Pulsuz Parkinq', 'Mini Bar', 'Otaq Xidməti (24/7)'
+                        ],
+                        restaurant: {
+                          name: 'Regional Dad Sarayı',
+                          cuisine: 'Naxçıvanın qədim milli mətbəxi və Avropa ləzzətləri',
+                          hours: '07:00 - 23:05'
+                        },
+                        phone: '+994 36 545 00 00',
+                        email: 'info@hotel.naxcivan.az',
+                        whatsapp: '+994 60 237 71 37',
+                        logo: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?q=80&w=150',
+                        images: [
+                          'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600',
+                          'https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=600'
+                        ],
+                        location: { lat: 39.2089, lng: 45.4122 },
+                        isActive: true,
+                        createdAt: new Date().toISOString()
+                      } as any);
+                    }}
+                    className="mt-2 bg-gradient-to-r from-gold-primary to-amber-500 hover:from-gold-dark hover:to-amber-600 text-navy-deep font-sans font-bold text-xs md:text-sm px-8 py-3.5 rounded-2xl flex items-center gap-2 shadow-2xl shadow-gold-primary/20 transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer transition-all uppercase tracking-wider"
                   >
-                    <Plus className="w-4 h-4" />
-                    Yeni Mehmanxana Əlavə Et
+                    <Plus className="w-5 h-5 stroke-[2.5]" />
+                    Yeni Otel Yaradın (Hərtərəfli Panel)
                   </button>
-                </form>
+                </div>
               </div>
 
               <div>
@@ -1575,13 +2099,23 @@ export default function Admin({ onNavigate }: AdminProps) {
                           <p className="text-xs text-slate-400 mt-0.5">{hotel.stars} Ulduz • {hotel.address}</p>
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleDeleteHotel(hotel.id)}
-                        className="p-2 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all cursor-pointer"
-                        title="Oteli sil"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setEditingHotel(hotel)}
+                          className="py-1.5 px-3 bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white rounded-xl transition-all cursor-pointer flex items-center gap-1 font-semibold text-xs shrink-0"
+                          title="Oteli Redaktə Et"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Redaktə</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteHotel(hotel.id)}
+                          className="p-2 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all cursor-pointer"
+                          title="Oteli sil"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -2117,12 +2651,12 @@ export default function Admin({ onNavigate }: AdminProps) {
                 </h4>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-sans">
-                  {/* Light ve Dark Logo */}
+                  {/* Multiple Logo uploads */}
                   <div className="flex flex-col gap-4">
                     {/* Light Logo */}
-                    <div className="bg-slate-55 p-3 rounded-2xl border">
+                    <div className="bg-slate-50 p-3 rounded-2xl border">
                       <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-xs font-semibold text-slate-700">Açıq Rejim Loqosu (Light Mode Logo)</span>
+                        <span className="text-xs font-semibold text-slate-705">Açıq Rejim Loqosu (Light Mode Logo)</span>
                         <button
                           type="button"
                           onClick={() => openMediaPicker(setCfgLogoLightUrl)}
@@ -2141,7 +2675,7 @@ export default function Admin({ onNavigate }: AdminProps) {
                           <div className="w-14 h-14 rounded-lg border-2 border-dashed flex items-center justify-center text-[10px] text-slate-400 font-sans shrink-0">Yoxdur</div>
                         )}
                         <div className="flex-1">
-                          <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-3 py-1.5 rounded-lg inline-flex items-center cursor-pointer transition-all border border-gold-primary/20 select-none">
+                          <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-[11px] font-bold px-3 py-1.5 rounded-lg inline-flex items-center cursor-pointer transition-all border border-gold-primary/20 select-none">
                             Yüklə
                             <input
                               type="file"
@@ -2155,9 +2689,9 @@ export default function Admin({ onNavigate }: AdminProps) {
                     </div>
 
                     {/* Dark Logo */}
-                    <div className="bg-slate-55 p-3 rounded-2xl border">
+                    <div className="bg-slate-50 p-3 rounded-2xl border">
                       <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-xs font-semibold text-slate-700">Tünd Rejim Loqosu (Dark Mode Logo)</span>
+                        <span className="text-xs font-semibold text-slate-705">Tünd Rejim Loqosu (Dark Mode Logo)</span>
                         <button
                           type="button"
                           onClick={() => openMediaPicker(setCfgLogoDarkUrl)}
@@ -2176,7 +2710,7 @@ export default function Admin({ onNavigate }: AdminProps) {
                           <div className="w-14 h-14 rounded-lg border-2 border-dashed flex items-center justify-center text-[10px] text-slate-400 font-sans shrink-0">Yoxdur</div>
                         )}
                         <div className="flex-1">
-                          <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-3 py-1.5 rounded-lg inline-flex items-center cursor-pointer transition-all border border-gold-primary/20 select-none">
+                          <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-[11px] font-bold px-3 py-1.5 rounded-lg inline-flex items-center cursor-pointer transition-all border border-gold-primary/20 select-none">
                             Yüklə
                             <input
                               type="file"
@@ -2189,10 +2723,82 @@ export default function Admin({ onNavigate }: AdminProps) {
                       </div>
                     </div>
 
-                    {/* Favikon */}
-                    <div className="bg-slate-55 p-3 rounded-2xl border">
+                    {/* Mobile Logo */}
+                    <div className="bg-slate-50 p-3 rounded-2xl border">
                       <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-xs font-semibold text-slate-700">Sayt Favikonu (16x16 icon)</span>
+                        <span className="text-xs font-semibold text-slate-705">Mobil Görünüş Loqosu (Mobile Logo)</span>
+                        <button
+                          type="button"
+                          onClick={() => openMediaPicker(setCfgLogoMobileUrl)}
+                          className="text-xs text-gold-primary hover:underline flex items-center gap-1 cursor-pointer font-sans"
+                        >
+                          <Image className="w-3 h-3" /> Kitabxanadan Seç
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        {cfgLogoMobileUrl ? (
+                          <div className="w-14 h-14 rounded-lg bg-slate-100 border p-1 flex items-center justify-center shrink-0">
+                            <img src={cfgLogoMobileUrl} alt="Mobile Logo" className="max-w-full max-h-full object-contain" referrerPolicy="no-referrer" />
+                          </div>
+                        ) : (
+                          <div className="w-14 h-14 rounded-lg border-2 border-dashed flex items-center justify-center text-[10px] text-slate-400 font-sans shrink-0">Əsas istifadə olunacaq</div>
+                        )}
+                        <div className="flex-1">
+                          <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-[11px] font-bold px-3 py-1.5 rounded-lg inline-flex items-center cursor-pointer transition-all border border-gold-primary/20 select-none">
+                            Yüklə
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileUpload(e, setCfgLogoMobileUrl)}
+                            />
+                          </label>
+                          <p className="text-[10px] text-slate-400 mt-1">Mobil cihazlarda daha yığcam görünüş üçün xüsusi kiçilmiş loqo.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer Logo */}
+                    <div className="bg-slate-50 p-3 rounded-2xl border">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-xs font-semibold text-slate-705"> Footer Loqosu (Footer Logo)</span>
+                        <button
+                          type="button"
+                          onClick={() => openMediaPicker(setCfgLogoFooterUrl)}
+                          className="text-xs text-gold-primary hover:underline flex items-center gap-1 cursor-pointer font-sans"
+                        >
+                          <Image className="w-3 h-3" /> Kitabxanadan Seç
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        {cfgLogoFooterUrl ? (
+                          <div className="w-14 h-14 rounded-lg bg-slate-100 border p-1 flex items-center justify-center shrink-0">
+                            <img src={cfgLogoFooterUrl} alt="Footer Logo" className="max-w-full max-h-full object-contain" referrerPolicy="no-referrer" />
+                          </div>
+                        ) : (
+                          <div className="w-14 h-14 rounded-lg border-2 border-dashed flex items-center justify-center text-[10px] text-slate-400 font-sans shrink-0">Xristian loqosu/Əsas</div>
+                        )}
+                        <div className="flex-1">
+                          <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-[11px] font-bold px-3 py-1.5 rounded-lg inline-flex items-center cursor-pointer transition-all border border-gold-primary/20 select-none">
+                            Yüklə
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileUpload(e, setCfgLogoFooterUrl)}
+                            />
+                          </label>
+                          <p className="text-[10px] text-slate-400 mt-1">Saytın alt hissəsində (Footer) görünəcək rəsmi loqo.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Favicon */}
+                    <div className="bg-slate-50 p-3 rounded-2xl border">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-xs font-semibold text-slate-705">Sayt Favikonu (Favicon 16x16)</span>
                         <button
                           type="button"
                           onClick={() => openMediaPicker(setCfgFaviconUrl)}
@@ -2208,10 +2814,10 @@ export default function Admin({ onNavigate }: AdminProps) {
                             <img src={cfgFaviconUrl} alt="Favicon" className="w-6 h-6 object-contain" referrerPolicy="no-referrer" />
                           </div>
                         ) : (
-                          <div className="w-14 h-14 rounded-lg border-2 border-dashed flex items-center justify-center text-[10px] text-slate-400 font-sans shrink-0">Yoxdur</div>
+                          <div className="w-14 h-14 rounded-lg border-2 border-dashed flex items-center justify-center text-[10px] text-slate-400 font-sans shrink-0">Standart</div>
                         )}
                         <div className="flex-1">
-                          <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold px-3 py-1.5 rounded-lg inline-flex items-center cursor-pointer transition-all border border-gold-primary/20 select-none">
+                          <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-[11px] font-bold px-3 py-1.5 rounded-lg inline-flex items-center cursor-pointer transition-all border border-gold-primary/20 select-none">
                             Yüklə
                             <input
                               type="file"
@@ -2225,94 +2831,180 @@ export default function Admin({ onNavigate }: AdminProps) {
                     </div>
                   </div>
 
-                  {/* Sizing and Position sliders */}
-                  <div className="bg-slate-50 border border-slate-100 p-5 rounded-2xl flex flex-col gap-4">
-                    <h5 className="font-semibold text-xs text-navy-deep uppercase tracking-wider select-none">Loqo Ölçüsü və Yerləşmə Qaydası (Canlı)</h5>
+                  {/* Sizing, Layout Variants, and Alignment configurations */}
+                  <div className="bg-slate-50 border border-slate-100 p-5 rounded-2xl flex flex-col gap-4 font-sans text-xs">
+                    <h5 className="font-bold text-xs text-navy-deep uppercase tracking-wider select-none mb-1 text-slate-700">Başlıq Dizayn variantları & Ölçüləri</h5>
                     
-                    <div className="flex flex-col gap-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-500">Loqo Eni (Width):</span>
-                        <span className="font-mono font-bold text-navy-deep">{cfgLogoWidth}px</span>
+                    {/* Header Logo Variants */}
+                    <div className="flex flex-col gap-1.5 bg-white border p-3 rounded-xl">
+                      <label className="text-xs font-bold text-slate-600 block">Başlıq (Header) Loqo Variantı</label>
+                      <div className="grid grid-cols-2 gap-2 mt-1">
+                        <button
+                          type="button"
+                          onClick={() => setCfgLogoVariant('variant1')}
+                          className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer font-bold ${
+                            cfgLogoVariant === 'variant1' 
+                              ? 'border-gold-primary bg-gold-primary/10 text-navy-deep shadow-sm' 
+                              : 'border-slate-200 hover:bg-slate-50 text-slate-500'
+                          }`}
+                        >
+                          <div className="text-sm font-semibold">Variant 1</div>
+                          <div className="text-[10px] font-medium mt-0.5 opacity-80">Geniş Mərkəzlənmiş Format</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCfgLogoVariant('variant2')}
+                          className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer font-bold ${
+                            cfgLogoVariant === 'variant2' 
+                              ? 'border-gold-primary bg-gold-primary/10 text-navy-deep shadow-sm' 
+                              : 'border-slate-200 hover:bg-slate-50 text-slate-500'
+                          }`}
+                        >
+                          <div className="text-sm font-semibold">Variant 2</div>
+                          <div className="text-[10px] font-medium mt-0.5 opacity-80">Kiçik Sol Format (Default)</div>
+                        </button>
                       </div>
-                      <input
-                        type="range"
-                        min="50"
-                        max="300"
-                        step="5"
-                        value={cfgLogoWidth}
-                        onChange={(e) => setCfgLogoWidth(Number(e.target.value))}
-                        className="w-full accent-gold-primary cursor-pointer bg-slate-200 h-1 rounded-lg"
-                      />
+                      <p className="text-[10px] text-slate-400 mt-1 leading-normal">
+                        Variant 1: Loqo bütöv ekranın üst hissəsində mərkəzdə geniş formada dayanır və menyu aşağı sətirə sürüşür.
+                        Variant 2: Klassik sol tərəfdə yığcam şəkildə yerləşir.
+                      </p>
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-500">Loqo Hündürlüyü (Height):</span>
-                        <span className="font-mono font-bold text-navy-deep">{cfgLogoHeight}px</span>
+                    {/* Desktop dimensions */}
+                    <div className="border border-slate-200/60 p-3 rounded-xl bg-white space-y-3">
+                      <span className="block font-bold text-slate-700 text-[11px] uppercase tracking-wider">Masaüstü (Desktop) Ölçüləri</span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between text-[11px]">
+                          <span className="text-slate-500">Masaüstü Loqo Eni (Width):</span>
+                          <span className="font-mono font-bold text-navy-deep">{cfgDesktopWidth || cfgLogoWidth}px</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="50"
+                          max="400"
+                          step="5"
+                          value={cfgDesktopWidth || cfgLogoWidth}
+                          onChange={(e) => {
+                            setCfgDesktopWidth(Number(e.target.value));
+                            setCfgLogoWidth(Number(e.target.value));
+                          }}
+                          className="w-full accent-gold-primary cursor-pointer bg-slate-200 h-1 rounded-lg"
+                        />
                       </div>
-                      <input
-                        type="range"
-                        min="20"
-                        max="120"
-                        step="2"
-                        value={cfgLogoHeight}
-                        onChange={(e) => setCfgLogoHeight(Number(e.target.value))}
-                        className="w-full accent-gold-primary cursor-pointer bg-slate-200 h-1 rounded-lg"
-                      />
+
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between text-[11px]">
+                          <span className="text-slate-500">Masaüstü Loqo Hündürlüyü (Height):</span>
+                          <span className="font-mono font-bold text-navy-deep">{cfgDesktopHeight || cfgLogoHeight}px</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="20"
+                          max="180"
+                          step="2"
+                          value={cfgDesktopHeight || cfgLogoHeight}
+                          onChange={(e) => {
+                            setCfgDesktopHeight(Number(e.target.value));
+                            setCfgLogoHeight(Number(e.target.value));
+                          }}
+                          className="w-full accent-gold-primary cursor-pointer bg-slate-200 h-1 rounded-lg"
+                        />
+                      </div>
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-500">Horizontal Sürüşmə (Position X):</span>
-                        <span className="font-mono font-bold text-navy-deep">{cfgLogoPositionX}px</span>
+                    {/* Mobile dimensions */}
+                    <div className="border border-slate-200/60 p-3 rounded-xl bg-white space-y-3">
+                      <span className="block font-bold text-slate-700 text-[11px] uppercase tracking-wider">Mobil Cihaz (Mobile) Ölçüləri</span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between text-[11px]">
+                          <span className="text-slate-500">Mobil Loqo Eni (Width):</span>
+                          <span className="font-mono font-bold text-navy-deep">{cfgMobileWidth}px</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="40"
+                          max="250"
+                          step="5"
+                          value={cfgMobileWidth}
+                          onChange={(e) => setCfgMobileWidth(Number(e.target.value))}
+                          className="w-full accent-gold-primary cursor-pointer bg-slate-200 h-1 rounded-lg"
+                        />
                       </div>
-                      <input
-                        type="range"
-                        min="-50"
-                        max="150"
-                        step="1"
-                        value={cfgLogoPositionX}
-                        onChange={(e) => setCfgLogoPositionX(Number(e.target.value))}
-                        className="w-full accent-gold-primary cursor-pointer bg-slate-200 h-1 rounded-lg"
-                      />
+
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between text-[11px]">
+                          <span className="text-slate-500">Mobil Loqo Hündürlüyü (Height):</span>
+                          <span className="font-mono font-bold text-navy-deep">{cfgMobileHeight}px</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="15"
+                          max="100"
+                          step="2"
+                          value={cfgMobileHeight}
+                          onChange={(e) => setCfgMobileHeight(Number(e.target.value))}
+                          className="w-full accent-gold-primary cursor-pointer bg-slate-200 h-1 rounded-lg"
+                        />
+                      </div>
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-500">Vertical Offset (Position Y):</span>
-                        <span className="font-mono font-bold text-navy-deep">{cfgLogoPositionY}px</span>
+                    {/* Fine positioning adjustments */}
+                    <div className="border border-slate-200/60 p-3 rounded-xl bg-white space-y-3">
+                      <span className="block font-bold text-slate-700 text-[11px] uppercase tracking-wider">Hassas Hizalama Tənzimləmələri</span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-500">Horizontal Sürüşmə (Position X):</span>
+                          <span className="font-mono font-bold text-navy-deep">{cfgLogoPositionX}px</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="-50"
+                          max="150"
+                          step="1"
+                          value={cfgLogoPositionX}
+                          onChange={(e) => setCfgLogoPositionX(Number(e.target.value))}
+                          className="w-full accent-gold-primary cursor-pointer bg-slate-200 h-1 rounded-lg"
+                        />
                       </div>
-                      <input
-                        type="range"
-                        min="-20"
-                        max="60"
-                        step="1"
-                        value={cfgLogoPositionY}
-                        onChange={(e) => setCfgLogoPositionY(Number(e.target.value))}
-                        className="w-full accent-gold-primary cursor-pointer bg-slate-200 h-1 rounded-lg"
-                      />
+
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Vertical Offset (Position Y):</span>
+                          <span className="font-mono font-bold text-navy-deep">{cfgLogoPositionY}px</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="-20"
+                          max="60"
+                          step="1"
+                          value={cfgLogoPositionY}
+                          onChange={(e) => setCfgLogoPositionY(Number(e.target.value))}
+                          className="w-full accent-gold-primary cursor-pointer bg-slate-200 h-1 rounded-lg"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Loqo Canlı Sınaq Önizləmə Paneli (Realtime Logo Preview Canvas) */}
-                <div className="mt-5 p-4 border border-slate-100 rounded-2xl flex flex-col items-center justify-center bg-slate-100 relative overflow-hidden">
-                  <span className="absolute top-2 left-2 text-[9px] text-slate-500/80 uppercase font-mono tracking-widest pointer-events-none select-none">Naviqasiya Önizləmə</span>
-                  <div className="w-full max-w-lg bg-navy-deep py-4 px-6 rounded-xl flex items-center justify-between border border-white/5">
-                    <div className="flex items-center" style={{ transform: `translate(${cfgLogoPositionX}px, ${cfgLogoPositionY}px)` }}>
+                {/* Real-time branding preview canvas */}
+                <div className="mt-5 p-4 border border-slate-100 rounded-3xl flex flex-col items-center justify-center bg-slate-100 relative overflow-hidden">
+                  <span className="absolute top-3 left-3 text-[9px] text-slate-500 uppercase font-mono tracking-widest pointer-events-none select-none font-bold">Canlı Başlıq (Header) Önizləmə</span>
+                  <div className={`w-full max-w-xl bg-navy-deep py-4 px-6 rounded-2xl flex border border-white/5 transition-all text-white ${cfgLogoVariant === 'variant1' ? 'flex-col items-center gap-2' : 'flex-row items-center justify-between'}`}>
+                    <div style={{ transform: `translate(${cfgLogoPositionX}px, ${cfgLogoPositionY}px)` }} className="transition-all select-none">
                       {cfgLogoLightUrl ? (
                         <img
                           src={cfgLogoLightUrl}
                           alt="Logo Preview"
-                          style={{ width: `${cfgLogoWidth}px`, height: `${cfgLogoHeight}px` }}
+                          style={{ width: `${cfgDesktopWidth || cfgLogoWidth}px`, height: `${cfgDesktopHeight || cfgLogoHeight}px` }}
                           className="object-contain"
                           referrerPolicy="no-referrer"
                         />
                       ) : (
-                        <span className="text-gold-primary font-bold tracking-widest text-lg">{cfgHeaderTitle || 'NAXÇIVAN'}</span>
+                        <span className="text-gold-primary font-serif font-bold tracking-widest text-lg">{cfgHeaderTitle || 'NAXÇIVAN'}</span>
                       )}
                     </div>
-                    <div className="flex gap-4 text-[10px] text-slate-400 font-sans font-medium uppercase tracking-wider select-none">
+                    <div className="flex gap-4 text-[10px] text-slate-400 font-sans font-bold uppercase tracking-wider select-none border-t border-white/5 pt-1.5 w-full justify-center lg:border-t-0 lg:pt-0 lg:w-auto">
+                      <span className="text-gold-primary border-b border-gold-primary">Ana Səhifə</span>
                       <span>Turlar</span>
                       <span>Otellər</span>
                       <span>Məkanlar</span>
@@ -2788,6 +3480,138 @@ export default function Admin({ onNavigate }: AdminProps) {
                   >
                     <Plus className="w-3.5 h-3.5" /> Videonu daxil et
                   </button>
+                </div>
+              </div>
+
+              {/* SECTION I: WhatsApp Settings */}
+              <div className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm">
+                <h4 className="font-serif text-base font-bold text-navy-deep border-b pb-2 mb-4 flex items-center gap-2 select-none">
+                  <MessageSquare className="w-4 h-4 text-indigo-600 font-bold" />
+                  WhatsApp Business API & Avtomatik Sifariş Bildirişləri
+                </h4>
+
+                <div className="space-y-6 text-sm font-sans" id="wa-settings-elements">
+                  
+                  {/* Mode Selector */}
+                  <div className="bg-slate-50 border p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div>
+                      <p className="font-bold text-navy-deep">WhatsApp API Çatdırılma Rejimi</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">Sifarişlərin real və ya test (simulyasiya) rejimində göndərilməsini tənzimləyin.</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setWaIsRealMode(false)}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          !waIsRealMode 
+                          ? 'bg-amber-100 text-amber-800 border-2 border-amber-300' 
+                          : 'bg-white text-slate-600 border hover:bg-slate-50'
+                        }`}
+                      >
+                        Simulyasiya Modu (Məsləhət Görülən)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setWaIsRealMode(true)}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          waIsRealMode 
+                          ? 'bg-indigo-600 text-white border-2 border-indigo-800 shadow' 
+                          : 'bg-white text-slate-600 border hover:bg-slate-50'
+                        }`}
+                      >
+                        Canlı Meta Cloud API (Real Mode)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Meta Phone ID */}
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-slate-500">Meta Telefon Nömrəsi ID-si (Phone Number ID)</label>
+                      <input
+                        type="text"
+                        placeholder="Məsələn: 10938495038"
+                        disabled={!waIsRealMode}
+                        value={waPhoneId}
+                        onChange={(e) => setWaPhoneId(e.target.value)}
+                        className="p-2.5 bg-slate-50 border rounded-xl disabled:opacity-50 font-mono text-xs"
+                      />
+                    </div>
+
+                    {/* Meta Access Token */}
+                    <div className="flex flex-col gap-1 md:col-span-2">
+                      <label className="text-xs text-slate-500">Meta Giriş Tokeni (Permanent System Access Token)</label>
+                      <input
+                        type="password"
+                        placeholder="EAYH3847HDJHS..."
+                        disabled={!waIsRealMode}
+                        value={waAccessToken}
+                        onChange={(e) => setWaAccessToken(e.target.value)}
+                        className="p-2.5 bg-slate-50 border rounded-xl disabled:opacity-50 font-mono text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Message Template Customizer */}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs font-bold text-slate-600">Avtomatik Sifariş Bildiriş Mətni Şablonu</label>
+                      <span className="text-[10px] text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded font-medium">Tur & Otel üçün ortaq</span>
+                    </div>
+                    <textarea
+                      rows={6}
+                      placeholder="Bildiriş şablonunu daxil edin..."
+                      value={waMessageTemplate}
+                      onChange={(e) => setWaMessageTemplate(e.target.value)}
+                      className="p-3 bg-slate-50 border rounded-xl font-sans text-xs md:text-sm mt-1 whitespace-pre-wrap leading-relaxed shadow-inner"
+                    />
+                    
+                    {/* Dynamic Placeholders Helpers bar */}
+                    <div className="mt-2 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 flex flex-col gap-1 w-full text-[10px] md:text-xs">
+                      <span className="font-bold text-indigo-900 select-none">Mətndə istifadə edə biləcəyiniz dinamik sahələr:</span>
+                      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 mt-1.5 font-mono">
+                        <div className="p-1 px-2 border rounded bg-white text-[10px] font-sans truncate hover:border-indigo-400 cursor-pointer" title="Kopyala" onClick={() => { setWaMessageTemplate(waMessageTemplate + '{Müştəri Adı}'); success('{Müştəri Adı} əlavə edildi!'); }}>
+                          <span className="font-bold text-indigo-600 font-mono">{`{Müştəri Adı}`}</span> <span className="text-slate-400 text-[9px]">(Ad & Soyad)</span>
+                        </div>
+                        <div className="p-1 px-2 border rounded bg-white text-[10px] font-sans truncate hover:border-indigo-400 cursor-pointer" title="Kopyala" onClick={() => { setWaMessageTemplate(waMessageTemplate + '{Tur Adı}'); success('{Tur Adı} əlavə edildi!'); }}>
+                          <span className="font-bold text-indigo-600 font-mono">{`{Tur Adı}`}</span> <span className="text-slate-400 text-[9px]">(Tur/Otel)</span>
+                        </div>
+                        <div className="p-1 px-2 border rounded bg-white text-[10px] font-sans truncate hover:border-indigo-400 cursor-pointer" title="Kopyala" onClick={() => { setWaMessageTemplate(waMessageTemplate + '{Tur Tarixi}'); success('{Tur Tarixi} əlavə edildi!'); }}>
+                          <span className="font-bold text-indigo-600 font-mono">{`{Tur Tarixi}`}</span> <span className="text-slate-400 text-[9px]">(Tarix)</span>
+                        </div>
+                        <div className="p-1 px-2 border rounded bg-white text-[10px] font-sans truncate hover:border-indigo-400 cursor-pointer" title="Kopyala" onClick={() => { setWaMessageTemplate(waMessageTemplate + '{Tur Başlama Saatı}'); success('{Tur Başlama Saatı} əlavə edildi!'); }}>
+                          <span className="font-bold text-indigo-600 font-mono">{`{Tur Başlama Saatı}`}</span> <span className="text-slate-400 text-[9px]">(Saat)</span>
+                        </div>
+                        <div className="p-1 px-2 border rounded bg-white text-[10px] font-sans truncate hover:border-indigo-400 cursor-pointer" title="Kopyala" onClick={() => { setWaMessageTemplate(waMessageTemplate + '{Rezervasiya Nömrəsi}'); success('{Rezervasiya Nömrəsi} əlavə edildi!'); }}>
+                          <span className="font-bold text-indigo-600 font-mono">{`{Rezervasiya Nömrəsi}`}</span> <span className="text-slate-400 text-[9px]">(ID)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Webhook Developer Information Card */}
+                  <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50/50 space-y-3 font-sans text-left">
+                    <p className="font-bold text-slate-700 text-xs select-none">🔗 Real Vaxt Webhook Qurulması (İnteqrasiya Faktı)</p>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      E-ticarət portalında real vaxt status yenilənmələrini aktivləşdirmək üçün Meta Developer panelində bu Webhook tənzimləmələrini daxil edin:
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+                      <div className="p-2.5 bg-white border rounded-xl flex flex-col gap-1 shadow-sm">
+                        <span className="text-[10px] font-sans font-bold text-slate-400">CALLBACK URL</span>
+                        <span className="text-navy-deep font-bold truncate leading-none mt-1">{window.location.origin}/api/whatsapp/webhook</span>
+                      </div>
+                      <div className="p-2.5 bg-white border rounded-xl flex flex-col gap-1 shadow-sm relative">
+                        <span className="text-[10px] font-sans font-bold text-slate-400">VERIFY TOKEN (DOĞRULAMA ŞİFRƏSİ)</span>
+                        <input
+                          type="text"
+                          value={waVerifyToken}
+                          onChange={(e) => setWaVerifyToken(e.target.value)}
+                          className="p-1 border bg-slate-50 rounded text-xs select-all w-full mt-1 font-bold text-indigo-600"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
@@ -3394,6 +4218,893 @@ export default function Admin({ onNavigate }: AdminProps) {
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp Messages Logs Modal */}
+      {isLogsModalOpen && selectedLogsRes && (
+        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-[950] p-4 font-sans overflow-y-auto backdrop-blur-sm animate-fadeIn text-left">
+          <div className="bg-white rounded-3xl w-full max-w-2xl flex flex-col max-h-[85vh] overflow-hidden shadow-2xl border border-slate-100 relative my-8 animate-slideUp">
+            {/* Modal Header */}
+            <div className="p-5 border-b flex justify-between items-center bg-slate-50 sticky top-0 z-10 select-none">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-indigo-600" />
+                <div>
+                  <h4 className="font-serif text-base font-bold text-navy-deep leading-none">
+                    WhatsApp Mesaj Tarixçəsi
+                  </h4>
+                  <p className="text-[10px] text-slate-400 font-sans mt-1 leading-none">
+                    Müştəri: <span className="font-semibold text-slate-600">{selectedLogsRes.fullName}</span> ({selectedLogsRes.phone})
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => { setIsLogsModalOpen(false); setSelectedLogsRes(null); }} 
+                className="p-1.5 bg-slate-100 hover:bg-rose-500 hover:text-white rounded-xl text-slate-500 cursor-pointer transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Scrollable Contents */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {(!selectedLogsRes.whatsappLogs || selectedLogsRes.whatsappLogs.length === 0) ? (
+                <div className="text-center py-8 text-slate-400 font-sans text-sm">
+                  Bu rezervasiya üçün heç bir WhatsApp bildirişi göndərilməyib.
+                </div>
+              ) : (
+                <div className="space-y-4" id="whatsapp-logs-container">
+                  {selectedLogsRes.whatsappLogs.map((log: any, idx: number) => (
+                    <div key={idx} className="p-4 rounded-2xl border bg-slate-50/50 flex flex-col gap-2">
+                      <div className="flex justify-between items-start gap-4">
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
+                          log.status === 'read' ? 'bg-sky-100 text-sky-800' :
+                          log.status === 'sent' || log.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                          'bg-rose-100 text-rose-800'
+                        }`}>
+                          {log.status === 'read' ? 'Oxundu' :
+                           log.status === 'sent' || log.status === 'delivered' ? 'Göndərildi' : 'Xəta baş verdi'}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {new Date(log.timestamp).toLocaleString('az-AZ')}
+                        </span>
+                      </div>
+                      
+                      {log.messageId && (
+                        <div className="text-[9px] text-slate-400 font-mono">
+                          ID: {log.messageId}
+                        </div>
+                      )}
+
+                      <div className="text-xs text-slate-700 bg-white border border-slate-100 rounded-xl p-3 whitespace-pre-wrap font-sans">
+                        {log.message}
+                      </div>
+
+                      {log.error && (
+                        <div className="text-[10px] text-rose-600 bg-rose-50 rounded-lg p-2 font-mono">
+                          Xəta: {log.error}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t bg-slate-50 flex justify-end gap-2 sticky bottom-0 z-10 select-none">
+              <button
+                type="button"
+                onClick={() => { setIsLogsModalOpen(false); setSelectedLogsRes(null); }}
+                className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs cursor-pointer transition-all"
+              >
+                Bağla
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 1. EDIT TOUR MODAL */}
+      {editingTour && (
+        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-[950] p-4 font-sans overflow-y-auto backdrop-blur-sm animate-fadeIn text-left">
+          <div className="bg-white rounded-3xl w-full max-w-4xl flex flex-col md:max-h-[85vh] overflow-hidden shadow-2xl border border-slate-100 relative my-8 animate-slideUp">
+            {/* Modal Header */}
+            <div className="p-5 border-b flex justify-between items-center bg-slate-50 sticky top-0 z-10 select-none">
+              <div className="flex items-center gap-2">
+                <Compass className="w-5 h-5 text-gold-primary animate-spin-slow" />
+                <div>
+                  <h4 className="font-serif text-base font-bold text-navy-deep leading-none">
+                    Tur Məlumatlarını Redaktə Et (Düzəliş)
+                  </h4>
+                  <p className="text-[10px] text-slate-400 font-sans mt-1 leading-none">Tur ID: {editingTour.id}</p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setEditingTour(null)} 
+                className="p-1.5 bg-slate-100 hover:bg-rose-500 hover:text-white rounded-xl text-slate-500 cursor-pointer transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Scrollable Form Body */}
+            <form onSubmit={handleEditTourSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* Tur Adı */}
+                <div className="flex flex-col gap-1 md:col-span-2">
+                  <label className="text-xs font-bold text-slate-500">Turun Adı</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingTour.name || ''}
+                    onChange={(e) => setEditingTour({ ...editingTour, name: e.target.value })}
+                    className="p-2.5 bg-slate-50 border rounded-xl text-xs font-medium focus:bg-white"
+                  />
+                </div>
+
+                {/* Kateqoriya */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-500">Kateqoriyası</label>
+                  <select
+                    value={editingTour.category || ''}
+                    onChange={(e) => setEditingTour({ ...editingTour, category: e.target.value })}
+                    className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white cursor-pointer"
+                  >
+                    <option value="cultural">Mədəniyyət Turu</option>
+                    <option value="nature">Təbiət Turu</option>
+                    <option value="historical">Tarixi Tur</option>
+                    <option value="wellness">Sağlamlıq Turu</option>
+                    <option value="adventure">Macəra Turu</option>
+                  </select>
+                </div>
+
+                {/* Qiymət */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-500">Gecəlik / Ümumi Qiymət (₼)</label>
+                  <input
+                    type="number"
+                    required
+                    value={editingTour.price || 0}
+                    onChange={(e) => setEditingTour({ ...editingTour, price: Number(e.target.value) })}
+                    className="p-2.5 bg-slate-50 border rounded-xl text-xs font-bold text-amber-600 focus:bg-white"
+                  />
+                </div>
+
+                {/* Müddət */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-500">Müddət (Gün)</label>
+                  <input
+                    type="number"
+                    required
+                    value={editingTour.duration || 1}
+                    onChange={(e) => setEditingTour({ ...editingTour, duration: Number(e.target.value) })}
+                    className="p-2.5 bg-slate-50 border rounded-xl text-xs font-medium focus:bg-white"
+                  />
+                </div>
+
+                {/* Əsas Şəkil */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-500 font-sans">Karusel / Əsas Tur Şəkli</label>
+                  <div className="flex items-center gap-2 bg-slate-50 p-2 border rounded-xl">
+                    {editingTour.mainImage ? (
+                      <img src={editingTour.mainImage} className="w-8 h-8 rounded object-cover shadow border shrink-0" alt="" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="w-8 h-8 rounded border-dashed border bg-white shrink-0" />
+                    )}
+                    <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-[9px] font-bold px-2 py-1.5 rounded-lg cursor-pointer flex-1 text-center font-sans">
+                      Şəkil Dəyiş
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleFileUpload(e, (url) => setEditingTour({ ...editingTour, mainImage: url }))}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Təfərrüatlı qısa təsvir */}
+                <div className="flex flex-col gap-1 md:col-span-3">
+                  <label className="text-xs font-bold text-slate-500">Səyahət Proqramının Təsviri</label>
+                  <textarea
+                    rows={3}
+                    value={editingTour.shortDescription || ''}
+                    onChange={(e) => setEditingTour({ ...editingTour, shortDescription: e.target.value })}
+                    className="p-2.5 bg-slate-50 border rounded-xl text-xs font-medium focus:bg-white"
+                  />
+                </div>
+
+                {/* Daxil Olan Xidmətlər */}
+                <div className="flex flex-col gap-1 md:col-span-3">
+                  <label className="text-xs font-bold text-slate-500">Daxil Olan Xidmətlər (Vergüllə ayıraraq yeniləyin)</label>
+                  <input
+                    type="text"
+                    value={Array.isArray(editingTour.includedServices) ? editingTour.includedServices.join(', ') : (editingTour.includedServices || '')}
+                    onChange={(e) => setEditingTour({ ...editingTour, includedServices: e.target.value.split(',').map((s: string) => s.trim()) })}
+                    className="p-2.5 bg-slate-50 border rounded-xl text-xs font-medium focus:bg-white"
+                  />
+                </div>
+
+                {/* Nəqliyyat məlumatları */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-500">Nəqliyyat Növü</label>
+                  <input
+                    type="text"
+                    value={editingTour.transport?.type || ''}
+                    onChange={(e) => setEditingTour({
+                      ...editingTour,
+                      transport: { ...(editingTour.transport || {}), type: e.target.value }
+                    })}
+                    className="p-2.5 bg-slate-50 border rounded-xl text-xs font-medium"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1 md:col-span-2">
+                  <label className="text-xs font-bold text-slate-500">Nəqliyyat Avtomobil Modeli</label>
+                  <input
+                    type="text"
+                    value={editingTour.transport?.model || ''}
+                    onChange={(e) => setEditingTour({
+                      ...editingTour,
+                      transport: { ...(editingTour.transport || {}), model: e.target.value }
+                    })}
+                    className="p-2.5 bg-slate-50 border rounded-xl text-xs font-medium"
+                  />
+                </div>
+
+              </div>
+
+              {/* DYNAMIC CULINARY Restorans and Foods Section in EDIT MODAL (Qidalanma Planı) */}
+              <div className="border-t border-slate-100 pt-6 mt-4">
+                <div className="flex items-center gap-2 mb-4 bg-amber-50/50 p-3 rounded-2xl border border-amber-100/50 justify-start select-none">
+                  <Utensils className="w-5 h-5 text-gold-primary shrink-0 animate-pulse" />
+                  <div className="text-left font-sans">
+                    <h4 className="font-serif text-sm font-bold text-navy-deep">Tura Bağlı Restoran və Menu Bölmələri (Qidalanma Planı)</h4>
+                    <p className="text-[10px] text-slate-400 leading-none mt-0.5 font-semibold">Buradan səhər, nahar və axşam yeməyi tərtib olunan restoran şəkli və menyusunu redaktə edin.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                  
+                  {/* Səhər Yeməyi */}
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col gap-3">
+                    <span className="text-xs font-bold text-navy-deep uppercase tracking-wider flex items-center gap-1">☕ Səhər Yeməyi</span>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-slate-500 font-sans">Restoranın Adı</label>
+                      <input
+                        type="text"
+                        value={editingTour.meals?.breakfast?.restaurantName || ''}
+                        onChange={(e) => {
+                          const meals = { ...(editingTour.meals || {}) };
+                          meals.breakfast = { ...(meals.breakfast || { items: [] }), restaurantName: e.target.value };
+                          setEditingTour({ ...editingTour, meals });
+                        }}
+                        className="p-2 bg-white border rounded-xl text-xs"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-slate-500 font-sans">Restoran Şəkli</label>
+                      <div className="flex items-center gap-2 bg-white p-2 border rounded-xl">
+                        {editingTour.meals?.breakfast?.image ? (
+                          <div className="relative w-10 h-10 rounded overflow-hidden border shrink-0 bg-slate-100 flex items-center justify-center">
+                            <img src={editingTour.meals.breakfast.image} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const meals = { ...(editingTour.meals || {}) };
+                                meals.breakfast = { ...(meals.breakfast || { items: [] }), image: '' };
+                                setEditingTour({ ...editingTour, meals });
+                              }}
+                              className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-[8px] font-bold opacity-0 hover:opacity-100 transition-all cursor-pointer"
+                            >
+                              Sil
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded border border-dashed bg-slate-100 flex items-center justify-center text-[8px] text-slate-450 shrink-0">Yoxdur</div>
+                        )}
+                        <label className="bg-slate-200 hover:bg-slate-300 text-slate-700 text-[8px] font-bold px-2 py-1 rounded-lg cursor-pointer shrink-0 transition-all font-sans">
+                          Şəkil Yüklə
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, (url) => {
+                              const meals = { ...(editingTour.meals || {}) };
+                              meals.breakfast = { ...(meals.breakfast || { items: [] }), image: url };
+                              setEditingTour({ ...editingTour, meals });
+                            })}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-slate-500 font-sans">Menyu (Vergüllə ayıraraq)</label>
+                      <input
+                        type="text"
+                        value={Array.isArray(editingTour.meals?.breakfast?.items) ? editingTour.meals?.breakfast?.items.join(', ') : ''}
+                        onChange={(e) => {
+                          const meals = { ...(editingTour.meals || {}) };
+                          meals.breakfast = { ...(meals.breakfast || {}), items: e.target.value.split(',').map((s: string) => s.trim()) };
+                          setEditingTour({ ...editingTour, meals });
+                        }}
+                        className="p-2 bg-white border border-slate-200 rounded-xl text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Nahar Yeməyi */}
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col gap-3">
+                    <span className="text-xs font-bold text-navy-deep uppercase tracking-wider flex items-center gap-1">🍲 Nahar Yeməyi</span>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-slate-500 font-sans">Restoranın Adı</label>
+                      <input
+                        type="text"
+                        value={editingTour.meals?.lunch?.restaurantName || ''}
+                        onChange={(e) => {
+                          const meals = { ...(editingTour.meals || {}) };
+                          meals.lunch = { ...(meals.lunch || { items: [] }), restaurantName: e.target.value };
+                          setEditingTour({ ...editingTour, meals });
+                        }}
+                        className="p-2 bg-white border rounded-xl text-xs"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-slate-500 font-sans">Restoran Şəkli</label>
+                      <div className="flex items-center gap-2 bg-white p-2 border rounded-xl">
+                        {editingTour.meals?.lunch?.image ? (
+                          <div className="relative w-10 h-10 rounded overflow-hidden border shrink-0 bg-slate-100 flex items-center justify-center">
+                            <img src={editingTour.meals.lunch.image} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const meals = { ...(editingTour.meals || {}) };
+                                meals.lunch = { ...(meals.lunch || { items: [] }), image: '' };
+                                setEditingTour({ ...editingTour, meals });
+                              }}
+                              className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-[8px] font-bold opacity-0 hover:opacity-100 transition-all cursor-pointer"
+                            >
+                              Sil
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded border border-dashed bg-slate-100 flex items-center justify-center text-[8px] text-slate-450 shrink-0">Yoxdur</div>
+                        )}
+                        <label className="bg-slate-200 hover:bg-slate-300 text-slate-700 text-[8px] font-bold px-2 py-1 rounded-lg cursor-pointer shrink-0 transition-all font-sans">
+                          Şəkil Yüklə
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, (url) => {
+                              const meals = { ...(editingTour.meals || {}) };
+                              meals.lunch = { ...(meals.lunch || { items: [] }), image: url };
+                              setEditingTour({ ...editingTour, meals });
+                            })}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-slate-500 font-sans font-sans">Menyu (Vergüllə ayıraraq)</label>
+                      <input
+                        type="text"
+                        value={Array.isArray(editingTour.meals?.lunch?.items) ? editingTour.meals?.lunch?.items.join(', ') : ''}
+                        onChange={(e) => {
+                          const meals = { ...(editingTour.meals || {}) };
+                          meals.lunch = { ...(meals.lunch || {}), items: e.target.value.split(',').map((s: string) => s.trim()) };
+                          setEditingTour({ ...editingTour, meals });
+                        }}
+                        className="p-2 bg-white border border-slate-200 rounded-xl text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Axşam Yeməyi */}
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col gap-3">
+                    <span className="text-xs font-bold text-navy-deep uppercase tracking-wider flex items-center gap-1">🍢 Axşam Yeməyi</span>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-slate-500 font-sans">Restoranın Adı</label>
+                      <input
+                        type="text"
+                        value={editingTour.meals?.dinner?.restaurantName || ''}
+                        onChange={(e) => {
+                          const meals = { ...(editingTour.meals || {}) };
+                          meals.dinner = { ...(meals.dinner || { items: [] }), restaurantName: e.target.value };
+                          setEditingTour({ ...editingTour, meals });
+                        }}
+                        className="p-2 bg-white border rounded-xl text-xs"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-slate-500 font-sans">Restoran Şəkli</label>
+                      <div className="flex items-center gap-2 bg-white p-2 border rounded-xl">
+                        {editingTour.meals?.dinner?.image ? (
+                          <div className="relative w-10 h-10 rounded overflow-hidden border shrink-0 bg-slate-100 flex items-center justify-center">
+                            <img src={editingTour.meals.dinner.image} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const meals = { ...(editingTour.meals || {}) };
+                                meals.dinner = { ...(meals.dinner || { items: [] }), image: '' };
+                                setEditingTour({ ...editingTour, meals });
+                              }}
+                              className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-[8px] font-bold opacity-0 hover:opacity-100 transition-all cursor-pointer"
+                            >
+                              Sil
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded border border-dashed bg-slate-100 flex items-center justify-center text-[8px] text-slate-455 shrink-0">Yoxdur</div>
+                        )}
+                        <label className="bg-slate-200 hover:bg-slate-300 text-slate-700 text-[8px] font-bold px-2 py-1 rounded-lg cursor-pointer shrink-0 transition-all font-sans">
+                          Şəkil Yüklə
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, (url) => {
+                              const meals = { ...(editingTour.meals || {}) };
+                              meals.dinner = { ...(meals.dinner || { items: [] }), image: url };
+                              setEditingTour({ ...editingTour, meals });
+                            })}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-slate-500 font-sans font-sans">Menyu (Vergüllə ayıraraq)</label>
+                      <input
+                        type="text"
+                        value={Array.isArray(editingTour.meals?.dinner?.items) ? editingTour.meals?.dinner?.items.join(', ') : ''}
+                        onChange={(e) => {
+                          const meals = { ...(editingTour.meals || {}) };
+                          meals.dinner = { ...(meals.dinner || {}), items: e.target.value.split(',').map((s: string) => s.trim()) };
+                          setEditingTour({ ...editingTour, meals });
+                        }}
+                        className="p-2 bg-white border border-slate-200 rounded-xl text-xs"
+                      />
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Submit panel */}
+              <div className="p-4 border-t flex justify-end gap-2 bg-slate-50 sticky bottom-0 z-10 -mx-6 -mb-6">
+                <button
+                  type="submit"
+                  className="bg-gold-primary hover:bg-gold-dark text-navy-deep font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-md font-sans"
+                >
+                  <Check className="w-4 h-4" />
+                  Saxla və Çıx
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingTour(null)}
+                  className="bg-slate-200 hover:bg-slate-300 text-slate-750 font-bold px-4 py-2.5 rounded-xl text-xs cursor-pointer transition-all font-sans"
+                >
+                  Geri Qayıt
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+
+      {/* 2. EDIT HOTEL MODAL */}
+      {editingHotel && (
+        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-[950] p-4 font-sans overflow-y-auto backdrop-blur-sm animate-fadeIn text-left">
+          <div className="bg-white rounded-3xl w-full max-w-4xl flex flex-col md:max-h-[85vh] overflow-hidden shadow-2xl border border-slate-100 relative my-8 animate-slideUp">
+            {/* Modal Header */}
+            <div className="p-5 border-b flex justify-between items-center bg-slate-50 sticky top-0 z-10 select-none">
+              <div className="flex items-center gap-2">
+                <Building className="w-5 h-5 text-gold-primary animate-pulse" />
+                <div>
+                  <h4 className="font-serif text-base font-bold text-navy-deep leading-none">
+                    Mehmanxana və Tarifləri Redaktə Et
+                  </h4>
+                  <p className="text-[10px] text-slate-400 font-sans mt-1 leading-none">Otel ID: {editingHotel.id}</p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setEditingHotel(null)} 
+                className="p-1.5 bg-slate-100 hover:bg-rose-500 hover:text-white rounded-xl text-slate-500 cursor-pointer transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Scrollable Form Body */}
+            <form onSubmit={handleEditHotelSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* Otel Adı */}
+                <div className="flex flex-col gap-1 md:col-span-2">
+                  <label className="text-xs font-bold text-slate-500">Mehmanxananın (Otel) Adı</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingHotel.name || ''}
+                    onChange={(e) => setEditingHotel({ ...editingHotel, name: e.target.value })}
+                    className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white"
+                  />
+                </div>
+
+                {/* Ulduz Sayı */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-500">Ulduz Sayı</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={5}
+                    required
+                    value={editingHotel.stars || 4}
+                    onChange={(e) => setEditingHotel({ ...editingHotel, stars: Number(e.target.value) })}
+                    className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white"
+                  />
+                </div>
+
+                {/* Ünvan */}
+                <div className="flex flex-col gap-1 md:col-span-2">
+                  <label className="text-xs font-bold text-slate-500">Fiziki Ünvanı</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingHotel.address || ''}
+                    onChange={(e) => setEditingHotel({ ...editingHotel, address: e.target.value })}
+                    className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white"
+                  />
+                </div>
+
+                {/* Əsas Əlaqə Nömrəsi */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-500 font-sans">Əlaqə Telefonu/WhatsApp</label>
+                  <input
+                    type="text"
+                    value={editingHotel.contact?.phone || ''}
+                    onChange={(e) => {
+                      const contact = { ...(editingHotel.contact || {}) };
+                      contact.phone = e.target.value;
+                      setEditingHotel({ ...editingHotel, contact });
+                    }}
+                    className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+                  />
+                </div>
+
+                {/* Əlaqə Email */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-500">Email Ünvanı</label>
+                  <input
+                    type="email"
+                    value={editingHotel.contact?.email || ''}
+                    onChange={(e) => {
+                      const contact = { ...(editingHotel.contact || {}) };
+                      contact.email = e.target.value;
+                      setEditingHotel({ ...editingHotel, contact });
+                    }}
+                    className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+                  />
+                </div>
+
+                {/* Check In / Out */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-500">Giriş saatı (Check-In)</label>
+                  <input
+                    type="text"
+                    value={editingHotel.checkInTime || '14:00'}
+                    onChange={(e) => setEditingHotel({ ...editingHotel, checkInTime: e.target.value })}
+                    className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-500">Çıxış saatı (Check-Out)</label>
+                  <input
+                    type="text"
+                    value={editingHotel.checkOutTime || '12:00'}
+                    onChange={(e) => setEditingHotel({ ...editingHotel, checkOutTime: e.target.value })}
+                    className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+                  />
+                </div>
+
+                {/* Hotel Təsviri */}
+                <div className="flex flex-col gap-1 md:col-span-3">
+                  <label className="text-xs font-bold text-slate-500">Mehmanxananın Ətraflı Təsviri</label>
+                  <textarea
+                    rows={3}
+                    value={editingHotel.description || ''}
+                    onChange={(e) => setEditingHotel({ ...editingHotel, description: e.target.value })}
+                    className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
+                  />
+                </div>
+
+              </div>
+
+              {/* UNLIMITED DYNAMIC ROOM TYPES EDITOR WITH SEASONAL PRICING */}
+              <div className="border-t border-slate-100 pt-6">
+                <div className="flex justify-between items-center mb-4 select-none">
+                  <div>
+                    <h4 className="font-serif text-sm font-bold text-navy-deep">Otaq Növləri, Mövsümlük Tariflər və Paketlər</h4>
+                    <p className="text-[10px] text-slate-400 font-sans leading-none mt-0.5">Çarpayı sayı, mövsümlük yaz/yay/qış gecəlik rüsumları və təsviri ətraflı qeyd edin.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const rooms = Array.isArray(editingHotel.rooms) ? [...editingHotel.rooms] : [];
+                      rooms.push({
+                        id: 'room_' + Date.now(),
+                        name: 'İkiNəfərlik Komfort Otaq',
+                        image: 'https://images.unsplash.com/photo-1611891405914-ee72af1a8979',
+                        capacity: 2,
+                        size: '30m²',
+                        bedType: '1 Böyük King Size Çarpayı',
+                        price: 100,
+                        discountPrice: 90,
+                        seasonalPrices: { spring: 100, summer: 130, autumn: 95, winter: 80, holidays: 150 },
+                        amenities: ['Wifi', 'İsti su', 'Kondisioner', 'Smart LCD TV'],
+                        description: 'Tam mövsümlük klimatizasiya sistemi, dadlı səhər yeməyi daxil, şık mənzərəli geniş otaq.'
+                      });
+                      setEditingHotel({ ...editingHotel, rooms });
+                    }}
+                    className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-xs font-bold py-1.5 px-3.5 rounded-xl flex items-center gap-1 cursor-pointer transition-all shadow-sm font-sans"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Yeni Otaq Növü Əlavə Et
+                  </button>
+                </div>
+
+                <div className="space-y-4 max-h-[350px] overflow-y-auto p-2 border border-slate-200 rounded-2xl bg-slate-50/50">
+                  {Array.isArray(editingHotel.rooms) && editingHotel.rooms.length > 0 ? (
+                    editingHotel.rooms.map((room, roomIdx) => (
+                      <div key={room.id || roomIdx} className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col gap-3 relative text-left">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const rooms = editingHotel.rooms.filter((_: any, i: number) => i !== roomIdx);
+                            setEditingHotel({ ...editingHotel, rooms });
+                          }}
+                          className="absolute top-2 right-2 p-1 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all text-xs cursor-pointer"
+                          title="Bu otağı sil"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+                          {/* Otaq şəkli */}
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-slate-500 font-sans">Otaq Şəkli</label>
+                            <div className="flex items-center gap-1.5 bg-slate-50 p-1 border rounded-lg">
+                              {room.image ? (
+                                <img src={room.image} className="w-8 h-8 rounded object-cover shadow shrink-0" alt="" referrerPolicy="no-referrer" />
+                              ) : (
+                                <div className="w-8 h-8 rounded bg-slate-200 shrink-0" />
+                              )}
+                              <label className="bg-slate-200 hover:bg-slate-300 text-slate-700 text-[8px] font-bold px-1.5 py-1 rounded cursor-pointer text-center flex-1 font-sans select-none">
+                                Şəkil Yüklə
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => handleFileUpload(e, (url) => {
+                                    const rooms = [...editingHotel.rooms];
+                                    rooms[roomIdx] = { ...rooms[roomIdx], image: url };
+                                    setEditingHotel({ ...editingHotel, rooms });
+                                  })}
+                                />
+                              </label>
+                            </div>
+                          </div>
+
+                          {/* Otaq Adı */}
+                          <div className="flex flex-col gap-1 md:col-span-2">
+                            <label className="text-[10px] text-slate-500 font-sans font-semibold">Otaq və ya Paket Adı</label>
+                            <input
+                              type="text"
+                              value={room.name || ''}
+                              onChange={(e) => {
+                                const rooms = [...editingHotel.rooms];
+                                rooms[roomIdx] = { ...rooms[roomIdx], name: e.target.value };
+                                setEditingHotel({ ...editingHotel, rooms });
+                              }}
+                              className="p-1.5 border border-slate-200 rounded-lg text-xs"
+                            />
+                          </div>
+
+                          {/* Tutum / İştirakçı sayısı */}
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-slate-500 font-sans">Maks. Qonaq (Tutum)</label>
+                            <input
+                              type="number"
+                              value={room.capacity || 2}
+                              onChange={(e) => {
+                                const rooms = [...editingHotel.rooms];
+                                rooms[roomIdx] = { ...rooms[roomIdx], capacity: Number(e.target.value) };
+                                setEditingHotel({ ...editingHotel, rooms });
+                              }}
+                              className="p-1.5 border border-slate-200 rounded-lg text-xs"
+                            />
+                          </div>
+
+                          {/* Sahə */}
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-slate-500 font-sans">Otaq Sahəsi (m²)</label>
+                            <input
+                              type="text"
+                              value={room.size || ''}
+                              onChange={(e) => {
+                                const rooms = [...editingHotel.rooms];
+                                rooms[roomIdx] = { ...rooms[roomIdx], size: e.target.value };
+                                setEditingHotel({ ...editingHotel, rooms });
+                              }}
+                              className="p-1.5 border border-slate-200 rounded-lg text-xs"
+                              placeholder="Məs. 35m²"
+                            />
+                          </div>
+
+                          {/* Çarpayı Tipi */}
+                          <div className="flex flex-col gap-1 md:col-span-2">
+                            <label className="text-[10px] text-slate-500 font-sans">Çarpayı Tipi</label>
+                            <input
+                              type="text"
+                              value={room.bedType || ''}
+                              onChange={(e) => {
+                                const rooms = [...editingHotel.rooms];
+                                rooms[roomIdx] = { ...rooms[roomIdx], bedType: e.target.value };
+                                setEditingHotel({ ...editingHotel, rooms });
+                              }}
+                              className="p-1.5 border border-slate-200 rounded-lg text-xs"
+                              placeholder="Məs. 1 Böyük King Size çarpayı"
+                            />
+                          </div>
+
+                          {/* Standart Qiymət */}
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-slate-500 font-sans font-semibold">Standard Gecəlik Qiymət (₼)</label>
+                            <input
+                              type="number"
+                              value={room.price || 0}
+                              onChange={(e) => {
+                                const rooms = [...editingHotel.rooms];
+                                rooms[roomIdx] = { ...rooms[roomIdx], price: Number(e.target.value) };
+                                setEditingHotel({ ...editingHotel, rooms });
+                              }}
+                              className="p-1.5 border border-slate-200 rounded-lg text-xs font-bold text-amber-600"
+                            />
+                          </div>
+
+                          {/* Endirimli Qiymət */}
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-slate-500 font-sans font-semibold">Endirimli Gecəlik Qiymət (₼)</label>
+                            <input
+                              type="number"
+                              value={room.discountPrice || 0}
+                              onChange={(e) => {
+                                const rooms = [...editingHotel.rooms];
+                                rooms[roomIdx] = { ...rooms[roomIdx], discountPrice: Number(e.target.value) };
+                                setEditingHotel({ ...editingHotel, rooms });
+                              }}
+                              className="p-1.5 border border-slate-200 rounded-lg text-xs font-semibold text-rose-500"
+                            />
+                          </div>
+
+                          {/* SEASONAL PRICING MATRIX SPECIFIC TO ROOMS */}
+                          <div className="col-span-1 md:col-span-4 border-t border-slate-100 pt-2 grid grid-cols-2 md:grid-cols-5 gap-2 bg-slate-50 p-2 rounded-lg mt-1 font-sans">
+                            <div className="flex flex-col gap-0.5">
+                              <label className="text-[9px] text-slate-500 font-semibold leading-none mb-0.5">🌸 Yaz Rüsumu (₼)</label>
+                              <input
+                                type="number"
+                                value={room.seasonalPrices?.spring || 0}
+                                onChange={(e) => {
+                                  const rooms = [...editingHotel.rooms];
+                                  const seasonalPrices = { ...(rooms[roomIdx].seasonalPrices || {}) };
+                                  seasonalPrices.spring = Number(e.target.value);
+                                  rooms[roomIdx] = { ...rooms[roomIdx], seasonalPrices };
+                                  setEditingHotel({ ...editingHotel, rooms });
+                                }}
+                                className="p-1 border border-slate-200 rounded bg-white text-[10px]"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                              <label className="text-[9px] text-slate-500 font-semibold leading-none mb-0.5">☀️ Yay Rüsumu (₼)</label>
+                              <input
+                                type="number"
+                                value={room.seasonalPrices?.summer || 0}
+                                onChange={(e) => {
+                                  const rooms = [...editingHotel.rooms];
+                                  const seasonalPrices = { ...(rooms[roomIdx].seasonalPrices || {}) };
+                                  seasonalPrices.summer = Number(e.target.value);
+                                  rooms[roomIdx] = { ...rooms[roomIdx], seasonalPrices };
+                                  setEditingHotel({ ...editingHotel, rooms });
+                                }}
+                                className="p-1 border border-slate-200 rounded bg-white text-[10px]"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                              <label className="text-[9px] text-slate-500 font-semibold leading-none mb-0.5">🍁 Payız Rüsumu (₼)</label>
+                              <input
+                                type="number"
+                                value={room.seasonalPrices?.autumn || 0}
+                                onChange={(e) => {
+                                  const rooms = [...editingHotel.rooms];
+                                  const seasonalPrices = { ...(rooms[roomIdx].seasonalPrices || {}) };
+                                  seasonalPrices.autumn = Number(e.target.value);
+                                  rooms[roomIdx] = { ...rooms[roomIdx], seasonalPrices };
+                                  setEditingHotel({ ...editingHotel, rooms });
+                                }}
+                                className="p-1 border border-slate-200 rounded bg-white text-[10px]"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                              <label className="text-[9px] text-slate-500 font-semibold leading-none mb-0.5">❄️ Qış Rüsumu (₼)</label>
+                              <input
+                                type="number"
+                                value={room.seasonalPrices?.winter || 0}
+                                onChange={(e) => {
+                                  const rooms = [...editingHotel.rooms];
+                                  const seasonalPrices = { ...(rooms[roomIdx].seasonalPrices || {}) };
+                                  seasonalPrices.winter = Number(e.target.value);
+                                  rooms[roomIdx] = { ...rooms[roomIdx], seasonalPrices };
+                                  setEditingHotel({ ...editingHotel, rooms });
+                                }}
+                                className="p-1 border border-slate-200 rounded bg-white text-[10px]"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                              <label className="text-[9px] text-slate-500 font-semibold leading-none mb-0.5">🎉 Bayram / Özel (₼)</label>
+                              <input
+                                type="number"
+                                value={room.seasonalPrices?.holidays || 0}
+                                onChange={(e) => {
+                                  const rooms = [...editingHotel.rooms];
+                                  const seasonalPrices = { ...(rooms[roomIdx].seasonalPrices || {}) };
+                                  seasonalPrices.holidays = Number(e.target.value);
+                                  rooms[roomIdx] = { ...rooms[roomIdx], seasonalPrices };
+                                  setEditingHotel({ ...editingHotel, rooms });
+                                }}
+                                className="p-1 border border-slate-200 rounded bg-white text-[10px]"
+                              />
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-6 text-center text-xs text-slate-400">Heç bir otaq təsnifatı yoxdur. Başlamaq üçün yuxarıdakı "Otaq Tipi Əlavə Et" düyməsinə klikləyin.</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="p-4 border-t flex justify-end gap-2 bg-slate-50 sticky bottom-0 z-10 -mx-6 -mb-6">
+                <button
+                  type="submit"
+                  className="bg-gold-primary hover:bg-gold-dark text-navy-deep font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-md font-sans"
+                >
+                  <Check className="w-4 h-4" />
+                  Oteli və Otaqları Yadda Saxla
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingHotel(null)}
+                  className="bg-slate-200 hover:bg-slate-300 text-slate-750 font-bold px-4 py-2.5 rounded-xl text-xs cursor-pointer transition-all font-sans"
+                >
+                  Geri Çəkil
+                </button>
+              </div>
+
+            </form>
           </div>
         </div>
       )}
