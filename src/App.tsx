@@ -10,6 +10,7 @@ import Places from './pages/Places';
 import PlaceDetail from './pages/PlaceDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AdminLogin from './pages/AdminLogin';
 import Admin from './pages/Admin';
 import NotFound from './pages/NotFound';
 import { AuthProvider } from './context/AuthContext';
@@ -28,7 +29,7 @@ function AppContent() {
         const config = await api.settings.get();
         if (config) {
           setSettings(config);
-          
+
           // Apply dynamic browser document title based on SEO requirements
           if (config.seoSettings?.title) {
             document.title = config.seoSettings.title;
@@ -46,7 +47,7 @@ function AppContent() {
     const handlePopState = () => {
       setCurrentPath(window.location.hash.slice(1) || '/');
     };
-    
+
     // Read initial hash path or fall back to home
     if (window.location.hash) {
       setCurrentPath(window.location.hash.slice(1) || '/');
@@ -73,7 +74,10 @@ function AppContent() {
     if (currentPath === '/places') return <Places onNavigate={handleNavigate} />;
     if (currentPath === '/login') return <Login onNavigate={handleNavigate} />;
     if (currentPath === '/register') return <Register onNavigate={handleNavigate} />;
-    if (currentPath === (settings?.adminPath || '/admin')) return <Admin onNavigate={handleNavigate} />;
+
+    // Secure admin routes - hidden path from URL
+    if (currentPath === '/admin-secure-login') return <AdminLogin onNavigate={handleNavigate} />;
+    if (currentPath === '/admin-panel-x72k') return <Admin onNavigate={handleNavigate} />;
 
     // Subpath matches e.g. /tours/:id, etc.
     const tourDetailMatch = currentPath.match(/^\/tours\/([a-zA-Z0-9_\-]+)$/);
@@ -97,7 +101,7 @@ function AppContent() {
 
   return (
     <div className="flex flex-col min-h-screen bg-cream-bg text-text-primary relative select-text selection:bg-gold-primary/30 selection:text-navy-deep">
-      
+
       {/* Global Navbar */}
       <Navbar currentPath={currentPath} onNavigate={handleNavigate} />
 

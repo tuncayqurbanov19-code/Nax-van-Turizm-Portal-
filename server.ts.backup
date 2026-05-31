@@ -6,17 +6,11 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { db, hashPassword } from './server/db';
 import { signToken, verifyToken } from './server/auth';
-import { createClient } from '@supabase/supabase-js';
 
 const app = express();
 const httpServer = createServer(app);
 const wss = new WebSocketServer({ noServer: true });
 const PORT = 3000;
-
-// Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 const adminClients = new Set<WebSocket>();
 
@@ -56,18 +50,185 @@ function notifyAdminOfNewReservation(reservation: any) {
   }
 }
 
-// Track WhatsApp-sourced reservations in Supabase
-async function trackWhatsAppReservation(reservation: any) {
-  if (!supabase) return;
+async function sendWhatsAppNotification(reservationId: string): Promise<any> {
+  const reservation = db.reservations.findById(reservationId);
+  if (!reservation) {
+    throw new Error('Rezervasiya tapılmaddı.');
+  }
 
+  const settings = db.settings.get();
+  const waSettings = settings.whatsappSettings || {
+    phoneId: "1234567890",
+    accessToken: "META_ACCESS_TOKEN",
+    verifyToken: "naxcivan_verify_token_2026",
+    messageTemplate: "",
+    isRealMode: false
+  };
+
+  let tourName = '';
+  if (reservation.type === 'tour') {
+    const tour = db.tours.findById(reservation.refId);
+    tourName = tour ? tour.name : 'Naxçıvan Turu';
+  } else {
+    const hotel = db.hotels.findById(reservation.refId);
+    tourName = hotel ? hotel.name : 'Otel Rezervasiya';
+  }
+
+  // Format Check-In Date (e.g., 2026-06-15 -> 15.06.2026)
+  let tourDateStr = '';
   try {
-    await supabase.from('reservation_stats').insert({
-      reservation_id: reservation.id,
-      source: 'whatsapp',
-      status: 'pending'
+    const d = new Date(reservation.checkIn);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      tourDateStr = `${day}.${month}.${year}`;
+    } else {
+      tourDateStr = reservation.checkIn;
+    }
+  } catch (e) {
+    tourDateStr = reservation.checkIn;
+  }
+
+  const tourTimeStr = '08:00'; // Default start time
+
+  let messageBody = waSettings.messageTemplate || `Hörmətli {Müştəri Adı},\n\nSifarişiniz uğurla qəbul edildi.\n\nTurunuz {Tur Tarixi} tarixində, saat {Tur Başlama Saatı}-da başlayacaq.\n\nSizə xoş və unudulmaz səyahət arzulayırıq. Bizi seçdiyiniz üçün təşəkkür edirik.`;
+
+  // Dynamically replace placeholders
+  messageBody = messageBody
+    .replace(/{Müştəri Adı}/g, reservation.fullName)
+    .replace(/{Customer Name}/g, reservation.fullName)
+    .replace(/{Tur Adı}/g, tourName)
+    .replace(/{Tur Tarixi}/g, tourDateStr)
+    .replace(/{Tur Başlama Saatı}/g, tourTimeStr)
+    .replace(/{Rezervasiya Nömrəsi}/g, reservation.id);
+
+  const cleanPhone = reservation.phone.replace(/\D/g, '');
+
+  if (waSettings.isRealMode && waSettings.phoneId && waSettings.accessToken && waSettings.accessToken !== 'META_ACCESS_TOKEN') {
+    // Send via Meta Web API
+    try {
+      const url = `https://graph.facebook.com/v19.0/${waSettings.phoneId}/messages`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${waSettings.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: cleanPhone,
+          type: 'text',
+          text: {
+            preview_url: false,
+            body: messageBody
+          }
+        })
+      });
+
+      const data: any = await response.json();
+
+      if (response.ok && data.messages && data.messages[0]) {
+        const messageId = data.messages[0].id;
+        const newLog = {
+          timestamp: new Date().toISOString(),
+          message: messageBody,
+          status: 'sent' as const,
+          messageId
+        };
+        const currentLogs = reservation.whatsappLogs || [];
+        db.reservations.findByIdAndUpdate(reservationId, {
+          whatsappStatus: 'sent',
+          whatsappLogs: [...currentLogs, newLog]
+        });
+        return { success: true, status: 'sent', messageId };
+      } else {
+        const errMsg = data.error?.message || JSON.stringify(data);
+        const newLog = {
+          timestamp: new Date().toISOString(),
+          message: messageBody,
+          status: 'failed' as const,
+          error: errMsg
+        };
+        const currentLogs = reservation.whatsappLogs || [];
+        db.reservations.findByIdAndUpdate(reservationId, {
+          whatsappStatus: 'failed',
+          whatsappLogs: [...currentLogs, newLog]
+        });
+        return { success: false, status: 'failed', error: errMsg };
+      }
+    } catch (err: any) {
+      const newLog = {
+        timestamp: new Date().toISOString(),
+        message: messageBody,
+        status: 'failed' as const,
+        error: err.message
+      };
+      const currentLogs = reservation.whatsappLogs || [];
+      db.reservations.findByIdAndUpdate(reservationId, {
+        whatsappStatus: 'failed',
+        whatsappLogs: [...currentLogs, newLog]
+      });
+      return { success: false, status: 'failed', error: err.message };
+    }
+  } else {
+    // Simulated Mode:
+    const mockMessageId = `wamid.HBgLOTk4NTUwMzM1Mzc1NjkxNjMWFjI4NUQwOUQ3MjcyRThDNEExQwA${Math.random().toString(36).substring(2, 8)}`;
+    const newLog = {
+      timestamp: new Date().toISOString(),
+      message: messageBody,
+      status: 'sent' as const,
+      messageId: mockMessageId
+    };
+    const currentLogs = reservation.whatsappLogs || [];
+    db.reservations.findByIdAndUpdate(reservationId, {
+      whatsappStatus: 'sent',
+      whatsappLogs: [...currentLogs, newLog]
     });
-  } catch (error) {
-    console.error('Failed to track reservation stats:', error);
+
+    // Simulate "delivered" (to show status change flow)
+    setTimeout(() => {
+      try {
+        const resObj = db.reservations.findById(reservationId);
+        if (resObj && resObj.whatsappLogs) {
+          const updatedLogs = resObj.whatsappLogs.map((l: any) => {
+            if (l.messageId === mockMessageId) {
+              return { ...l, status: 'delivered' as const };
+            }
+            return l;
+          });
+          db.reservations.findByIdAndUpdate(reservationId, {
+            whatsappLogs: updatedLogs
+          });
+        }
+      } catch (e) {
+        // ignore
+      }
+    }, 1500);
+
+    // Simulate "read" (Oxundu) after 3.5 seconds
+    setTimeout(() => {
+      try {
+        const resObj = db.reservations.findById(reservationId);
+        if (resObj && resObj.whatsappLogs) {
+          const updatedLogs = resObj.whatsappLogs.map((l: any) => {
+            if (l.messageId === mockMessageId) {
+              return { ...l, status: 'read' as const };
+            }
+            return l;
+          });
+          db.reservations.findByIdAndUpdate(reservationId, {
+            whatsappStatus: 'read',
+            whatsappLogs: updatedLogs
+          });
+        }
+      } catch (e) {
+        // ignore
+      }
+    }, 3500);
+
+    return { success: true, status: 'sent', messageId: mockMessageId, simulated: true };
   }
 }
 
@@ -121,146 +282,6 @@ const requireAdmin = (req: Request, res: Response, next: NextFunction): void => 
 // AUTHENTICATION API ROUTES
 // -------------------------------------------------------------------------
 
-// Admin Login - Uses secure credentials from Supabase
-app.post('/api/auth/admin-login', async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-  const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
-  const device = req.headers['user-agent'] || 'Bilinməyən Cihaz';
-
-  if (!email || !password) {
-    res.status(400).json({ message: 'Email və şifrə daxil edilməlidir.' });
-    return;
-  }
-
-  const normalizedEmail = email.toLowerCase().trim();
-
-  // Check admin credentials from Supabase
-  if (!supabase) {
-    res.status(500).json({ message: 'Server xətası. Zəhmət olmasa sonra yenidən cəhd edin.' });
-    return;
-  }
-
-  try {
-    const { data: adminCreds, error: adminError } = await supabase
-      .from('admin_credentials')
-      .select('*')
-      .eq('email', normalizedEmail)
-      .eq('is_active', true)
-      .single();
-
-    if (adminError || !adminCreds) {
-      db.adminLogins.create({
-        email: normalizedEmail,
-        ip,
-        device,
-        status: 'FAIL_EMAIL',
-        isSuspicious: true
-      });
-      res.status(400).json({ message: 'Email və ya şifrə yanlışdır.' });
-      return;
-    }
-
-    const passwordHash = hashPassword(password);
-
-    if (adminCreds.password_hash !== passwordHash) {
-      db.adminLogins.create({
-        email: normalizedEmail,
-        ip,
-        device,
-        status: 'FAIL_PASSWORD',
-        isSuspicious: true
-      });
-      res.status(400).json({ message: 'Email və ya şifrə yanlışdır.' });
-      return;
-    }
-
-    // Successful admin login
-    db.adminLogins.create({
-      email: normalizedEmail,
-      ip,
-      device,
-      status: 'SUCCESS',
-      isSuspicious: false
-    });
-
-    // Get or create admin user in local DB for JWT
-    let adminUser = db.users.findOne({ email: normalizedEmail });
-    if (!adminUser) {
-      adminUser = db.users.create({
-        fullName: 'Administrator',
-        email: normalizedEmail,
-        passwordHash: passwordHash,
-        role: 'admin',
-        isBlocked: false
-      });
-    } else if (adminUser.role !== 'admin') {
-      adminUser = db.users.findByIdAndUpdate(adminUser.id, { role: 'admin' });
-    }
-
-    const token = signToken({ id: adminUser.id, email: adminUser.email, role: adminUser.role });
-
-    res.json({
-      token,
-      user: {
-        id: adminUser.id,
-        fullName: adminUser.fullName,
-        email: adminUser.email,
-        role: adminUser.role
-      }
-    });
-  } catch (error) {
-    console.error('Admin login error:', error);
-    res.status(500).json({ message: 'Server xətası baş verdi.' });
-  }
-});
-
-// Regular User Login
-app.post('/api/auth/login', (req: Request, res: Response) => {
-  const { email, password } = req.body;
-  const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
-  const device = req.headers['user-agent'] || 'Bilinməyən Cihaz';
-
-  if (!email || !password) {
-    res.status(400).json({ message: 'Bu xanalar boş qala bilməz.' });
-    return;
-  }
-
-  const user = db.users.findOne({ email: email.toLowerCase() });
-
-  if (!user) {
-    res.status(400).json({ message: 'Daxil edilən email və ya şifrə yanlışdır.' });
-    return;
-  }
-
-  if (user.isBlocked) {
-    res.status(403).json({ message: 'Sazin hesabınız bloklanıb. Portal sahibləri ilə əlaqə saxlayın.' });
-    return;
-  }
-
-  if (user.passwordHash !== hashPassword(password)) {
-    res.status(400).json({ message: 'Daxil edilən email və ya şifrə yanlışdır.' });
-    return;
-  }
-
-  // Regular users cannot have admin role via normal login
-  if (user.role === 'admin') {
-    res.status(403).json({ message: 'Admin girişi üçün xüsusi portal istifadə edin.' });
-    return;
-  }
-
-  const token = signToken({ id: user.id, email: user.email, role: user.role });
-
-  res.json({
-    token,
-    user: {
-      id: user.id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role
-    }
-  });
-});
-
 app.post('/api/auth/register', (req: Request, res: Response) => {
   const { fullName, email, password } = req.body;
 
@@ -274,13 +295,14 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
     return;
   }
 
+  // Simple email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     res.status(400).json({ message: 'Düzgün email ünvanı daxil edin.' });
     return;
   }
 
-  const existing = db.users.findOne({ email: email.toLowerCase() });
+  const existing = db.users.findOne({ email });
   if (existing) {
     res.status(400).json({ message: 'Bu email ünvanı ilə artıq qeydiyyatdan keçilib.' });
     return;
@@ -289,7 +311,7 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
   const hashedPassword = hashPassword(password);
   const newUser = db.users.create({
     fullName,
-    email: email.toLowerCase(),
+    email,
     passwordHash: hashedPassword,
     role: 'user',
     isBlocked: false
@@ -308,6 +330,172 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
   });
 });
 
+const temp2faCodes = new Map<string, { code: string; expires: number }>();
+
+app.post('/api/auth/login', (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+  const device = req.headers['user-agent'] || 'Bilinməyən Cihaz';
+
+  if (!email || !password) {
+    res.status(400).json({ message: 'Bu xanalar boş qala bilməz.' });
+    return;
+  }
+
+  const user = db.users.findOne({ email });
+
+  // If email matches any administrator email but login fails
+  const isAdminEmail = email.toLowerCase() === 'tuncayqurbanov19@gmail.com' || (user && user.role === 'admin');
+
+  if (!user) {
+    if (isAdminEmail) {
+      db.adminLogins.create({
+        email,
+        ip,
+        device,
+        status: 'FAIL_EMAIL',
+        isSuspicious: true
+      });
+    }
+    res.status(400).json({ message: 'Daxil edilən email və ya şifrə yanlışdır.' });
+    return;
+  }
+
+  if (user.isBlocked) {
+    res.status(403).json({ message: 'Sizin hesabınız bloklanıb. Portal sahibləri ilə əlaqə saxlayın.' });
+    return;
+  }
+
+  if (user.passwordHash !== hashPassword(password)) {
+    if (isAdminEmail) {
+      db.adminLogins.create({
+        email,
+        ip,
+        device,
+        status: 'FAIL_PASSWORD',
+        isSuspicious: true
+      });
+    }
+    res.status(400).json({ message: 'Daxil edilən email və ya şifrə yanlışdır.' });
+    return;
+  }
+
+  // Handle Admin distinct flows (with potential 2FA verify option)
+  if (user.role === 'admin') {
+    const settings = db.settings.get();
+    const is2FAEnabled = !!settings.twoFactorEnabled;
+
+    if (is2FAEnabled) {
+      const tempOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      temp2faCodes.set(email, {
+        code: tempOtp,
+        expires: Date.now() + 5 * 60000 // valid for 5 minutes
+      });
+
+      // Log attempt
+      db.adminLogins.create({
+        email,
+        ip,
+        device,
+        status: 'ATTEMPT',
+        isSuspicious: false
+      });
+
+      res.json({
+        require2FA: true,
+        twoFactorOtp: tempOtp, // Send down for simulation view
+        email
+      });
+      return;
+    }
+
+    // Standard Success for Admin if 2FA disabled
+    db.adminLogins.create({
+      email,
+      ip,
+      device,
+      status: 'SUCCESS',
+      isSuspicious: false
+    });
+  }
+
+  const token = signToken({ id: user.id, email: user.email, role: user.role });
+
+  res.json({
+    token,
+    user: {
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role
+    }
+  });
+});
+
+app.post('/api/auth/verify-2fa', (req: Request, res: Response) => {
+  const { email, code } = req.body;
+  const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+  const device = req.headers['user-agent'] || 'Bilinməyən Cihaz';
+
+  if (!email || !code) {
+    res.status(400).json({ message: 'E-mail və iki mərhələli kod daxil edilməlidir.' });
+    return;
+  }
+
+  const record = temp2faCodes.get(email);
+  if (!record || record.code !== code || record.expires < Date.now()) {
+    db.adminLogins.create({
+      email,
+      ip,
+      device,
+      status: 'FAIL_2FA',
+      isSuspicious: true
+    });
+    res.status(400).json({ message: 'Daxil edilən 2FA kodu yanlışdır və ya vaxtı keçib.' });
+    return;
+  }
+
+  // Code validated! Clear OTP
+  temp2faCodes.delete(email);
+
+  const user = db.users.findOne({ email });
+  if (!user) {
+    res.status(400).json({ message: 'İstifadəçi tapılmadı.' });
+    return;
+  }
+
+  // Record successful login
+  db.adminLogins.create({
+    email,
+    ip,
+    device,
+    status: 'SUCCESS',
+    isSuspicious: false
+  });
+
+  const token = signToken({ id: user.id, email: user.email, role: user.role });
+
+  res.json({
+    token,
+    user: {
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role
+    }
+  });
+});
+
+app.get('/api/admin/logins', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+  res.json(db.adminLogins.find());
+});
+
+app.post('/api/admin/logins/clear', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+  db.adminLogins.clear();
+  res.json({ success: true, message: 'İnzibatçı giriş tarixçəsi rəsmən təmizləndi.' });
+});
+
+// Get currently logged-in user session
 app.get('/api/auth/me', authenticateToken, (req: Request, res: Response) => {
   const user = (req as any).user;
   res.json({
@@ -330,6 +518,7 @@ app.get('/api/tours', (req: Request, res: Response) => {
   res.json(activeTours);
 });
 
+// Admin endpoint to retrieve all tours regardless of status
 app.get('/api/tours/all', authenticateToken, requireAdmin, (req: Request, res: Response) => {
   res.json(db.tours.find());
 });
@@ -480,7 +669,7 @@ app.delete('/api/places/:id', authenticateToken, requireAdmin, (req: Request, re
 });
 
 // -------------------------------------------------------------------------
-// RESERVATIONS ENDPOINTS - WhatsApp Direct Integration
+// RESERVATIONS ENDPOINTS
 // -------------------------------------------------------------------------
 
 app.get('/api/reservations', authenticateToken, (req: Request, res: Response) => {
@@ -492,8 +681,7 @@ app.get('/api/reservations', authenticateToken, (req: Request, res: Response) =>
   }
 });
 
-// Create reservation - Direct WhatsApp redirect
-app.post('/api/reservations', authenticateToken, async (req: Request, res: Response) => {
+app.post('/api/reservations', authenticateToken, (req: Request, res: Response) => {
   const { type, refId, fullName, email, phone, checkIn, checkOut, guests, notes, totalPrice } = req.body;
   const user = (req as any).user;
 
@@ -527,28 +715,14 @@ app.post('/api/reservations', authenticateToken, async (req: Request, res: Respo
       res.status(400).json({ message: 'Giriş tarixi çıxış tarixindən əvvəl olmalıdır.' });
       return;
     }
-  }
-
-  // Get tour or hotel name for WhatsApp message
-  let itemName = '';
-  let itemPrice = 0;
-
-  if (type === 'tour') {
-    const tour = db.tours.findById(refId);
-    if (tour) {
-      itemName = tour.name;
-      itemPrice = tour.price;
-    }
   } else {
-    const hotel = db.hotels.findById(refId);
-    if (hotel) {
-      itemName = hotel.name;
-      itemPrice = hotel.rooms.length > 0 ? Math.min(...hotel.rooms.map(r => r.price)) : 0;
+    if (checkOutDate && checkInDate > checkOutDate) {
+      res.status(400).json({ message: 'Çıxış tarixi giriş tarixindən əvvəl ola bilməz.' });
+      return;
     }
   }
 
   try {
-    // Create reservation record
     const reservation = db.reservations.create({
       userId: user.id,
       type,
@@ -561,62 +735,19 @@ app.post('/api/reservations', authenticateToken, async (req: Request, res: Respo
       guests: Number(guests),
       notes: notes || '',
       status: 'pending',
-      totalPrice: Number(totalPrice) || 0,
-      whatsappStatus: 'not_sent'
+      totalPrice: Number(totalPrice) || 0
     });
 
-    // Track in Supabase for statistics
-    await trackWhatsAppReservation(reservation);
+    notifyAdminOfNewReservation(reservation);
 
-    // Format WhatsApp message
-    const checkInFormatted = new Date(checkIn).toLocaleDateString('az-AZ');
-    const checkOutFormatted = checkOut ? new Date(checkOut).toLocaleDateString('az-AZ') : checkInFormatted;
-
-    let message = `🌐 *Naxçıvan Turizm Portalı - Yeni Rezervasiya*\n\n`;
-    message += `📋 *Rezervasiya Məlumatları:*\n`;
-    message += `━━━━━━━━━━━━━━━━━━\n`;
-    message += `👤 *Ad, Soyad:* ${fullName}\n`;
-    message += `📧 *E-poçt:* ${email}\n`;
-    message += `📱 *Telefon:* ${phone}\n\n`;
-
-    if (type === 'tour') {
-      message += `🎯 *Tur:* ${itemName}\n`;
-      message += `📅 *Tarix:* ${checkInFormatted}\n`;
-    } else {
-      message += `🏨 *Otel:* ${itemName}\n`;
-      message += `📅 *Giriş:* ${checkInFormatted}\n`;
-      message += `📅 *Çıxış:* ${checkOutFormatted}\n`;
-    }
-
-    message += `👥 *İştirakçı sayı:* ${guests} nəfər\n`;
-    message += `💰 *Ümumi məbləğ:* ${totalPrice || itemPrice * guests} AZN\n`;
-
-    if (notes && notes.trim()) {
-      message += `\n📝 *Əlavə qeydlər:*\n${notes}\n`;
-    }
-
-    message += `\n━━━━━━━━━━━━━━━━━━\n`;
-    message += `🔔 Bu rezervasiya Naxçıvan Turizm Portalı vasitəsilə göndərilib.`;
-
-    // Return WhatsApp redirect URL
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/9940703538283?text=${encodedMessage}`;
-
-    res.status(201).json({
-      success: true,
-      reservation,
-      whatsappUrl,
-      message: 'Rezervasiya qeydə alındı. WhatsApp-a yönləndirilirsiniz...'
-    });
-
+    res.status(201).json(reservation);
   } catch (error) {
-    console.error('Reservation error:', error);
     res.status(500).json({ message: 'Rezervasiyanı yaratmaq mümkün olmadı.' });
   }
 });
 
-app.put('/api/reservations/:id/status', authenticateToken, requireAdmin, (req: Request, res: Response) => {
-  const { status } = req.body;
+app.put('/api/reservations/:id/status', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  const { status } = req.body; // pending, confirmed, cancelled
   if (!status) {
     res.status(400).json({ message: 'Status daxil edilməlidir.' });
     return;
@@ -628,52 +759,103 @@ app.put('/api/reservations/:id/status', authenticateToken, requireAdmin, (req: R
     return;
   }
 
-  res.json(updated);
+  // Automatic WhatsApp notification if order is confirmed
+  if (status === 'confirmed') {
+    try {
+      await sendWhatsAppNotification(req.params.id);
+    } catch (e: any) {
+      console.error('Auto WhatsApp notification failed:', e);
+    }
+  }
+
+  // Reload reservation with updated logs/status
+  const finalReservation = db.reservations.findById(req.params.id);
+  res.json(finalReservation || updated);
 });
 
-// -------------------------------------------------------------------------
-// RESERVATION STATISTICS
-// -------------------------------------------------------------------------
-
-app.get('/api/reservations/stats', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+// Manual resend / trigger WhatsApp
+app.post('/api/reservations/:id/whatsapp', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const localReservations = db.reservations.find();
+    const result = await sendWhatsAppNotification(req.params.id);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ message: err.message || 'Göndərmə xətası baş verdi.' });
+  }
+});
 
-    // Get WhatsApp statistics from Supabase if available
-    let whatsappStats = { total: 0, pending: 0, confirmed: 0, cancelled: 0 };
+// GET: webhook verification
+app.get('/api/whatsapp/webhook', (req: Request, res: Response) => {
+  const settings = db.settings.get();
+  const verifyToken = settings.whatsappSettings?.verifyToken || 'naxcivan_verify_token_2026';
+  
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
 
-    if (supabase) {
-      const { data: statsData, error } = await supabase
-        .from('reservation_stats')
-        .select('status');
+  if (mode === 'subscribe' && token === verifyToken) {
+    console.log('WhatsApp Webhook verified successfully.');
+    res.status(200).send(challenge);
+  } else {
+    res.status(403).json({ message: 'Lisenziya xətası: Doğrulama tokeni qeyri-kafi və ya düzgün deyil.' });
+  }
+});
 
-      if (!error && statsData) {
-        whatsappStats.total = statsData.length;
-        whatsappStats.pending = statsData.filter(s => s.status === 'pending').length;
-        whatsappStats.confirmed = statsData.filter(s => s.status === 'confirmed').length;
-        whatsappStats.cancelled = statsData.filter(s => s.status === 'cancelled').length;
+// POST: webhook status reports
+app.post('/api/whatsapp/webhook', (req: Request, res: Response) => {
+  const body = req.body;
+
+  if (body.object === 'whatsapp_business_account') {
+    try {
+      const entries = body.entry;
+      for (const entry of entries) {
+        for (const change of entry.changes) {
+          const value = change.value;
+          if (value && value.statuses) {
+            for (const statusObj of value.statuses) {
+              const messageId = statusObj.id;
+              const statusName = statusObj.status; // sent, delivered, read, failed
+
+              const reservations = db.reservations.find();
+              for (const resItem of reservations) {
+                if (resItem.whatsappLogs) {
+                  const hasMessage = resItem.whatsappLogs.some((l: any) => l.messageId === messageId);
+                  if (hasMessage) {
+                    const updatedLogs = resItem.whatsappLogs.map((l: any) => {
+                      if (l.messageId === messageId) {
+                        return { 
+                          ...l, 
+                          status: statusName === 'delivered' ? 'delivered' : (statusName === 'read' ? 'read' : (statusName === 'failed' ? 'failed' : l.status)),
+                          error: statusObj.errors ? JSON.stringify(statusObj.errors) : l.error
+                        };
+                      }
+                      return l;
+                    });
+
+                    let mappedStatus = resItem.whatsappStatus;
+                    if (statusName === 'read') mappedStatus = 'read';
+                    else if (statusName === 'failed') mappedStatus = 'failed';
+                    else if (statusName === 'sent' || statusName === 'delivered') mappedStatus = 'sent';
+
+                    db.reservations.findByIdAndUpdate(resItem.id, {
+                      whatsappStatus: mappedStatus,
+                      whatsappLogs: updatedLogs
+                    });
+                    
+                    console.log(`Updated WhatsApp status for Reservation ${resItem.id} to ${mappedStatus} via Webhook`);
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
       }
+    } catch (e: any) {
+      console.error('Error handling WhatsApp status webhook:', e);
     }
-
-    const localStats = {
-      total: localReservations.length,
-      pending: localReservations.filter(r => r.status === 'pending').length,
-      confirmed: localReservations.filter(r => r.status === 'confirmed').length,
-      cancelled: localReservations.filter(r => r.status === 'cancelled').length
-    };
-
-    res.json({
-      local: localStats,
-      whatsapp: whatsappStats,
-      combined: {
-        total: localStats.total + whatsappStats.total,
-        pending: localStats.pending + whatsappStats.pending,
-        confirmed: localStats.confirmed + whatsappStats.confirmed,
-        cancelled: localStats.cancelled + whatsappStats.cancelled
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Statistika yüklənərkən xəta baş verdi.' });
+    res.status(200).send('EVENT_RECEIVED');
+  } else {
+    res.sendStatus(404);
   }
 });
 
@@ -748,6 +930,7 @@ app.put('/api/users/:id/block', authenticateToken, requireAdmin, (req: Request, 
     return;
   }
 
+  // Prevent self blocking
   const currentUser = (req as any).user;
   if (currentUser.id === req.params.id) {
     res.status(400).json({ message: 'Öz hesabınızı bloklaya bilməzsiniz.' });
@@ -947,8 +1130,8 @@ app.delete('/api/companies/:id', authenticateToken, requireAdmin, (req: Request,
 // AI ASSISTANT CHAT ENDPOINT
 // -------------------------------------------------------------------------
 app.post('/api/ai/chat', async (req: Request, res: Response) => {
-  const { messages } = req.body;
-
+  const { messages } = req.body; // array of {role: 'user'|'model', text: string}
+  
   if (!messages || !Array.isArray(messages)) {
     res.status(400).json({ message: 'Mesajlar göndərilməyib.' });
     return;
@@ -956,20 +1139,27 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
 
   try {
     const apiKey = process.env.GEMINI_API_KEY;
-
+    
+    // If apiKey is completely missing or is a mock, we return simulated localized AI answers
     if (!apiKey) {
       const lastMessage = messages[messages.length - 1]?.text || "";
       const lowerText = lastMessage.toLowerCase();
-
+      
       let reply = "Salam! Mən sizin virtual Naxçıvan Turizm bələdçinizəm. Sizə necə kömək edə bilərəm?";
       if (lowerText.includes("şəhər") || lowerText.includes("baki") || lowerText.includes("baku")) {
-        reply = "Naxçıvanda gəzməli çox gözəl yerlər var. Möminə Xatun türbəsi, Xan Sarayı, Nuh Peyğəmbər məqbərəsi və Saat Meydanı əsas görməli yerləndir.";
+        reply = "Naxçıvanda gəzməli çox gözəl yerlər var. Möminə Xatun türbəsi, Xan Sarayı, Nuh Peyğəmbər məqbərəsi və Saat Meydanı əsas görməli yerləndir. Əgər Bakı ilə müqayisə etsək, Naxçıvan daha sakit, qədim və mistik havası ilə seçilir.";
       } else if (lowerText.includes("tur") || lowerText.includes("təklif") || lowerText.includes("tour")) {
-        reply = "Sizə iki möhtəşəm tur paketimiz olan 'Naxçıvanın Tarixi Şah Əsərləri' (3 günlük, 250 AZN) və ya 'Duzdağ Sağlamlıq və Təbiət Eko-Turu' (2 günlük, 180 AZN) paketlərini tövsiyə edirəm.";
+        reply = "Sizə iki möhtəşəm tur paketimiz olan 'Naxçıvanın Tarixi Şah Əsərləri' (3 günlük, 250 AZN) və ya 'Duzdağ Sağlamlıq və Təbiət Eko-Turu' (2 günlük, 180 AZN) paketlərini tövsiyə edirəm. Çox ləzzətli yeməklər və rahat nəqliyyat daxildir!";
       } else if (lowerText.includes("duz") || lowerText.includes("sağlam") || lowerText.includes("astma")) {
-        reply = "Naxçıvanın məşhur Duzdağ Fizioterapiya Mərkəzi tənəffüs sistemi, xüsusən astma xəstələri üçün unikal təbii müalicə ocağıdır.";
+        reply = "Naxçıvanın məşhur Duzdağ Fizioterapiya Mərkəzi tənəffüs sistemi, xüsusən astma xəstələri üçün unikal təbii müalicə ocağıdır. Orada duz mağaralarında gecələyərək bədəninizi bərpa edə bilərsiniz. Duzdağ turumuz bu seansları təmin edir.";
       } else if (lowerText.includes("yer") || lowerText.includes("görməli") || lowerText.includes("məkan")) {
-        reply = "Naxçıvanda mütləq Əlincəqalaya çıxmalı, Mominə Xatun türbəsini ziyarət etməli, Batabat gölünü seyr etməlisiniz.";
+        reply = "Naxçıvanda mütləq Əlincəqalaya (Azərbaycanın Maçu Piçusu) çıxmalı, Mominə Xatun türbəsini ziyarət etməli, Şahbuz rayonunda Batabat gölünü və ordakı üzən torf adasını seyr etməli və Ordubadda qədim məhəllələri gəzməlisiniz.";
+      } else if (lowerText.includes("kəh") || lowerText.includes("əshab") || lowerText.includes("ziyarət")) {
+        reply = "Əshabi-Kəhf Mağarası Naxçıvanda ən müqəddəs və inanc yerlərindən biridir. Qurani-Kərimdə bəhs olunan əfsanəvi 7 gənc və onların sadiq iti Kətmirlə bağlı olan bu məkan həm yerli, həm xristian/musəlman turistlərin sevimli yeridir.";
+      } else if (lowerText.includes("limon") || lowerText.includes("yemək") || lowerText.includes("qayqanaq")) {
+        reply = "Naxçıvanın Ordubad limonunun qoxusu əvəzedilməzdir. Kulinariyamızda Naxçıvan qovurması, Ordubad qayqanağı, balqabaqlı qabaq aşı və şaftalı içinə doldurulmuş alana şirniyyatı mütləq dadılmalıdır!";
+      } else {
+        reply = "Naxçıvan qədim sivilizasiyaların beşiyidir! Sizə turlarımızı axtarmaqda, tarixi məkanları kəşf etməkdə bələdçilik etməkdən məmnun olaram. Azərbaycan və Naxçıvanın turizm potensialı haqqında istədiyiniz sualı verə bilərsiniz.";
       }
 
       setTimeout(() => {
@@ -981,8 +1171,8 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
     const { GoogleGenAI } = require('@google/genai');
     const ai = new GoogleGenAI({ apiKey });
 
-    const systemInstruction = `You are a professional AI Travel Assistant for the Nakhchivan and Azerbaijan Tourism Platform, speaking fluent Azerbaijani.
-    Your name is 'Naxçıvan Travel AI'.
+    const systemInstruction = `You are a professional AI Travel Assistant for the Nakhchivan and Azerbaijan Tourism Platform, speaking fluent Azerbaijani. 
+    Your name is 'Naxçıvan Travel AI'. 
     You MUST adhere strictly to the following rules:
     1. Only recommend tours, destinations, hotels, and food that are in Nakhchivan or general Azerbaijan.
     2. Suggest similar Azerbaijani destinations if the user asks.
@@ -1017,10 +1207,11 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
 
 // -------------------------------------------------------------------------
 // Local File Upload Endpoint (Protected - Admins Only)
+// Supported Formats: JPG, JPEG, PNG, WEBP, SVG, PDF
 // -------------------------------------------------------------------------
 app.post('/api/upload', authenticateToken, requireAdmin, (req: Request, res: Response) => {
-  const { fileName, fileData } = req.body;
-
+  const { fileName, fileData } = req.body; // fileData is base64 string
+  
   if (!fileData) {
     res.status(400).json({ message: 'Fayl məlumatı yüklənməyib.' });
     return;
@@ -1039,6 +1230,7 @@ app.post('/api/upload', authenticateToken, requireAdmin, (req: Request, res: Res
       base64Buffer = Buffer.from(fileData, 'base64');
     }
 
+    // Strict validation
     const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml', 'application/pdf'];
     if (!allowedMimeTypes.includes(mimeType)) {
       res.status(400).json({ message: 'Yalnız JPG, JPEG, PNG, WEBP, SVG və PDF formatları dəstəklənir!' });
@@ -1063,7 +1255,8 @@ app.post('/api/upload', authenticateToken, requireAdmin, (req: Request, res: Res
     fs.writeFileSync(path.join(uploadDir, finalName), base64Buffer);
 
     const sizeInKb = Math.round(base64Buffer.length / 1024) + ' KB';
-
+    
+    // Categorize media automatically based on file type / name
     let cat: 'logo' | 'tour' | 'hotel' | 'place' | 'restaurant' | 'blog' | 'other' | 'document' = 'other';
     if (ext === '.pdf') cat = 'document';
     else if (cleanName.toLowerCase().includes('logo')) cat = 'logo';
@@ -1109,28 +1302,20 @@ app.delete('/api/media/:id', authenticateToken, requireAdmin, (req: Request, res
       res.status(404).json({ message: 'Media faylı tapılmadı.' });
       return;
     }
-
+    
+    // If it is stored locally in /uploads/, unlink it!
     if (mediaItem.url.startsWith('/uploads/')) {
       const filePath = path.join(process.cwd(), mediaItem.url.replace(/^\//, ''));
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
     }
-
+    
     (db as any).media.findByIdAndDelete(id);
     res.json({ message: 'Media faylı platformadan uğurla silindi.' });
   } catch (err: any) {
     res.status(500).json({ message: 'Media faylı silinərkən xəta baş verdi: ' + err.message });
   }
-});
-
-app.get('/api/admin/logins', authenticateToken, requireAdmin, (req: Request, res: Response) => {
-  res.json(db.adminLogins.find());
-});
-
-app.post('/api/admin/logins/clear', authenticateToken, requireAdmin, (req: Request, res: Response) => {
-  db.adminLogins.clear();
-  res.json({ success: true, message: 'İnzibatçı giriş tarixçəsi rəsmən təmizləndi.' });
 });
 
 // -------------------------------------------------------------------------
