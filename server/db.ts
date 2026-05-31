@@ -170,16 +170,6 @@ export interface MediaItem {
   createdAt: string;
 }
 
-export interface AdminLogin {
-  id: string;
-  email: string;
-  timestamp: string;
-  ip: string;
-  device: string;
-  status: 'SUCCESS' | 'FAIL_PASSWORD' | 'FAIL_2FA' | 'FAIL_EMAIL' | 'ATTEMPT';
-  isSuspicious: boolean;
-}
-
 export interface WhatsAppLog {
   timestamp: string;
   message: string;
@@ -203,7 +193,6 @@ export interface Reservation {
   status: 'pending' | 'confirmed' | 'cancelled';
   totalPrice: number;
   createdAt: string;
-  startTime?: string;
   whatsappStatus?: 'pending_send' | 'sent' | 'read' | 'failed' | 'not_sent';
   whatsappLogs?: WhatsAppLog[];
 }
@@ -321,8 +310,6 @@ export interface SettingsSchema {
     desktopHeight?: number;
   };
   whatsappSettings?: WhatsAppSettings;
-  adminPath?: string;
-  twoFactorEnabled?: boolean;
 }
 
 interface DatabaseSchema {
@@ -337,7 +324,6 @@ interface DatabaseSchema {
   settings: SettingsSchema;
   companies: TourismCompany[];
   media?: MediaItem[];
-  adminLogins?: AdminLogin[];
 }
 
 // Password hashing helper using standard Node crypto
@@ -1079,9 +1065,6 @@ class FileDatabase {
 
   public getMedia() { this.initialize(); return this.data.media || []; }
   public saveMedia(media: MediaItem[]) { this.data.media = media; this.write(); }
-
-  public getAdminLogins() { this.initialize(); return this.data.adminLogins || []; }
-  public saveAdminLogins(logs: AdminLogin[]) { this.data.adminLogins = logs; this.write(); }
 }
 
 export const dbInstance = new FileDatabase();
@@ -1413,25 +1396,6 @@ export const db = {
       const list = dbInstance.getMedia();
       const filtered = list.filter(m => m.id !== id);
       dbInstance.saveMedia(filtered);
-      return true;
-    }
-  },
-
-  adminLogins: {
-    find: () => dbInstance.getAdminLogins(),
-    create: (data: Omit<AdminLogin, 'id' | 'timestamp'>) => {
-      const list = dbInstance.getAdminLogins();
-      const newItem: AdminLogin = {
-        ...data,
-        id: 'log_' + Date.now().toString(36),
-        timestamp: new Date().toISOString()
-      };
-      list.push(newItem);
-      dbInstance.saveAdminLogins(list);
-      return newItem;
-    },
-    clear: () => {
-      dbInstance.saveAdminLogins([]);
       return true;
     }
   }

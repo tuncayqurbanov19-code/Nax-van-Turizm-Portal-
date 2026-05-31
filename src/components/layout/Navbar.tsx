@@ -149,14 +149,14 @@ export default function Navbar({ currentPath, onNavigate }: NavbarProps) {
                   <div className="flex items-center gap-3">
                     {isAdmin && (
                       <button
-                        onClick={() => handleLinkClick('/admin-panel-x72k')}
+                        onClick={() => handleLinkClick('/admin')}
                         className="flex items-center gap-2 bg-gold-primary/15 border border-gold-primary/40 text-gold-primary font-semibold hover:bg-gold-primary/35 px-3 py-1.5 rounded-lg transition-all font-sans cursor-pointer text-xs"
                       >
                         <ShieldAlert className="w-3.5 h-3.5" />
                         İdarə Paneli
                       </button>
                     )}
-
+                    
                     <div className="flex items-center gap-2 bg-white/5 border border-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-sans">
                       <UserIcon className="w-3.5 h-3.5 text-gold-primary" />
                       <span className="font-semibold max-w-[100px] truncate">{user.fullName}</span>
@@ -248,14 +248,14 @@ export default function Navbar({ currentPath, onNavigate }: NavbarProps) {
                 <div className="flex items-center gap-3">
                   {isAdmin && (
                     <button
-                      onClick={() => handleLinkClick('/admin-panel-x72k')}
+                      onClick={() => handleLinkClick('/admin')}
                       className="flex items-center gap-2 bg-gold-primary/15 border border-gold-primary/40 text-gold-primary font-semibold hover:bg-gold-primary/35 px-4 py-2 rounded-xl transition-all font-sans cursor-pointer animate-fadeIn"
                     >
                       <ShieldAlert className="w-4 h-4" />
                       İdarə Paneli
                     </button>
                   )}
-
+                  
                   <div className="flex items-center gap-2 bg-white/5 border border-white/10 text-white px-4 py-2 rounded-xl">
                     <UserIcon className="w-4 h-4 text-gold-primary" />
                     <span className="font-medium font-sans text-xs max-w-[120px] truncate">{user.fullName}</span>
@@ -358,7 +358,7 @@ export default function Navbar({ currentPath, onNavigate }: NavbarProps) {
 
                 {isAdmin && (
                   <button
-                    onClick={() => handleLinkClick('/admin-panel-x72k')}
+                    onClick={() => handleLinkClick('/admin')}
                     className="w-full flex items-center justify-center gap-2 bg-gold-primary text-navy-deep font-bold py-3 rounded-xl transition-all font-sans cursor-pointer"
                   >
                     <ShieldAlert className="w-4 h-4" />

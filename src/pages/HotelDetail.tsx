@@ -105,8 +105,6 @@ export default function HotelDetail({ hotelId, onNavigate }: HotelDetailProps) {
 
     try {
       setBookingLoading(true);
-
-      // Call API to create reservation
       const res = await api.reservations.create({
         type: 'hotel',
         refId: hotel?.id,
@@ -120,23 +118,34 @@ export default function HotelDetail({ hotelId, onNavigate }: HotelDetailProps) {
         totalPrice
       });
 
-      if (res && res.success && res.whatsappUrl) {
-        // Success - Redirect to WhatsApp
+      if (res && res.id) {
+        const text = `Salam! Mən Naxçıvan Rəqəmsal Turizm Bələdçisi üzərindən yeni otel rezervasiyası etmək istəyirəm.\n\n` +
+          `📋 Otel Rezervasiyası Məlumatları:\n` +
+          `• Otel: ${hotel?.name || ''}\n` +
+          `• Müştəri: ${bookingFullName}\n` +
+          `• Telefon: ${bookingPhone}\n` +
+          `• E-poçt: ${bookingEmail}\n` +
+          `• Giriş Tarixi: ${checkInDate}\n` +
+          `• Çıxış Tarixi: ${checkOutDate}\n` +
+          `• Qonaq sayı: ${bookingGuestsCount}\n` +
+          `• Ümumi Məbləğ: ${totalPrice} AZN\n` +
+          (bookingNotes.trim() ? `• Qeyd: ${bookingNotes}\n` : '');
+
+        const encodedText = encodeURIComponent(text);
+        const whatsappUrl = `https://wa.me/9940703538283?text=${encodedText}`;
+
         success('Otel sifarişiniz qeydə alındı! WhatsApp-a yönləndirilirsiniz...', 'Rezervasiya Göndərildi');
         setCheckInDate('');
         setCheckOutDate('');
         setBookingNotes('');
-        setBookingLoading(false);
 
         setTimeout(() => {
-          window.location.href = res.whatsappUrl;
-        }, 800);
-      } else if (res && res.message) {
-        error(res.message);
-        setBookingLoading(false);
+          window.location.href = whatsappUrl;
+        }, 1000);
       }
     } catch (e: any) {
       error(e.message || 'Rezervasiya göndərilərkən xəta yarandı.');
+    } finally {
       setBookingLoading(false);
     }
   };

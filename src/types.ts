@@ -175,7 +175,6 @@ export interface Reservation {
   status: 'pending' | 'confirmed' | 'cancelled';
   totalPrice: number;
   createdAt: string;
-  startTime?: string;
   whatsappStatus?: 'pending_send' | 'sent' | 'read' | 'failed' | 'not_sent';
   whatsappLogs?: WhatsAppLog[];
 }
@@ -293,18 +292,6 @@ export interface SettingsSchema {
     desktopHeight?: number;
   };
   whatsappSettings?: WhatsAppSettings;
-  adminPath?: string;
-  twoFactorEnabled?: boolean;
-}
-
-export interface AdminLogin {
-  id: string;
-  email: string;
-  timestamp: string;
-  ip: string;
-  device: string;
-  status: 'SUCCESS' | 'FAIL_PASSWORD' | 'FAIL_2FA' | 'FAIL_EMAIL' | 'ATTEMPT';
-  isSuspicious: boolean;
 }
 
 export interface MediaItem {

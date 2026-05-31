@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, Calendar, Compass, Building, Landmark, MessageSquare, Users, CreditCard as Edit3, Trash2, Plus, Check, X, ShieldAlert, Award, TrendingUp, Utensils, BookOpen, Settings, Image, Video, Heart, Globe, FileText, Copy, ExternalLink, Search, FileSliders as Sliders, RotateCw, ZoomIn, Upload, QrCode, Printer } from 'lucide-react';
+import { ShieldCheck, Calendar, Compass, Building, Landmark, MessageSquare, Users, Edit3, Trash2, Plus, Check, X, ShieldAlert, Award, TrendingUp, Utensils, BookOpen, Settings, Image, Video, Heart, Globe, FileText, Copy, ExternalLink, Search, Sliders, RotateCw, ZoomIn, Upload, QrCode, Printer } from 'lucide-react';
 import { api } from '../services/api';
 import QRCode from 'qrcode';
 import { useAuth } from '../context/AuthContext';
@@ -30,15 +30,6 @@ export default function Admin({ onNavigate }: AdminProps) {
   const [blogsList, setBlogsList] = useState<Blog[]>([]);
   const [settingsSchema, setSettingsSchema] = useState<SettingsSchema | null>(null);
   const [companies, setCompanies] = useState<TourismCompany[]>([]);
-
-  // Reservation Statistics
-  const [reservationStats, setReservationStats] = useState<{
-    total: number;
-    pending: number;
-    confirmed: number;
-    cancelled: number;
-    whatsappSourced: number;
-  } | null>(null);
 
   // NEW Forms state
   // New Tour Form
@@ -177,15 +168,6 @@ export default function Admin({ onNavigate }: AdminProps) {
   const [waMessageTemplate, setWaMessageTemplate] = useState<string>('');
   const [waIsRealMode, setWaIsRealMode] = useState<boolean>(false);
 
-  // System & Security Settings States
-  const [adminPath, setAdminPath] = useState<string>('/admin');
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState<boolean>(false);
-  const [adminLoginsList, setAdminLoginsList] = useState<any[]>([]);
-  const [isCredentialModalOpen, setIsCredentialModalOpen] = useState<boolean>(false);
-  const [newAdminEmail, setNewAdminEmail] = useState<string>('tuncayqurbanov19@gmail.com');
-  const [newAdminPassword, setNewAdminPassword] = useState<string>('');
-  const [newAdminFullName, setNewAdminFullName] = useState<string>('');
-
   const generateQrCode = async (id: string, name: string, category: string, type: 'tour' | 'place', image: string) => {
     try {
       const urlPath = type === 'tour' ? `/tours/${id}` : `/places/${id}`;
@@ -267,21 +249,6 @@ export default function Admin({ onNavigate }: AdminProps) {
       setBlogsList(blgs || []);
       setCompanies(compsList || []);
       setMediaList(mediaData || []);
-
-      // Fetch reservation statistics
-      try {
-        const statsRes = await fetch('/api/reservations/stats', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        if (statsRes.ok) {
-          const statsData = await statsRes.json();
-          setReservationStats(statsData);
-        }
-      } catch (statsErr) {
-        console.error('Failed to load reservation stats:', statsErr);
-      }
       
       if (cfg) {
         setSettingsSchema(cfg);
@@ -319,16 +286,6 @@ export default function Admin({ onNavigate }: AdminProps) {
         setCfgLogoPositionX(cfg.logoSettings?.logoPositionX || 0);
         setCfgLogoPositionY(cfg.logoSettings?.logoPositionY || 0);
         setCfgLogoVariant(cfg.logoSettings?.logoVariant || 'variant2');
-
-        // Hydrate Dynamic Security Settings
-        setAdminPath(cfg.adminPath || '/admin');
-        setTwoFactorEnabled(!!cfg.twoFactorEnabled);
-
-        // Fetch safety login history logs
-        try {
-          const logsRes = await api.admin.getLogins();
-          setAdminLoginsList(logsRes || []);
-        } catch (_) {}
 
         // Hydrate WhatsApp configs
         if (cfg.whatsappSettings) {
@@ -981,9 +938,7 @@ export default function Admin({ onNavigate }: AdminProps) {
           verifyToken: waVerifyToken,
           messageTemplate: waMessageTemplate,
           isRealMode: waIsRealMode
-        },
-        adminPath,
-        twoFactorEnabled
+        }
       };
 
       await api.settings.update(payload);
@@ -1075,36 +1030,7 @@ export default function Admin({ onNavigate }: AdminProps) {
           {activeTab === 'reservations' && (
             <div className="flex flex-col gap-6" id="panel-reservations">
               <h3 className="font-serif text-xl font-bold text-navy-deep select-none">Gələn Sifarişlərin Təsdiqi</h3>
-
-              {/* Reservation Statistics Dashboard */}
-              {reservationStats && (
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-2">
-                  <div className="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm">
-                    <p className="text-[10px] text-slate-400 font-sans uppercase tracking-wider mb-1">Toplam Sifariş</p>
-                    <p className="text-2xl font-mono font-bold text-navy-deep">{reservationStats.total}</p>
-                  </div>
-                  <div className="bg-white border border-amber-100 p-5 rounded-2xl shadow-sm">
-                    <p className="text-[10px] text-amber-600 font-sans uppercase tracking-wider mb-1">Gözləyən</p>
-                    <p className="text-2xl font-mono font-bold text-amber-600">{reservationStats.pending}</p>
-                  </div>
-                  <div className="bg-white border border-emerald-100 p-5 rounded-2xl shadow-sm">
-                    <p className="text-[10px] text-emerald-600 font-sans uppercase tracking-wider mb-1">Təsdiqlənmiş</p>
-                    <p className="text-2xl font-mono font-bold text-emerald-600">{reservationStats.confirmed}</p>
-                  </div>
-                  <div className="bg-white border border-rose-100 p-5 rounded-2xl shadow-sm">
-                    <p className="text-[10px] text-rose-600 font-sans uppercase tracking-wider mb-1">Ləğv Edilmiş</p>
-                    <p className="text-2xl font-mono font-bold text-rose-600">{reservationStats.cancelled}</p>
-                  </div>
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 p-5 rounded-2xl shadow-sm">
-                    <p className="text-[10px] text-green-700 font-sans uppercase tracking-wider mb-1 flex items-center gap-1">
-                      <MessageSquare className="w-3 h-3" />
-                      WhatsApp Mənbəli
-                    </p>
-                    <p className="text-2xl font-mono font-bold text-green-700">{reservationStats.whatsappSourced}</p>
-                  </div>
-                </div>
-              )}
-
+              
               {reservations.length === 0 ? (
                 <div className="bg-white border rounded-3xl p-12 text-center text-slate-400 font-sans">
                   Siyahıda heç bir otel və ya tur sifarişi qeydə alınmamışdır.

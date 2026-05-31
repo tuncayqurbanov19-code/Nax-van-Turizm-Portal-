@@ -236,7 +236,7 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
     };
   }, [activeTab, tour]);
 
-   // Form submit handling - Direct WhatsApp redirect
+   // Form submit handling
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -260,8 +260,6 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
 
     try {
       const totalPrice = (tour?.price || 0) * guestsCount;
-
-      // Call API to create reservation record
       const res = await api.reservations.create({
         type: 'tour',
         refId: tour?.id,
@@ -269,22 +267,33 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
         email: bookingEmail,
         phone: bookingPhone,
         checkIn: bookingDate,
-        checkOut: bookingDate,
+        checkOut: bookingDate, // Simple Tour is single-start check-in
         guests: Number(guestsCount),
         notes: bookingNotes,
         totalPrice
       });
 
-      if (res && res.success && res.whatsappUrl) {
-        // Success - Redirect to WhatsApp
+      if (res && res.id) {
+        const text = `Salam! Mən Naxçıvan Rəqəmsal Turizm Bələdçisi üzərindən yeni tur rezervasiyası etmək istəyirəm.\n\n` +
+          `📋 Sifariş Məlumatları:\n` +
+          `• Tur: ${tour?.name || ''}\n` +
+          `• Müştəri: ${bookingFullName}\n` +
+          `• Telefon: ${bookingPhone}\n` +
+          `• E-poçt: ${bookingEmail}\n` +
+          `• Tarix: ${bookingDate}\n` +
+          `• İştirakçı sayı: ${guestsCount}\n` +
+          `• Ümumi Məbləğ: ${totalPrice} AZN\n` +
+          (bookingNotes.trim() ? `• Qeyd: ${bookingNotes}\n` : '');
+
+        const encodedText = encodeURIComponent(text);
+        const whatsappUrl = `https://wa.me/9940703538283?text=${encodedText}`;
+        
         success('Sizin sifarişiniz qeydə alındı! WhatsApp-a yönləndirilirsiniz...', 'Sifariş qəbul olundu');
         setIsBookingModalOpen(false);
-
+        
         setTimeout(() => {
-          window.location.href = res.whatsappUrl;
-        }, 800);
-      } else if (res && res.message) {
-        error(res.message);
+          window.location.href = whatsappUrl;
+        }, 1000);
       }
     } catch (e: any) {
       error(e.message || 'Sifariş zamanı rəsmi xəta yarandı.');

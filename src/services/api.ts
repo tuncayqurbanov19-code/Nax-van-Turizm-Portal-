@@ -56,7 +56,6 @@ async function apiRequest(endpoint: string, config: FetchConfig = {}) {
 export const api = {
   auth: {
     login: (data: any) => apiRequest('/api/auth/login', { method: 'POST', data }),
-    verify2FA: (data: any) => apiRequest('/api/auth/verify-2fa', { method: 'POST', data }),
     register: (data: any) => apiRequest('/api/auth/register', { method: 'POST', data }),
     me: () => apiRequest('/api/auth/me', { method: 'GET' })
   },
@@ -165,10 +164,5 @@ export const api = {
       apiRequest('/api/upload', { method: 'POST', data: { fileData: base64Image, fileName: 'sekil' } }),
     uploadFile: (fileName: string, base64Data: string) =>
       apiRequest('/api/upload', { method: 'POST', data: { fileName, fileData: base64Data } })
-  },
-
-  admin: {
-    getLogins: () => apiRequest('/api/admin/logins'),
-    clearLogins: () => apiRequest('/api/admin/logins/clear', { method: 'POST' })
   }
 };
