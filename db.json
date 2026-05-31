@@ -17,6 +17,15 @@
       "role": "user",
       "isBlocked": false,
       "createdAt": "2026-05-15T00:00:00.000Z"
+    },
+    {
+      "fullName": "tuncay",
+      "email": "admin@naxcivan.travel",
+      "passwordHash": "919b7ea344bc818b2be6f1b90f41ce0fff28d4f481fd429793419d10e5753eca",
+      "role": "user",
+      "isBlocked": false,
+      "id": "usr_mpu09641",
+      "createdAt": "2026-05-31T16:39:41.617Z"
     }
   ],
   "places": [
@@ -579,6 +588,22 @@
       "status": "confirmed",
       "totalPrice": 320,
       "createdAt": "2026-05-30T21:04:59.717Z"
+    },
+    {
+      "userId": "usr_mpu09641",
+      "type": "tour",
+      "refId": "tour_1",
+      "fullName": "tuncay",
+      "email": "admin@naxcivan.travel",
+      "phone": "+994 ",
+      "checkIn": "2026-06-10",
+      "checkOut": "2026-06-10",
+      "guests": 1,
+      "notes": "",
+      "status": "pending",
+      "totalPrice": 250,
+      "id": "res_mpu09r4e",
+      "createdAt": "2026-05-31T16:40:08.846Z"
     }
   ],
   "comments": [
