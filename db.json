@@ -744,7 +744,7 @@
       "phoneId": "1234567890",
       "accessToken": "META_ACCESS_TOKEN",
       "verifyToken": "naxcivan_verify_token_2026",
-      "messageTemplate": "Hörmətli {Müştəri Adı},\n\nSifarişiniz uğurla qəbul edildi.\n\nTurunuz {Tur Tarixi} tarixində, saat {Tur Başlama Saatı}-da başlayacaq.\n\nSizə xoş və unudulmaz səyahət arzulayırıq. Bizi seçdiyiniz üçün təşəkkür edirik.\n\nHər hansı sualınız yaranarsa, bizimlə əlaqə saxlaya bilərsiniz.\n\nƏlaqə:\n📧 tourist@tourism.naxcivan\n📞 +994 60 237 71 37",
+      "messageTemplate": "Hörmətli {Müştəri Adı},\n\nSifarişiniz uğurla qəbul edildi! ✓\n\n📋 Sifarişiniz Məlumatları:\n• Tur: {Tur Adı}\n• Tarix: {Tur Tarixi}\n• Saat: {Tur Başlama Saatı}\n\nSizə xoş və unudulmaz səyahət arzulayırıq!\nBizi seçdiyiniz üçün təşəkkür edirik.\n\nHər hansı sualınız yaranarsa, bizimlə əlaqə saxlaya bilərsiniz.",
       "isRealMode": false
     }
   },
