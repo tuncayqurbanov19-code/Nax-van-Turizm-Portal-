@@ -150,6 +150,7 @@ export interface TourismCompany {
   };
   isActive: boolean;
   createdAt: string;
+  commissionRate?: number;
 }
 
 export interface WhatsAppLog {

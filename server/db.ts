@@ -159,6 +159,7 @@ export interface TourismCompany {
   };
   isActive: boolean;
   createdAt: string;
+  commissionRate?: number;
 }
 
 export interface MediaItem {
@@ -942,7 +943,8 @@ function getSeedData(): DatabaseSchema {
         telegram: 'https://t.me/cahantravel'
       },
       isActive: true,
-      createdAt: new Date('2026-04-10').toISOString()
+      createdAt: new Date('2026-04-10').toISOString(),
+      commissionRate: 10
     },
     {
       id: 'comp_2',
@@ -958,7 +960,8 @@ function getSeedData(): DatabaseSchema {
         instagram: 'https://instagram.com/bakutravel'
       },
       isActive: true,
-      createdAt: new Date('2026-05-01').toISOString()
+      createdAt: new Date('2026-05-01').toISOString(),
+      commissionRate: 8
     }
   ];
 

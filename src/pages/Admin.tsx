@@ -61,6 +61,8 @@ export default function Admin({ onNavigate }: AdminProps) {
   const [newCompFb, setNewCompFb] = useState('');
   const [newCompInsta, setNewCompInsta] = useState('');
   const [newCompTg, setNewCompTg] = useState('');
+  const [newCompCommission, setNewCompCommission] = useState(10);
+  const [editingRates, setEditingRates] = useState<Record<string, string>>({});
 
   // New Place Form
   const [newPlaceName, setNewPlaceName] = useState('');
@@ -870,7 +872,8 @@ export default function Admin({ onNavigate }: AdminProps) {
           facebook: newCompFb,
           instagram: newCompInsta,
           telegram: newCompTg
-        }
+        },
+        commissionRate: Number(newCompCommission)
       };
 
       await api.companies.create(payload);
@@ -885,6 +888,7 @@ export default function Admin({ onNavigate }: AdminProps) {
       setNewCompFb('');
       setNewCompInsta('');
       setNewCompTg('');
+      setNewCompCommission(10);
       loadData();
     } catch (err: any) {
       error(err.message || 'Şirkət əlavə edilə bilmədi.');
@@ -899,6 +903,20 @@ export default function Admin({ onNavigate }: AdminProps) {
       loadData();
     } catch (err: any) {
       error(err.message || 'Şirkət silinə bilmədi.');
+    }
+  };
+
+  const handleUpdateCompanyCommissionRate = async (id: string, rate: number) => {
+    if (rate < 0 || rate > 100) {
+      error('Komissiya faizi 0-100 aralığında olmalıdır.');
+      return;
+    }
+    try {
+      await api.companies.update(id, { commissionRate: rate });
+      success('Komissiya faizi uğurla yeniləndi!');
+      loadData();
+    } catch (err: any) {
+      error(err.message || 'Komissiya faizini yeniləmək mümkün olmadı.');
     }
   };
 
@@ -972,12 +990,32 @@ export default function Admin({ onNavigate }: AdminProps) {
     }
   };
 
-  if (loading || !user || user.role !== 'admin') {
+  if (loading) {
     return (
       <div className="min-h-screen pt-32 pb-16 flex justify-center items-center font-sans">
         <div className="flex flex-col items-center gap-4">
           <span className="w-12 h-12 border-4 border-gold-primary border-t-transparent rounded-full animate-spin" />
           <p className="text-slate-500 text-sm font-sans">Giriş yoxlanılır...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="min-h-screen pt-32 pb-16 flex flex-col justify-center items-center font-sans">
+        <div className="bg-white border rounded-3xl p-8 max-w-md w-full text-center shadow-lg">
+          <ShieldAlert className="w-16 h-16 text-rose-500 mx-auto mb-4 animate-bounce" />
+          <h3 className="font-serif text-xl font-bold text-navy-deep mb-2">Giriş Məhdudlaşdırılıb</h3>
+          <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+            Bu səhifəyə giriş icazəniz yoxdur.
+          </p>
+          <button
+            onClick={() => onNavigate('/')}
+            className="w-full bg-navy-deep hover:bg-navy-mid text-gold-primary py-3 rounded-xl font-bold transition-all cursor-pointer"
+          >
+            Ana Səhifəyə Qayıt
+          </button>
         </div>
       </div>
     );
@@ -1895,6 +1933,117 @@ export default function Admin({ onNavigate }: AdminProps) {
           {activeTab === 'companies' && (
             <div className="flex flex-col gap-8 text-left animate-fade" id="panel-companies">
               
+              {/* Analytics Panel */}
+              {(() => {
+                const companyStats = companies.map(comp => {
+                  const companyTours = tours.filter(t => (t.companyId || '') === comp.id);
+                  const activeToursCount = companyTours.filter(t => t.isActive).length;
+                  const tourIds = companyTours.map(t => t.id);
+                  const companyReservations = reservations.filter(res => res.type === 'tour' && tourIds.includes(res.refId));
+                  const totalReservations = companyReservations.length;
+                  const totalSales = companyReservations
+                    .filter(res => res.status !== 'cancelled')
+                    .reduce((sum, res) => sum + (res.totalPrice || 0), 0);
+                  const rate = comp.commissionRate !== undefined && comp.commissionRate !== null ? comp.commissionRate : 10;
+                  const commissionAmount = (totalSales * rate) / 100;
+                  const netPayable = totalSales - commissionAmount;
+
+                  return {
+                    ...comp,
+                    activeToursCount,
+                    totalReservations,
+                    totalSales,
+                    commissionRate: rate,
+                    commissionAmount,
+                    netPayable,
+                    rawReservations: companyReservations
+                  };
+                });
+
+                const totalSalesAll = companyStats.reduce((sum, c) => sum + c.totalSales, 0);
+                const totalCommissionAll = companyStats.reduce((sum, c) => sum + c.commissionAmount, 0);
+                const topSalesCompany = [...companyStats].filter(c => c.totalSales > 0).sort((a, b) => b.totalSales - a.totalSales)[0] || null;
+                const topReservationCompany = [...companyStats].filter(c => c.totalReservations > 0).sort((a, b) => b.totalReservations - a.totalReservations)[0] || null;
+
+                const today = new Date();
+                const currentMonth = today.getMonth();
+                const currentYear = today.getFullYear();
+
+                const currentMonthSales = companyStats.reduce((sum, comp) => {
+                  const monthBookings = comp.rawReservations.filter(res => {
+                    if (res.status === 'cancelled') return false;
+                    const d = new Date(res.createdAt);
+                    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                  });
+                  return sum + monthBookings.reduce((s, b) => s + (b.totalPrice || 0), 0);
+                }, 0);
+
+                const currentYearSales = companyStats.reduce((sum, comp) => {
+                  const yearBookings = comp.rawReservations.filter(res => {
+                    if (res.status === 'cancelled') return false;
+                    const d = new Date(res.createdAt);
+                    return d.getFullYear() === currentYear;
+                  });
+                  return sum + yearBookings.reduce((s, b) => s + (b.totalPrice || 0), 0);
+                }, 0);
+
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-sans">
+                    {/* Card 1: Total Sales */}
+                    <div className="bg-gradient-to-br from-navy-deep to-navy-mid p-6 rounded-3xl border border-gold-primary/20 shadow-sm text-white flex flex-col justify-between">
+                      <div>
+                        <p className="text-xs text-slate-300 font-bold uppercase tracking-wider">Ümumi Satış</p>
+                        <h3 className="text-2xl font-serif font-black text-gold-primary mt-1 font-mono">
+                          {totalSalesAll.toLocaleString()} AZN
+                        </h3>
+                      </div>
+                      <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3 text-[11px]">
+                        <span className="text-slate-300">Bu il: <strong className="font-mono text-white">{currentYearSales.toLocaleString()} AZN</strong></span>
+                        <span className="text-slate-300">Bu ay: <strong className="font-mono text-white">{currentMonthSales.toLocaleString()} AZN</strong></span>
+                      </div>
+                    </div>
+
+                    {/* Card 2: Total Commission */}
+                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                      <div>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Ümumi Komissiya Gəliri</p>
+                        <h3 className="text-2xl font-black text-emerald-600 mt-1 font-mono">
+                          {totalCommissionAll.toLocaleString()} AZN
+                        </h3>
+                      </div>
+                      <div className="mt-4 text-[11px] text-slate-500 border-t pt-3 flex items-center justify-between">
+                        <span>Sistem mənfəəti</span>
+                        <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-mono text-[10px] font-bold">FAAL</span>
+                      </div>
+                    </div>
+
+                    {/* Card 3: Leaders */}
+                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between md:col-span-2 lg:col-span-1">
+                      <div>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Lider Şirkətlər</p>
+                        <div className="mt-2 space-y-2 text-xs">
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-500">Ən çox satış edən:</span>
+                            <span className="font-bold text-navy-deep truncate max-w-[140px]">
+                              {topSalesCompany ? topSalesCompany.name : '—'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-500">Ən çox rezervasiya:</span>
+                            <span className="font-bold text-navy-deep truncate max-w-[140px]">
+                              {topReservationCompany ? topReservationCompany.name : '—'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="border-t pt-3 mt-2 text-[10px] text-slate-400 italic">
+                        Real-vaxt analiz nəticələri
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Add New Company Form */}
               <div className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm">
                 <h3 className="font-serif text-lg font-bold text-navy-deep border-b pb-2 mb-6">Yeni Turizm Şirkəti Əlavə Et</h3>
@@ -2023,6 +2172,35 @@ export default function Admin({ onNavigate }: AdminProps) {
                     />
                   </div>
 
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-slate-550 font-semibold">İlkin Komissiya Faizi (%)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      placeholder="Faiz daxil edin. Məs: 10"
+                      value={newCompCommission}
+                      onChange={(e) => setNewCompCommission(Number(e.target.value))}
+                      className="p-2.5 bg-slate-50 border rounded-xl font-mono font-bold text-navy-deep"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1 md:col-span-2">
+                    <label className="text-xs text-slate-500">Sürətli Seçimlər</label>
+                    <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                      {[4, 5, 8, 10, 15].map(v => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setNewCompCommission(v)}
+                          className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${newCompCommission === v ? 'bg-gold-primary text-navy-deep border-gold-primary' : 'bg-white text-slate-600 border-slate-200'}`}
+                        >
+                          {v}%
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="flex flex-col gap-1 md:col-span-3">
                     <label className="text-xs text-slate-500">Şirkətin Təsviri / Bizim haqqımızda</label>
                     <textarea
@@ -2047,33 +2225,136 @@ export default function Admin({ onNavigate }: AdminProps) {
               {/* Companies List */}
               <div>
                 <h4 className="font-serif text-base font-bold text-navy-deep mb-4">Sistemdəki Turizm Şirkətləri ({companies.length})</h4>
-                <div className="bg-white border rounded-3xl divide-y overflow-hidden shadow-sm">
+                <div className="flex flex-col gap-6">
                   {companies.length === 0 ? (
-                    <div className="p-8 text-center text-slate-400">Heç bir turizm şirkəti qeydə alınmamışdır.</div>
+                    <div className="bg-white border rounded-3xl p-8 text-center text-slate-400">Heç bir turizm şirkəti qeydə alınmamışdır.</div>
                   ) : (
-                    companies.map((comp) => (
-                      <div key={comp.id} className="p-5 flex items-start justify-between gap-4 font-sans text-xs md:text-sm hover:bg-slate-50/40">
-                        <div className="flex items-start gap-4">
-                          <img src={comp.logo || 'https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=150'} alt="" className="w-14 h-14 object-cover rounded-2xl bg-slate-100 border p-1" />
-                          <div>
-                            <h4 className="font-bold text-lg text-navy-deep">{comp.name}</h4>
-                            <p className="text-xs text-slate-500 mt-1 max-w-xl leading-relaxed">{comp.description}</p>
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-slate-400 font-mono text-[11px]">
-                              <span>Tel: {comp.phone || 'Daxil edilməyib'}</span>
-                              <span>E-poçt: {comp.email || 'Daxil edilməyib'}</span>
-                              <span>Veb: {comp.website || 'Yoxdur'}</span>
+                    companies.map((comp) => {
+                      const companyTours = tours.filter(t => (t.companyId || '') === comp.id);
+                      const activeToursCount = companyTours.filter(t => t.isActive).length;
+                      const tourIds = companyTours.map(t => t.id);
+                      const companyReservations = reservations.filter(res => res.type === 'tour' && tourIds.includes(res.refId));
+                      const totalReservations = companyReservations.length;
+                      const totalSales = companyReservations
+                        .filter(res => res.status !== 'cancelled')
+                        .reduce((sum, res) => sum + (res.totalPrice || 0), 0);
+                      
+                      const rate = comp.commissionRate !== undefined && comp.commissionRate !== null ? comp.commissionRate : 10;
+                      const commissionAmount = (totalSales * rate) / 100;
+                      const netPayable = totalSales - commissionAmount;
+
+                      const currentEditValue = editingRates[comp.id] !== undefined ? editingRates[comp.id] : String(rate);
+
+                      return (
+                        <div key={comp.id} className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col gap-6 font-sans">
+                          {/* Header section of company card */}
+                          <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                            <div className="flex items-start gap-4 flex-1">
+                              <img src={comp.logo || 'https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=150'} alt="" className="w-16 h-16 object-cover rounded-2xl bg-slate-100 border p-1" />
+                              <div className="flex-1">
+                                <h4 className="font-bold text-lg text-navy-deep">{comp.name}</h4>
+                                <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{comp.description}</p>
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5 text-[11px] text-slate-400 font-mono">
+                                  <span>Tel: <strong className="text-slate-600 font-sans">{comp.phone || 'Daxil edilməyib'}</strong></span>
+                                  <span>E-poçt: <strong className="text-slate-600 font-sans">{comp.email || 'Daxil edilməyib'}</strong></span>
+                                  <span>Veb: {comp.website ? <a href={comp.website} target="_blank" rel="noreferrer" className="text-gold-primary hover:underline">{comp.website}</a> : 'Yoxdur'}</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <button
+                              onClick={() => handleDeleteCompany(comp.id)}
+                              className="p-2 bg-rose-50 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl border border-rose-100 transition-all cursor-pointer shrink-0 self-end md:self-start"
+                              title="Şirkəti Sil"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          {/* Dynamic Statistics Block & Commission Editor */}
+                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-slate-50/70 p-5 rounded-2xl border border-slate-100/50">
+                            {/* Stats numbers columns */}
+                            <div className="col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div className="flex flex-col bg-white p-3 rounded-xl border border-slate-100">
+                                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Aktiv Turlar</span>
+                                <span className="text-base font-black text-navy-deep mt-1 font-mono">{activeToursCount} / {companyTours.length}</span>
+                              </div>
+                              <div className="flex flex-col bg-white p-3 rounded-xl border border-slate-100">
+                                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Rezervasiya</span>
+                                <span className="text-base font-black text-navy-deep mt-1 font-mono">{totalReservations}</span>
+                              </div>
+                              <div className="flex flex-col bg-white p-3 rounded-xl border border-slate-100">
+                                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold font-sans">Ümumi Satış</span>
+                                <span className="text-base font-black text-navy-deep mt-1 font-mono text-amber-600">{totalSales.toLocaleString()} AZN</span>
+                              </div>
+                              <div className="flex flex-col bg-white p-3 rounded-xl border border-slate-100">
+                                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Komissiya (Məbləğ)</span>
+                                <span className="text-base font-black text-emerald-600 mt-1 font-mono">{commissionAmount.toLocaleString()} AZN</span>
+                              </div>
+                            </div>
+
+                            {/* Net Payable to company box */}
+                            <div className="flex flex-col justify-center bg-gradient-to-br from-navy-deep to-navy-mid p-3 rounded-xl border border-gold-primary/10 shadow-sm text-center">
+                              <span className="text-[10px] text-slate-300 font-bold uppercase tracking-wider">Şirkətə Ödəniləcək Yekun</span>
+                              <span className="text-lg font-black text-gold-primary mt-1 font-mono">{netPayable.toLocaleString()} AZN</span>
                             </div>
                           </div>
+
+                          {/* Commission Management Toolbar */}
+                          <div className="border-t border-slate-100 pt-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-navy-deep">Mövcud komissiya faizi:</span>
+                              <span className="bg-amber-100 text-amber-800 border border-amber-200 text-xs font-black px-2.5 py-0.5 rounded-full font-mono">{rate}%</span>
+                            </div>
+
+                            <form 
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                handleUpdateCompanyCommissionRate(comp.id, Number(currentEditValue));
+                              }}
+                              className="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border"
+                            >
+                              <span className="text-xs text-slate-550 pl-2 font-semibold">Komissiya:</span>
+                              <div className="flex flex-wrap items-center gap-1">
+                                {[4, 5, 8, 10, 15].map(val => (
+                                  <button
+                                    key={val}
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingRates({ ...editingRates, [comp.id]: String(val) });
+                                      handleUpdateCompanyCommissionRate(comp.id, val);
+                                    }}
+                                    className={`px-2 py-1 text-[11px] font-bold rounded-lg border transition-all cursor-pointer ${rate === val ? 'bg-gold-primary text-navy-deep border-gold-primary' : 'bg-white text-slate-600 border-slate-200'}`}
+                                  >
+                                    {val}%
+                                  </button>
+                                ))}
+                              </div>
+                              <div className="flex items-center gap-1 border-l pl-2">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  placeholder="Özəl"
+                                  value={currentEditValue}
+                                  onChange={(e) => setEditingRates({ ...editingRates, [comp.id]: e.target.value })}
+                                  className="w-14 p-1 text-center bg-white border rounded font-mono text-xs font-bold text-navy-deep"
+                                />
+                                <span className="text-xs text-slate-400 font-bold">%</span>
+                                <button
+                                  type="submit"
+                                  disabled={Number(currentEditValue) === rate}
+                                  className={`p-1 bg-navy-mid text-gold-primary rounded hover:bg-navy-deep transition-all cursor-pointer ${Number(currentEditValue) === rate ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                  title="Komissiyanı Saxla"
+                                >
+                                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                </button>
+                              </div>
+                            </form>
+                          </div>
                         </div>
-                        <button
-                          onClick={() => handleDeleteCompany(comp.id)}
-                          className="p-2 bg-rose-50 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl border border-rose-100 transition-all cursor-pointer shrink-0"
-                          title="Şirkəti Sil"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -4671,6 +4952,29 @@ export default function Admin({ onNavigate }: AdminProps) {
                     <option value="historical">Tarixi Tur</option>
                     <option value="wellness">Sağlamlıq Turu</option>
                     <option value="adventure">Macəra Turu</option>
+                  </select>
+                </div>
+
+                {/* Şirkət Seçimi */}
+                <div className="flex flex-col gap-1 col-span-1 md:col-span-3">
+                  <label className="text-xs font-bold text-slate-500">Turun Aid Olduğu Şirkət</label>
+                  <select
+                    value={editingTour.companyId || ''}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      const matchedCompany = companies.find(c => c.id === selectedId);
+                      setEditingTour({
+                        ...editingTour,
+                        companyId: selectedId,
+                        companyName: matchedCompany ? matchedCompany.name : ''
+                      });
+                    }}
+                    className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-navy-deep focus:bg-white cursor-pointer"
+                  >
+                    <option value="">-- Şirkət Seçin --</option>
+                    {companies.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
                   </select>
                 </div>
 
