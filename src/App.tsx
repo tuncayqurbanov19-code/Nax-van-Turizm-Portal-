@@ -13,6 +13,7 @@ import Register from './pages/Register';
 import Admin from './pages/Admin';
 import AdminLogin from './pages/AdminLogin';
 import NotFound from './pages/NotFound';
+import PWAInstallPrompt from './components/ui/PWAInstallPrompt';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider, useToast } from './components/ui/Toast';
 import { api } from './services/api';
@@ -124,6 +125,9 @@ function AppContent() {
 
       {/* Unified footer linkboard */}
       <Footer onNavigate={handleNavigate} settings={settings} />
+
+      {/* PWA Android/iOS App Install Banner Prompt */}
+      <PWAInstallPrompt />
 
 
     </div>
