@@ -1031,6 +1031,63 @@ export default function Admin({ onNavigate }: AdminProps) {
             <div className="flex flex-col gap-6" id="panel-reservations">
               <h3 className="font-serif text-xl font-bold text-navy-deep select-none">Gələn Sifarişlərin Təsdiqi</h3>
               
+              {/* Statistika Dashboard Section */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-2">
+                
+                {/* Card 1: Ümumi Sifarişlər */}
+                <div className="bg-white border border-slate-100 p-4 rounded-3xl shadow-sm flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-2xl bg-gold-primary/10 border border-gold-primary/20 text-gold-primary flex items-center justify-center shrink-0">
+                    <Calendar className="w-4.5 h-4.5 text-gold-primary" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-mono uppercase tracking-wider text-slate-400 font-bold leading-none">ÜMUMİ REZERV</p>
+                    <p className="text-xl font-serif font-extrabold text-navy-deep mt-1 leading-none">
+                      {reservations.length}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Card 2: WhatsApp Rezervasiyaları */}
+                <div className="bg-white border border-slate-100 p-4 rounded-3xl shadow-sm flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-650 flex items-center justify-center shrink-0">
+                    <MessageSquare className="w-4.5 h-4.5 text-emerald-650" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-mono uppercase tracking-wider text-slate-400 font-bold leading-none">WHATSAPP İLƏ</p>
+                    <p className="text-xl font-serif font-extrabold text-navy-deep mt-1 leading-none">
+                      {reservations.filter(r => r.viaWhatsapp === true || r.whatsappStatus !== undefined).length}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Card 3: Web / Sistem Rezervasiyaları */}
+                <div className="bg-white border border-[#eaeaea] p-4 rounded-3xl shadow-sm flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-600 flex items-center justify-center shrink-0">
+                    <Compass className="w-4.5 h-4.5 text-sky-600" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-mono uppercase tracking-wider text-slate-400 font-bold leading-none">SAYT VASİTƏSİLƏ</p>
+                    <p className="text-xl font-serif font-extrabold text-navy-deep mt-1 leading-none">
+                      {reservations.filter(r => !r.viaWhatsapp && r.whatsappStatus === undefined).length}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Card 4: Toplam Sifariş Dəyəri */}
+                <div className="bg-white border border-slate-100 p-4 rounded-3xl shadow-sm flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 flex items-center justify-center shrink-0">
+                    <span className="text-base font-extrabold font-mono text-amber-600">₼</span>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-mono uppercase tracking-wider text-slate-400 font-bold leading-none">TOPLAM GƏLİR</p>
+                    <p className="text-xl font-serif font-extrabold text-navy-deep mt-1 leading-none">
+                      ₼{reservations.reduce((acc, r) => acc + (r.totalPrice || 0), 0)}
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+              
               {reservations.length === 0 ? (
                 <div className="bg-white border rounded-3xl p-12 text-center text-slate-400 font-sans">
                   Siyahıda heç bir otel və ya tur sifarişi qeydə alınmamışdır.
@@ -1135,6 +1192,21 @@ export default function Admin({ onNavigate }: AdminProps) {
                                     <RotateCw className="w-3.5 h-3.5" />
                                   </button>
                                 )}
+                                {/* Manual customer WhatsApp Redirect link */}
+                                <a
+                                  href={`https://api.whatsapp.com/send?phone=${res.phone.replace(/[^0-9]/g, '')}&text=${encodeURIComponent(
+                                    res.type === 'tour'
+                                      ? `Hörmətli ${res.fullName}, sifarişiniz uğurla qəbul edildi. Turunuz ${res.checkIn} tarixində, saat 09:00-da qoyulmuşdur. Sizə xoş və unudulmaz səyahət arzulayırıq. Bizi seçdiyiniz üçün təşəkkür edirik. Hər hansı sualınız yaranarsa, bizimlə əlaqə saxlaya bilərsiniz.`
+                                      : `Hörmətli ${res.fullName}, sifarişiniz uğurla qəbul edildi. Mehmanxana qeydiyyatınız ${res.checkIn} — ${res.checkOut} tarixləri üçün təsdiqlənmişdir. Sizə xoş və rahat qonaqlama arzulayırıq. Bizi seçdiyiniz üçün təşəkkür edirik. Hər hansı sualınız yaranarsa, bizimlə əlaqə saxlaya bilərsiniz.`
+                                  )}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 bg-emerald-50 hover:bg-emerald-500 text-emerald-600 hover:text-white rounded-lg border border-emerald-100 transition-colors flex items-center justify-center cursor-pointer"
+                                  title="Müştəriyə WhatsApp ilə təsdiq mesajı göndər"
+                                  id={`btn-manual-wa-${res.id}`}
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </a>
                                 {/* View Logs history */}
                                 <button
                                   onClick={() => handleOpenLogs(res)}

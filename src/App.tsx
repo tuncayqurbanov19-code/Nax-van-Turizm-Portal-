@@ -11,8 +11,9 @@ import PlaceDetail from './pages/PlaceDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Admin from './pages/Admin';
+import AdminLogin from './pages/AdminLogin';
 import NotFound from './pages/NotFound';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider, useToast } from './components/ui/Toast';
 import { api } from './services/api';
 import { SettingsSchema } from './types';
@@ -20,6 +21,7 @@ import { SettingsSchema } from './types';
 function AppContent() {
   const [currentPath, setCurrentPath] = useState('/');
   const [settings, setSettings] = useState<SettingsSchema | null>(null);
+  const { isAdmin, loading } = useAuth();
 
   // Fetch settings once for global layout integrations
   useEffect(() => {
@@ -73,7 +75,21 @@ function AppContent() {
     if (currentPath === '/places') return <Places onNavigate={handleNavigate} />;
     if (currentPath === '/login') return <Login onNavigate={handleNavigate} />;
     if (currentPath === '/register') return <Register onNavigate={handleNavigate} />;
-    if (currentPath === '/admin') return <Admin onNavigate={handleNavigate} />;
+    if (currentPath === '/__secure_admin_login__') return <AdminLogin onNavigate={handleNavigate} />;
+    
+    if (currentPath === '/admin') {
+      if (loading) {
+        return (
+          <div className="min-h-screen pt-32 pb-16 flex justify-center items-center">
+            <span className="w-12 h-12 border-4 border-gold-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        );
+      }
+      if (isAdmin) {
+        return <Admin onNavigate={handleNavigate} />;
+      }
+      return <NotFound onNavigate={handleNavigate} />;
+    }
 
     // Subpath matches e.g. /tours/:id, etc.
     const tourDetailMatch = currentPath.match(/^\/tours\/([a-zA-Z0-9_\-]+)$/);

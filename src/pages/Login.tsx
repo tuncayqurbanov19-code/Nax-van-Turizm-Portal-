@@ -11,7 +11,7 @@ export default function Login({ onNavigate }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const { error } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,7 +39,8 @@ export default function Login({ onNavigate }: LoginProps) {
       const role = await login(email, password);
       if (role) {
         if (role === 'admin') {
-          onNavigate('/admin');
+          logout();
+          error('Daxil edilən email və ya şifrə yanlışdır.');
         } else {
           onNavigate('/');
         }

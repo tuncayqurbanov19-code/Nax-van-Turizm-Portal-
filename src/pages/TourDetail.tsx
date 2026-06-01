@@ -270,7 +270,8 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
         checkOut: bookingDate, // Simple Tour is single-start check-in
         guests: Number(guestsCount),
         notes: bookingNotes,
-        totalPrice
+        totalPrice,
+        viaWhatsapp: true
       });
 
       if (res && res.id) {
@@ -286,7 +287,7 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
           (bookingNotes.trim() ? `• Qeyd: ${bookingNotes}\n` : '');
 
         const encodedText = encodeURIComponent(text);
-        const whatsappUrl = `https://wa.me/9940703538283?text=${encodedText}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=994703538283&text=${encodedText}`;
         
         success('Sizin sifarişiniz qeydə alındı! WhatsApp-a yönləndirilirsiniz...', 'Sifariş qəbul olundu');
         setIsBookingModalOpen(false);

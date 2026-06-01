@@ -115,7 +115,8 @@ export default function HotelDetail({ hotelId, onNavigate }: HotelDetailProps) {
         checkOut: checkOutDate,
         guests: Number(bookingGuestsCount),
         notes: bookingNotes,
-        totalPrice
+        totalPrice,
+        viaWhatsapp: true
       });
 
       if (res && res.id) {
@@ -132,7 +133,7 @@ export default function HotelDetail({ hotelId, onNavigate }: HotelDetailProps) {
           (bookingNotes.trim() ? `• Qeyd: ${bookingNotes}\n` : '');
 
         const encodedText = encodeURIComponent(text);
-        const whatsappUrl = `https://wa.me/9940703538283?text=${encodedText}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=994703538283&text=${encodedText}`;
 
         success('Otel sifarişiniz qeydə alındı! WhatsApp-a yönləndirilirsiniz...', 'Rezervasiya Göndərildi');
         setCheckInDate('');
@@ -250,7 +251,6 @@ export default function HotelDetail({ hotelId, onNavigate }: HotelDetailProps) {
                 <div className="flex flex-col gap-1 text-slate-600">
                   <p>Telefon: <span className="font-bold text-navy-deep">{hotel.phone}</span></p>
                   <p>E-poçt: <span className="font-bold text-navy-deep">{hotel.email}</span></p>
-                  {hotel.whatsapp && <p>WhatsApp: <span className="font-bold text-emerald-650">{hotel.whatsapp}</span></p>}
                   {hotel.website && (
                     <p className="mt-1">
                       <a href={hotel.website} target="_blank" rel="noopener noreferrer" className="text-gold-primary font-bold hover:underline">

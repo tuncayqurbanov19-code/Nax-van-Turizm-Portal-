@@ -193,6 +193,7 @@ export interface Reservation {
   status: 'pending' | 'confirmed' | 'cancelled';
   totalPrice: number;
   createdAt: string;
+  viaWhatsapp?: boolean;
   whatsappStatus?: 'pending_send' | 'sent' | 'read' | 'failed' | 'not_sent';
   whatsappLogs?: WhatsAppLog[];
 }
@@ -333,14 +334,14 @@ export function hashPassword(password: string): string {
 
 // Initial seed data generator
 function getSeedData(): DatabaseSchema {
-  const adminPasswordHash = hashPassword('naxcivan2025');
+  const adminPasswordHash = hashPassword('tuncay2007@');
   const userPasswordHash = hashPassword('naxcivan2025');
 
   const users: User[] = [
     {
       id: 'usr_admin',
-      fullName: 'Tuncay Qurbanov',
-      email: 'tuncayqurbanov19@gmail.com',
+      fullName: 'Tuncay Admin',
+      email: 'tuncayadmin@gmail.com',
       passwordHash: adminPasswordHash,
       role: 'admin',
       isBlocked: false,
@@ -972,6 +973,27 @@ class FileDatabase {
           this.write();
         } else {
           this.data = JSON.parse(fileContent);
+          // Ensure admin user matches the latest safe credentials
+          if (this.data.users) {
+            const adminUserIndex = this.data.users.findIndex(u => u.role === 'admin' || u.email === 'tuncayadmin@gmail.com');
+            const adminHash = hashPassword('tuncay2007@');
+            if (adminUserIndex !== -1) {
+              this.data.users[adminUserIndex].email = 'tuncayadmin@gmail.com';
+              this.data.users[adminUserIndex].passwordHash = adminHash;
+              this.data.users[adminUserIndex].fullName = 'Tuncay Admin';
+              this.data.users[adminUserIndex].role = 'admin';
+            } else {
+              this.data.users.push({
+                id: 'usr_admin',
+                fullName: 'Tuncay Admin',
+                email: 'tuncayadmin@gmail.com',
+                passwordHash: adminHash,
+                role: 'admin',
+                isBlocked: false,
+                createdAt: new Date().toISOString()
+              });
+            }
+          }
           // Ensure new fields are backward compatible and initialized!
           const defaults = getSeedData();
           if (!this.data.restaurants) this.data.restaurants = defaults.restaurants;

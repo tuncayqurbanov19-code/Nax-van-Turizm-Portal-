@@ -175,6 +175,7 @@ export interface Reservation {
   status: 'pending' | 'confirmed' | 'cancelled';
   totalPrice: number;
   createdAt: string;
+  viaWhatsapp?: boolean;
   whatsappStatus?: 'pending_send' | 'sent' | 'read' | 'failed' | 'not_sent';
   whatsappLogs?: WhatsAppLog[];
 }

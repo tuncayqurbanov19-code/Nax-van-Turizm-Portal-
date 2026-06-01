@@ -606,7 +606,8 @@ app.post('/api/reservations', authenticateToken, (req: Request, res: Response) =
       checkOut: checkOut || checkIn,
       guests: Number(guests),
       notes: notes || '',
-      status: 'pending',
+      status: 'confirmed',
+      viaWhatsapp: req.body.viaWhatsapp !== undefined ? !!req.body.viaWhatsapp : true,
       totalPrice: Number(totalPrice) || 0
     });
 
