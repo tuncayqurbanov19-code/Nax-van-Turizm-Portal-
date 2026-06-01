@@ -14,6 +14,7 @@ import Admin from './pages/Admin';
 import AdminLogin from './pages/AdminLogin';
 import NotFound from './pages/NotFound';
 import PWAInstallPrompt from './components/ui/PWAInstallPrompt';
+import QuickContact from './components/ui/QuickContact';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider, useToast } from './components/ui/Toast';
 import { api } from './services/api';
@@ -128,6 +129,9 @@ function AppContent() {
 
       {/* PWA Android/iOS App Install Banner Prompt */}
       <PWAInstallPrompt />
+
+      {/* Direct Contact phone/whatsapp floating widget */}
+      <QuickContact />
 
 
     </div>

@@ -14,6 +14,7 @@ interface TourDetailProps {
 
 export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
   const [tour, setTour] = useState<Tour | null>(null);
+  const [hotelsList, setHotelsList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'stops' | 'meals' | 'hotel' | 'transport'>('stops');
   const { user } = useAuth();
@@ -44,6 +45,16 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
         setLoading(true);
         const data = await api.tours.getDetail(tourId);
         setTour(data);
+        
+        try {
+          const fetchedHotels = await api.hotels.getList();
+          if (Array.isArray(fetchedHotels)) {
+            setHotelsList(fetchedHotels);
+          }
+        } catch (hotelErr) {
+          console.error("Hotels could not be loaded in detail view:", hotelErr);
+        }
+
         if (data) {
           // Prepopulate booking form with logged user info
           if (user) {
@@ -61,6 +72,71 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
     }
     loadTour();
   }, [tourId, user]);
+
+  // SEO settings dynamic updater
+  useEffect(() => {
+    if (tour) {
+      const originalTitle = document.title;
+      if (tour.seoSettings?.title) {
+        document.title = tour.seoSettings.title;
+      } else {
+        document.title = `${tour.name} - Premium Naxçıvan Turları`;
+      }
+
+      let metaDesc = document.querySelector('meta[name="description"]');
+      let created = false;
+      let originalContent = '';
+      if (metaDesc) {
+        originalContent = metaDesc.getAttribute('content') || '';
+      }
+      if (tour.seoSettings?.description) {
+        if (!metaDesc) {
+          metaDesc = document.createElement('meta');
+          metaDesc.setAttribute('name', 'description');
+          document.head.appendChild(metaDesc);
+          created = true;
+        }
+        metaDesc.setAttribute('content', tour.seoSettings.description);
+      }
+
+      return () => {
+        document.title = originalTitle;
+        if (created && metaDesc) {
+          document.head.removeChild(metaDesc);
+        } else if (metaDesc && originalContent) {
+          metaDesc.setAttribute('content', originalContent);
+        }
+      };
+    }
+  }, [tour]);
+
+  // Adjust activeTab automatically if the current tab doesn't have data and is hidden
+  useEffect(() => {
+    if (tour) {
+      const showStops = tour.stops && tour.stops.length > 0;
+      const showMeals = (tour.customMeals && tour.customMeals.length > 0) || (tour.meals && (tour.meals.breakfast?.restaurantName || tour.meals.lunch?.restaurantName || tour.meals.dinner?.restaurantName));
+      const showHotel = (tour.hotelIds && tour.hotelIds.length > 0) || (tour.accommodation && tour.accommodation.hotelName);
+      const showTransport = (tour.customTransports && tour.customTransports.length > 0) || (tour.transport && (tour.transport.type || tour.transport.model));
+
+      if (activeTab === 'stops' && !showStops) {
+        if (showMeals) setActiveTab('meals');
+        else if (showHotel) setActiveTab('hotel');
+        else if (showTransport) setActiveTab('transport');
+      } else if (activeTab === 'meals' && !showMeals) {
+        if (showStops) setActiveTab('stops');
+        else if (showHotel) setActiveTab('hotel');
+        else if (showTransport) setActiveTab('transport');
+      } else if (activeTab === 'hotel' && !showHotel) {
+        if (showStops) setActiveTab('stops');
+        else if (showMeals) setActiveTab('meals');
+        else if (showTransport) setActiveTab('transport');
+      } else if (activeTab === 'transport' && !showTransport) {
+        if (showStops) setActiveTab('stops');
+        else if (showMeals) setActiveTab('meals');
+        else if (showHotel) setActiveTab('hotel');
+      }
+    }
+  }, [tour, activeTab]);
 
   // Three.js Interactive 360 Vehicle View Engine
   useEffect(() => {
@@ -359,11 +435,11 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
           {/* Tab Selection Header (sticky on scroll) */}
           <div className="bg-white border border-slate-100 rounded-2xl flex items-center overflow-x-auto p-2 shadow-sm sticky top-20 z-20">
             {[
-              { id: 'stops', label: 'Gediləcək Yerlər', icon: <MapPin className="w-4 h-4" /> },
-              { id: 'meals', label: 'Qidalanma', icon: <Coffee className="w-4 h-4" /> },
-              { id: 'hotel', label: 'Qonaqlama', icon: <Hotel className="w-4 h-4" /> },
-              { id: 'transport', label: 'Nəqliyyat', icon: <Car className="w-4 h-4" /> }
-            ].map((tab) => {
+              { id: 'stops', label: 'Gediləcək Yerlər', icon: <MapPin className="w-4 h-4" />, show: tour.stops && tour.stops.length > 0 },
+              { id: 'meals', label: 'Qidalanma', icon: <Coffee className="w-4 h-4" />, show: (tour.customMeals && tour.customMeals.length > 0) || (tour.meals && (tour.meals.breakfast?.restaurantName || tour.meals.lunch?.restaurantName || tour.meals.dinner?.restaurantName)) },
+              { id: 'hotel', label: 'Qonaqlama', icon: <Hotel className="w-4 h-4" />, show: (tour.hotelIds && tour.hotelIds.length > 0) || (tour.accommodation && tour.accommodation.hotelName) },
+              { id: 'transport', label: 'Nəqliyyat', icon: <Car className="w-4 h-4" />, show: (tour.customTransports && tour.customTransports.length > 0) || (tour.transport && (tour.transport.type || tour.transport.model)) }
+            ].filter(tab => tab.show).map((tab) => {
               const active = activeTab === tab.id;
               return (
                 <button
@@ -384,10 +460,9 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
 
           {/* TAB CONTENTS */}
           <div className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-md">
-            
-            {/* Tab 1: Gediləcək Yerlər Timeline view */}
+                 {/* Tab 1: Gediləcək Yerlər Timeline view */}
             {activeTab === 'stops' && (
-              <div className="flex flex-col gap-8 relative select-none">
+              <div className="flex flex-col gap-8 relative select-none font-sans">
                 <div className="absolute top-4 bottom-4 left-6 md:left-8 w-0.5 bg-gold-primary/30" />
                 
                 {tour.stops.map((stop, idx) => (
@@ -396,16 +471,29 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
                       {idx + 1}
                     </div>
                     
-                    <div className="flex-1 bg-slate-50 border border-slate-100 p-5 rounded-2xl flex flex-col md:flex-row gap-5 hover:bg-slate-50/50 transition-colors">
+                    <div className="flex-1 bg-slate-50 border border-slate-100 p-5 rounded-2xl flex flex-col md:flex-row gap-5 hover:bg-slate-100/50 transition-colors">
                       {stop.image && (
                         <div className="w-full md:w-36 aspect-[4/3] rounded-xl overflow-hidden shrink-0 bg-slate-200">
                           <img src={stop.image} alt={stop.placeName} className="w-full h-full object-cover" />
                         </div>
                       )}
-                      <div>
-                        <div className="flex items-center gap-3">
-                          <h4 className="font-serif text-lg font-bold text-navy-deep">{stop.placeName}</h4>
-                          <span className="text-[10px] font-mono bg-gold-light text-amber-800 font-bold px-2 py-0.5 rounded-full">{stop.duration}</span>
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-3">
+                            <h4 className="font-serif text-lg font-bold text-navy-deep">{stop.placeName}</h4>
+                            <span className="text-[10px] font-mono bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">{stop.duration}</span>
+                          </div>
+                          {stop.lat && stop.lng && (
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${stop.lat},${stop.lng}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[11px] font-bold text-gold-primary hover:text-amber-600 flex items-center gap-1 transition-colors"
+                            >
+                              <MapPin className="w-3.5 h-3.5" />
+                              Xəritədə Bax
+                            </a>
+                          )}
                         </div>
                         <p className="text-xs text-slate-500 font-sans mt-3 leading-relaxed">{stop.description}</p>
                       </div>
@@ -417,120 +505,225 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
 
             {/* Tab 2: Qidalanma section */}
             {activeTab === 'meals' && (
-              <div className="flex flex-col gap-6 select-none" id="tour-meals-container">
-                <h3 className="font-serif text-xl font-bold text-navy-deep flex items-center gap-2 mb-2">
-                  <Utensils className="w-5 h-5 text-gold-primary" />
-                  Milli və Regional Kulinariya Təminatı
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Lunch / breakfast / dinner cards */}
-                  {[
-                    { title: 'Səhər Yeməyi', obj: tour.meals.breakfast, icon: '☕' },
-                    { title: 'Nahar', obj: tour.meals.lunch, icon: '🍲' },
-                    { title: 'Axşam Yeməyi', obj: tour.meals.dinner, icon: '🍢' }
-                  ].map((meal, idx) => (
-                    <div key={idx} className="bg-slate-50 border border-slate-100 p-5 rounded-2xl">
-                      <div className="text-2xl mb-1">{meal.icon}</div>
-                      <h4 className="text-sm font-bold text-navy-deep font-sans">{meal.title}</h4>
-                      <p className="text-xs text-slate-400 font-sans mt-1">Məkan: {meal.obj.restaurantName}</p>
-                      
-                      <div className="flex flex-col gap-1.5 mt-4">
-                        {meal.obj.items.map((item, idy) => (
-                          <div key={idy} className="flex items-center gap-2 text-xs text-slate-600 font-sans">
-                            <span className="w-1.5 h-1.5 bg-gold-primary rounded-full" />
-                            {item}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+              <div className="flex flex-col gap-6 select-none font-sans" id="tour-meals-container">
+                <div className="border-b pb-4">
+                  <h3 className="font-serif text-xl font-bold text-navy-deep flex items-center gap-2">
+                    <Utensils className="w-5 h-5 text-gold-primary" />
+                    Milli və Regional Kulinariya Təminatı
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">Səyahət müddətində dadacağınız xüsusi təamlar və restoran planı</p>
                 </div>
+                
+                {tour.customMeals && tour.customMeals.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {tour.customMeals.map((meal, idx) => (
+                      <div key={idx} className="bg-slate-50 border border-slate-100 p-5 rounded-2xl flex flex-col gap-4 animate-fadeIn">
+                        {meal.image && (
+                          <div className="w-full h-40 rounded-xl overflow-hidden bg-slate-200">
+                            <img src={meal.image} alt={meal.typeName} className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <div>
+                          <span className="bg-gold-primary/10 text-gold-primary text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-lg">
+                            {meal.typeName}
+                          </span>
+                          <h4 className="text-base font-bold text-navy-deep font-sans mt-2">{meal.typeName}</h4>
+                          {meal.restaurantName && (
+                            <p className="text-xs text-slate-500 font-sans font-medium mt-1">📍 Məkan: {meal.restaurantName}</p>
+                          )}
+                          <div className="flex flex-wrap gap-1.5 mt-4">
+                            {meal.items.map((item, idy) => (
+                              <span key={idy} className="bg-white border border-slate-200 text-slate-600 text-xs px-2.5 py-1 rounded-xl font-medium">
+                                • {item}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {[
+                      { title: 'Səhər Yeməyi', obj: tour.meals?.breakfast, icon: '☕' },
+                      { title: 'Nahar', obj: tour.meals?.lunch, icon: '🍲' },
+                      { title: 'Axşam Yeməyi', obj: tour.meals?.dinner, icon: '🍢' }
+                    ].filter(m => m.obj && m.obj.restaurantName).map((meal, idx) => (
+                      <div key={idx} className="bg-slate-50 border border-slate-100 p-5 rounded-2xl">
+                        <div className="text-2xl mb-1">{meal.icon}</div>
+                        <h4 className="text-sm font-bold text-navy-deep font-sans">{meal.title}</h4>
+                        <p className="text-xs text-slate-400 font-sans mt-1">Məkan: {meal.obj.restaurantName}</p>
+                        
+                        <div className="flex flex-col gap-1.5 mt-4">
+                          {meal.obj.items.map((item, idy) => (
+                            <div key={idy} className="flex items-center gap-2 text-xs text-slate-600 font-sans">
+                              <span className="w-1.5 h-1.5 bg-gold-primary rounded-full" />
+                              {item}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {/* Tab 3: Qonaqlama section */}
             {activeTab === 'hotel' && (
-              <div className="select-none" id="tour-accommodation-container">
-                <h3 className="font-serif text-xl font-bold text-navy-deep flex items-center gap-2 mb-6">
-                  <Hotel className="w-5 h-5 text-gold-primary" />
-                  Yaşayış və Otel Təminatı
-                </h3>
+              <div className="select-none font-sans" id="tour-accommodation-container">
+                <div className="border-b pb-4 mb-6">
+                  <h3 className="font-serif text-xl font-bold text-navy-deep flex items-center gap-2">
+                    <Hotel className="w-5 h-5 text-gold-primary" />
+                    Yaşayış və Otel Təminatı
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">Bu tur müddətində qalacağınız lüks dərəcəli otel profilləri</p>
+                </div>
 
-                <div className="bg-slate-50 border border-slate-100 p-6 rounded-2xl flex flex-col md:flex-row gap-6 hover:bg-slate-100/50 transition-colors">
-                  <div className="flex-1">
-                    <h4 className="font-serif text-xl font-bold text-navy-deep">{tour.accommodation.hotelName}</h4>
-                    <p className="text-xs text-slate-400 font-sans mt-1">Otaq növü: {tour.accommodation.roomType}</p>
-                    
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-xs text-slate-500 font-sans font-medium">Reytinq:</span>
-                      <StarRating rating={5} size={14} />
-                    </div>
+                {tour.hotelIds && tour.hotelIds.length > 0 && hotelsList.length > 0 ? (
+                  <div className="flex flex-col gap-6 animate-fadeIn">
+                    {hotelsList
+                      .filter(h => tour.hotelIds?.includes(h.id))
+                      .map((hotel, idx) => (
+                        <div key={idx} className="bg-slate-50 border border-slate-100 p-6 rounded-2xl flex flex-col md:flex-row gap-6 hover:bg-slate-100/50 transition-colors">
+                          {hotel.images && hotel.images[0] && (
+                            <div className="w-full md:w-48 aspect-video rounded-xl overflow-hidden shrink-0 bg-slate-200">
+                              <img src={hotel.images[0]} alt={hotel.name} className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div>
+                                <h4 className="font-serif text-xl font-bold text-navy-deep">{hotel.name}</h4>
+                                <p className="text-xs text-slate-400 font-sans mt-1">📍 Ünvan: {hotel.address}</p>
+                              </div>
+                              <div className="flex items-center gap-1 bg-gold-primary/10 text-gold-primary px-2.5 py-1 rounded-xl">
+                                <span className="text-xs font-bold font-sans">Reytinq:</span>
+                                <StarRating rating={hotel.stars} size={13} />
+                              </div>
+                            </div>
+                            
+                            {hotel.shortDescription && (
+                              <p className="text-xs text-slate-500 font-sans mt-3 leading-relaxed">{hotel.shortDescription}</p>
+                            )}
 
-                    <div className="flex flex-wrap gap-2 mt-6">
-                      {tour.accommodation.amenities.map((a, i) => (
-                        <span key={i} className="bg-white border border-slate-200 text-slate-600 text-xs font-sans font-semibold px-3 py-1.5 rounded-xl">
-                          {a}
-                        </span>
+                            <div className="flex flex-wrap gap-2 mt-4">
+                              {hotel.amenities?.slice(0, 5).map((a: string, i: number) => (
+                                <span key={i} className="bg-white border border-slate-200 text-slate-650 text-[10px] font-sans font-semibold px-2.5 py-1 rounded-lg">
+                                  {a}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
                       ))}
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 border border-slate-100 p-6 rounded-2xl flex flex-col md:flex-row gap-6 hover:bg-slate-100/50 transition-colors">
+                    <div className="flex-1">
+                      <h4 className="font-serif text-xl font-bold text-navy-deep">{tour.accommodation?.hotelName || 'Lüks Mehmanxana'}</h4>
+                      <p className="text-xs text-slate-400 font-sans mt-1">Otaq növü: {tour.accommodation?.roomType}</p>
+                      
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs text-slate-500 font-sans font-medium">Reytinq:</span>
+                        <StarRating rating={5} size={14} />
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 mt-6">
+                        {tour.accommodation?.amenities?.map((a, i) => (
+                          <span key={i} className="bg-white border border-slate-200 text-slate-650 text-xs font-sans font-semibold px-3 py-1.5 rounded-xl block">
+                            {a}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
             {/* Tab 4: Nəqliyyat with complete Three.js Canvas */}
             {activeTab === 'transport' && (
-              <div className="flex flex-col gap-6" id="tour-transport-container">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div>
-                    <h3 className="font-serif text-xl font-bold text-navy-deep flex items-center gap-2">
-                      <Car className="w-5 h-5 text-gold-primary" />
-                      Komfortlu Nəqliyyat
-                    </h3>
-                    <p className="text-xs text-slate-400 font-sans mt-1">Model: {tour.transport.model}</p>
-                  </div>
-                  <span className="bg-slate-100 text-slate-700 text-xs font-bold font-sans px-3 py-1.5 rounded-xl">
-                    Növü: {tour.transport.type}
-                  </span>
+              <div className="flex flex-col gap-6 font-sans" id="tour-transport-container">
+                <div className="border-b pb-4">
+                  <h3 className="font-serif text-xl font-bold text-navy-deep flex items-center gap-2">
+                    <Car className="w-5 h-5 text-gold-primary" />
+                    Komfortlu Nəqliyyat Təminatı
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">Yolların və marşrutların rahatlığı üçün VIP nəqliyyat sistemləri</p>
                 </div>
 
-                {/* Interactive Three.js Viewport container OR Vehicle Image Showcase */}
-                {tour.transport.displayMode === 'image' ? (
-                  <div className="relative w-full h-[320px] bg-slate-900 rounded-2xl overflow-hidden border border-slate-200 shadow-inner flex items-center justify-center group">
-                    <img 
-                      src={tour.transport.image || 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800'} 
-                      alt={tour.transport.model} 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800';
-                      }}
-                    />
-                    <div className="absolute top-4 left-4 bg-slate-905/80 backdrop-blur-md border border-gold-primary/30 text-gold-primary text-[10px] font-sans font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
-                      📸 Avtomobilin Real Şəkli
-                    </div>
+                {tour.customTransports && tour.customTransports.length > 0 ? (
+                  <div className="flex flex-col gap-6 animate-fadeIn">
+                    {tour.customTransports.map((trans, idx) => (
+                      <div key={idx} className="bg-slate-50 border border-slate-100 p-6 rounded-2xl flex flex-col md:flex-row gap-6 hover:bg-slate-100/50 transition-colors">
+                        {trans.image && (
+                          <div className="w-full md:w-48 aspect-video rounded-xl overflow-hidden shrink-0 bg-slate-200 shadow-sm">
+                            <img src={trans.image} alt={trans.model} className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <span className="bg-gold-primary/10 text-gold-primary text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg">
+                            {trans.type}
+                          </span>
+                          <h4 className="font-sans text-lg font-bold text-navy-deep mt-2">{trans.model}</h4>
+                          <div className="flex flex-wrap gap-2 mt-4">
+                            {trans.features.map((feat, fIdx) => (
+                              <span key={fIdx} className="bg-white border border-slate-200 text-slate-600 text-[10px] px-2.5 py-1 rounded-lg font-medium">
+                                ✓ {feat}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
-                  <div className="relative w-full h-[320px] bg-navy-deep rounded-2xl overflow-hidden border border-slate-700">
-                    <canvas ref={canvasRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
-                    
-                    {/* Drag hints label */}
-                    <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md text-white text-[10px] md:text-xs text-center py-2 px-3 rounded-xl pointer-events-none uppercase font-semibold font-sans tracking-wide">
-                      🎮 Nəqliyyatın 3D Görüntüsü — Sürükləyərək fırlada və ya yaxınlaşdıra bilərsiniz
+                  <>
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div>
+                        <h4 className="text-base font-bold text-navy-deep font-sans">{tour.transport?.model || 'Modern avtobus'}</h4>
+                        <p className="text-xs text-slate-400 font-sans mt-0.5">Növü: {tour.transport?.type}</p>
+                      </div>
                     </div>
-                  </div>
-                )}
 
-                {/* Feature breakdown list */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
-                  {tour.transport.features.map((feat, idx) => (
-                    <div key={idx} className="bg-slate-50 border border-slate-150 p-3 rounded-xl flex flex-col items-center justify-center text-center">
-                      <Check className="w-4 h-4 text-emerald-500 mb-1" />
-                      <span className="text-[10px] font-bold text-slate-700 font-sans leading-tight">{feat}</span>
+                    {tour.transport?.displayMode === 'image' ? (
+                      <div className="relative w-full h-[320px] bg-slate-900 rounded-2xl overflow-hidden border border-slate-200 shadow-inner flex items-center justify-center group">
+                        <img 
+                          src={tour.transport.image || 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800'} 
+                          alt={tour.transport.model} 
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800';
+                          }}
+                        />
+                        <div className="absolute top-4 left-4 bg-slate-905/80 backdrop-blur-md border border-gold-primary/30 text-gold-primary text-[10px] font-sans font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
+                          📸 Avtomobilin Real Şəkli
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="relative w-full h-[320px] bg-navy-deep rounded-2xl overflow-hidden border border-slate-700">
+                        <canvas ref={canvasRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
+                        
+                        {/* Drag hints label */}
+                        <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md text-white text-[10px] md:text-xs text-center py-2 px-3 rounded-xl pointer-events-none uppercase font-semibold font-sans tracking-wide">
+                          🎮 Nəqliyyatın 3D Görüntüsü — Sürükləyərək fırlada və ya yaxınlaşdıra bilərsiniz
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Feature breakdown list */}
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+                      {tour.transport?.features?.map((feat, idx) => (
+                        <div key={idx} className="bg-slate-50 border border-slate-150 p-3 rounded-xl flex flex-col items-center justify-center text-center">
+                          <Check className="w-4 h-4 text-emerald-500 mb-1" />
+                          <span className="text-[10px] font-bold text-slate-700 font-sans leading-tight">{feat}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </>
+                )}
               </div>
             )}
 

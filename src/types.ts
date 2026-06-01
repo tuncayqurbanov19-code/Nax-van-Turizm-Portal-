@@ -95,6 +95,22 @@ export interface TourStop {
   duration: string;
   description: string;
   image: string;
+  lat?: number;
+  lng?: number;
+}
+
+export interface CustomMeal {
+  typeName: string; // e.g. "Səhər yeməyi", "BBQ", etc.
+  restaurantName?: string;
+  items: string[];
+  image?: string;
+}
+
+export interface CustomTransport {
+  type: 'Avtobus' | 'Mikroavtobus' | 'Minivan' | 'VIP Avtomobil' | 'Offroad' | 'Digər';
+  model: string;
+  features: string[];
+  image?: string;
 }
 
 export interface Tour {
@@ -103,6 +119,8 @@ export interface Tour {
   category: 'Tarixi' | 'Ekskursiya' | 'Eko-Turizm' | 'VIP' | 'Fərdi';
   duration: number;
   price: number;
+  discountPrice?: number; // Endirimli qiymət
+  contingent?: number;     // Kontingent / Limit
   shortDescription: string;
   mainImage: string;
   gallery: string[];
@@ -112,11 +130,13 @@ export interface Tour {
     lunch: { restaurantName: string; items: string[]; image?: string };
     dinner: { restaurantName: string; items: string[]; image?: string };
   };
+  customMeals?: CustomMeal[]; // Dynamic custom meals system
   accommodation: {
     hotelName: string;
     roomType: string;
     amenities: string[];
   };
+  hotelIds?: string[]; // Selected registered hotel IDs
   transport: {
     type: string;
     model: string;
@@ -125,6 +145,7 @@ export interface Tour {
     displayMode?: 'image' | '3d';
     image?: string;
   };
+  customTransports?: CustomTransport[]; // Dynamic custom transports system
   isActive: boolean;
   createdAt: string;
   vehicleType?: string;
@@ -132,6 +153,11 @@ export interface Tour {
   companyName?: string;
   includedServices?: string[];
   pdfDocuments?: string[];
+  seoSettings?: {
+    title?: string;
+    description?: string;
+    keywords?: string;
+  };
 }
 
 export interface TourismCompany {

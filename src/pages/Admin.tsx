@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, Calendar, Compass, Building, Landmark, MessageSquare, Users, Edit3, Trash2, Plus, Check, X, ShieldAlert, Award, TrendingUp, Utensils, BookOpen, Settings, Image, Video, Heart, Globe, FileText, Copy, ExternalLink, Search, Sliders, RotateCw, ZoomIn, Upload, QrCode, Printer } from 'lucide-react';
+import { ShieldCheck, Calendar, Compass, Building, Landmark, MessageSquare, Users, Edit3, Trash2, Plus, Check, X, ShieldAlert, Award, TrendingUp, Utensils, BookOpen, Settings, Image, Video, Heart, Globe, FileText, Copy, ExternalLink, Search, Sliders, RotateCw, ZoomIn, Upload, QrCode, Printer, MapPin, ArrowUp, ArrowDown, Coffee, Car } from 'lucide-react';
 import { api } from '../services/api';
 import QRCode from 'qrcode';
 import { useAuth } from '../context/AuthContext';
@@ -43,6 +43,41 @@ export default function Admin({ onNavigate }: AdminProps) {
   const [newTourCompanyId, setNewTourCompanyId] = useState('');
   const [newTourIncludedServices, setNewTourIncludedServices] = useState('Peşəkar bələdçi, kondisionerli nəqliyyat, muzey biletləri, otel binaları, dadlı milli səhər yeməyi');
   const [newTourPdfUrl, setNewTourPdfUrl] = useState('');
+
+  // Extended and customizable Tour parameters states
+  const [newTourStops, setNewTourStops] = useState<any[]>([
+    { placeName: 'Möminə Xatun Türbəsi', duration: '2 saat', description: 'Naxçıvan memarlıq məktəbinin incisini peşəkar bələdçi ilə gəzirik.', image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=400', lat: 39.2065, lng: 45.4111 }
+  ]);
+  const [newTourCustomMeals, setNewTourCustomMeals] = useState<any[]>([
+    { typeName: 'Səhər yeməyi', restaurantName: 'Saat Cafe-Bistro', items: ['Qaymaq', 'Bal', 'Naxçıvan şoru', 'Təndir çörəyi', 'Süzmə', 'Samovar çayı'], image: '' }
+  ]);
+  const [newTourSelectedHotelIds, setNewTourSelectedHotelIds] = useState<string[]>([]);
+  const [newTourCustomTransports, setNewTourCustomTransports] = useState<any[]>([
+    { type: 'Mikroavtobus', model: 'Mercedes-Benz Sprinter VIP', features: ['WiFi', 'Kondisioner', 'USB Şarj ports', 'Mineral sular', 'Geniş oturacaqlar'], image: '' }
+  ]);
+  const [newTourDiscountPrice, setNewTourDiscountPrice] = useState<number>(0);
+  const [newTourContingent, setNewTourContingent] = useState<number>(24);
+  const [newTourSeoTitle, setNewTourSeoTitle] = useState('');
+  const [newTourSeoDesc, setNewTourSeoDesc] = useState('');
+  const [newTourSeoKeywords, setNewTourSeoKeywords] = useState('');
+
+  // Auxiliary input states for managing inline addition to tours
+  const [auxStopName, setAuxStopName] = useState('');
+  const [auxStopDuration, setAuxStopDuration] = useState('');
+  const [auxStopDesc, setAuxStopDesc] = useState('');
+  const [auxStopImg, setAuxStopImg] = useState('');
+  const [auxStopLat, setAuxStopLat] = useState<number | ''>('');
+  const [auxStopLng, setAuxStopLng] = useState<number | ''>('');
+
+  const [auxMealType, setAuxMealType] = useState('Səhər yeməyi');
+  const [auxMealRest, setAuxMealRest] = useState('');
+  const [auxMealItems, setAuxMealItems] = useState('');
+  const [auxMealImg, setAuxMealImg] = useState('');
+
+  const [auxTransType, setAuxTransType] = useState<'Avtobus' | 'Mikroavtobus' | 'Minivan' | 'VIP Avtomobil' | 'Offroad' | 'Digər'>('Mikroavtobus');
+  const [auxTransModel, setAuxTransModel] = useState('');
+  const [auxTransFeatures, setAuxTransFeatures] = useState('');
+  const [auxTransImg, setAuxTransImg] = useState('');
 
   // Vehicle settings within Tour state
   const [vehicleDisplayMode, setVehicleDisplayMode] = useState<'image' | '3d'>('3d');
@@ -494,13 +529,15 @@ export default function Admin({ onNavigate }: AdminProps) {
       const payload: Omit<Tour, 'id'> = {
         name: newTourName,
         category: newTourCategory as any,
+        duration: Number(newTourDuration) || 3,
         mainImage: newTourImg || 'https://images.unsplash.com/photo-1541963463532-d68292c34b19',
         gallery: [],
         price: Number(newTourPrice),
-        duration: Number(newTourDuration),
+        discountPrice: Number(newTourDiscountPrice) || undefined,
+        contingent: Number(newTourContingent) || undefined,
         shortDescription: newTourDesc,
-        stops: [
-          { placeName: 'Qədim Gəmiqaya', duration: '1/2 gün', description: 'Gəmiqaya təsvirlərinin rəsmi tədqiqi.', image: '' }
+        stops: newTourStops.length > 0 ? newTourStops : [
+          { placeName: 'Qədim Gəmiqaya', duration: '1/2 gün', description: 'Gəmiqaya təsvirlərinin rəsmi tədqiqi.', image: '', lat: 39.2089, lng: 45.4122 }
         ],
         meals: {
           breakfast: { 
@@ -519,11 +556,13 @@ export default function Admin({ onNavigate }: AdminProps) {
             image: newTourDinnerImg || ''
           }
         },
+        customMeals: newTourCustomMeals,
         accommodation: {
           hotelName: 'Təbriz Premium Hotel',
           roomType: 'İkiNəfərlik Deluxe',
           amenities: ['WiFi', 'Hovuz', 'Mini Bar']
         },
+        hotelIds: newTourSelectedHotelIds,
         transport: {
           type: newTourVehicleType || 'VIP Mercedes Sprinter',
           model: vehicleModelName || 'Sprinter Tourer 2024',
@@ -532,13 +571,19 @@ export default function Admin({ onNavigate }: AdminProps) {
           displayMode: vehicleDisplayMode,
           image: vehicleImgUrl
         },
+        customTransports: newTourCustomTransports,
         createdAt: new Date().toISOString(),
         isActive: true,
         vehicleType: newTourVehicleType,
         companyId: newTourCompanyId || companies[0]?.id || 'comp_1',
         companyName: companyName,
         includedServices: newTourIncludedServices ? newTourIncludedServices.split(',').map(s => s.trim()) : [],
-        pdfDocuments: newTourPdfUrl ? [newTourPdfUrl] : []
+        pdfDocuments: newTourPdfUrl ? [newTourPdfUrl] : [],
+        seoSettings: {
+          title: newTourSeoTitle || undefined,
+          description: newTourSeoDesc || undefined,
+          keywords: newTourSeoKeywords || undefined
+        }
       };
 
       const res = await api.tours.create(payload);
@@ -560,6 +605,21 @@ export default function Admin({ onNavigate }: AdminProps) {
         setNewTourDinnerRest('');
         setNewTourDinnerImg('');
         setNewTourDinnerItems([]);
+        setNewTourStops([
+          { placeName: 'Möminə Xatun Türbəsi', duration: '2 saat', description: 'Naxçıvan memarlıq məktəbinin incisini peşəkar bələdçi ilə gəzirik.', image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=400', lat: 39.2065, lng: 45.4111 }
+        ]);
+        setNewTourCustomMeals([
+          { typeName: 'Səhər yeməyi', restaurantName: 'Saat Cafe-Bistro', items: ['Qaymaq', 'Bal', 'Naxçıvan şoru', 'Təndir çörəyi', 'Süzmə', 'Samovar çayı'], image: '' }
+        ]);
+        setNewTourSelectedHotelIds([]);
+        setNewTourCustomTransports([
+          { type: 'Mikroavtobus', model: 'Mercedes-Benz Sprinter VIP', features: ['WiFi', 'Kondisioner', 'USB Şarj ports', 'Mineral sular', 'Geniş oturacaqlar'], image: '' }
+        ]);
+        setNewTourDiscountPrice(0);
+        setNewTourContingent(24);
+        setNewTourSeoTitle('');
+        setNewTourSeoDesc('');
+        setNewTourSeoKeywords('');
         loadData();
       }
     } catch (err: any) {
@@ -4935,7 +4995,7 @@ export default function Admin({ onNavigate }: AdminProps) {
                     required
                     value={editingTour.name || ''}
                     onChange={(e) => setEditingTour({ ...editingTour, name: e.target.value })}
-                    className="p-2.5 bg-slate-50 border rounded-xl text-xs font-medium focus:bg-white"
+                    className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white"
                   />
                 </div>
 
@@ -4947,11 +5007,11 @@ export default function Admin({ onNavigate }: AdminProps) {
                     onChange={(e) => setEditingTour({ ...editingTour, category: e.target.value })}
                     className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white cursor-pointer"
                   >
-                    <option value="cultural">Mədəniyyət Turu</option>
-                    <option value="nature">Təbiət Turu</option>
-                    <option value="historical">Tarixi Tur</option>
-                    <option value="wellness">Sağlamlıq Turu</option>
-                    <option value="adventure">Macəra Turu</option>
+                    <option value="Tarixi">Tarixi</option>
+                    <option value="Ekskursiya">Ekskursiya</option>
+                    <option value="Eko-Turizm">Eko-Turizm</option>
+                    <option value="VIP">VIP</option>
+                    <option value="Fərdi">Fərdi</option>
                   </select>
                 </div>
 
@@ -4987,6 +5047,30 @@ export default function Admin({ onNavigate }: AdminProps) {
                     value={editingTour.price || 0}
                     onChange={(e) => setEditingTour({ ...editingTour, price: Number(e.target.value) })}
                     className="p-2.5 bg-slate-50 border rounded-xl text-xs font-bold text-amber-600 focus:bg-white"
+                  />
+                </div>
+
+                {/* Endirimli Qiymət */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-500">Endirimli Qiymət (₼ - istəyə görə)</label>
+                  <input
+                    type="number"
+                    value={editingTour.discountPrice || ''}
+                    onChange={(e) => setEditingTour({ ...editingTour, discountPrice: e.target.value ? Number(e.target.value) : undefined })}
+                    placeholder="Məsələn: 120"
+                    className="p-2.5 bg-slate-50 border rounded-xl text-xs font-bold text-emerald-600 focus:bg-white"
+                  />
+                </div>
+
+                {/* Kontingent / Limit */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-500">Maksimal Kontingent (Sərnişin limit)</label>
+                  <input
+                    type="number"
+                    value={editingTour.contingent || ''}
+                    onChange={(e) => setEditingTour({ ...editingTour, contingent: e.target.value ? Number(e.target.value) : undefined })}
+                    placeholder="Məsələn: 24"
+                    className="p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:bg-white"
                   />
                 </div>
 
@@ -5287,6 +5371,672 @@ export default function Admin({ onNavigate }: AdminProps) {
                     </div>
                   </div>
 
+                </div>
+              </div>
+
+              {/* 1. DYNAMIC DESTINATIONS SECTION (Gediləcək Yerlər Bölməsi) */}
+              <div className="border-t border-slate-100 pt-6 mt-6">
+                <div className="flex items-center justify-between mb-4 bg-emerald-50/50 p-3.5 rounded-2xl border border-emerald-100/50 select-none">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <div className="text-left font-sans">
+                      <h4 className="font-serif text-sm font-black text-navy-deep">Səyahət Proqramı • Gediləcək Yerlər Bölməsi</h4>
+                      <p className="text-[10px] text-slate-400 mt-0.5 font-medium">Tur proqramına daxil olan ekskursiya nöqtələrini, müddəti və koordinatları idarə edin.</p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100/50 px-2.5 py-1 rounded-full font-sans">
+                    {(editingTour.stops || []).length} Məkan
+                  </span>
+                </div>
+
+                {/* List of current stops */}
+                <div className="space-y-3 mb-4 text-left font-sans">
+                  {(!editingTour.stops || editingTour.stops.length === 0) ? (
+                    <p className="text-xs text-slate-400 italic py-2">Heç bir gediləcək məkan daxil edilməyib. Aşağıdan yeni məkan əlavə edin.</p>
+                  ) : (
+                    <div className="border border-slate-200/60 rounded-2xl divide-y overflow-hidden max-h-[350px] overflow-y-auto">
+                      {editingTour.stops.map((stop: any, idx: number) => (
+                        <div key={idx} className="p-3 bg-slate-50/50 hover:bg-white flex items-center justify-between gap-4 transition-colors">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            {stop.image ? (
+                              <img src={stop.image} className="w-10 h-10 rounded-lg object-cover shrink-0 border" alt="" referrerPolicy="no-referrer" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center shrink-0 border border-dashed"><MapPin className="w-4 h-4 text-slate-400" /></div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-xs font-bold text-navy-deep truncate">
+                                  {idx + 1}. {stop.placeName}
+                                </span>
+                                <span className="text-[9px] bg-slate-200/80 text-slate-600 font-bold px-1.5 py-0.5 rounded">
+                                  ⏱️ {stop.duration}
+                                </span>
+                                {(stop.lat || stop.lng) && (
+                                  <span className="text-[9px] bg-sky-50 text-sky-700 font-mono px-1 rounded-sm">
+                                    📍 GPS Ready
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">{stop.description}</p>
+                            </div>
+                          </div>
+
+                          {/* Sorting and Delete actions */}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => {
+                                const list = [...(editingTour.stops || [])];
+                                const temp = list[idx];
+                                list[idx] = list[idx - 1];
+                                list[idx - 1] = temp;
+                                setEditingTour({ ...editingTour, stops: list });
+                              }}
+                              className="p-1 hover:bg-slate-200 text-slate-500 rounded disabled:opacity-30 cursor-pointer"
+                              title="Yuxarı Sürüşdür"
+                            >
+                              <ArrowUp className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === editingTour.stops.length - 1}
+                              onClick={() => {
+                                const list = [...(editingTour.stops || [])];
+                                const temp = list[idx];
+                                list[idx] = list[idx + 1];
+                                list[idx + 1] = temp;
+                                setEditingTour({ ...editingTour, stops: list });
+                              }}
+                              className="p-1 hover:bg-slate-200 text-slate-500 rounded disabled:opacity-30 cursor-pointer"
+                              title="Aşağı Sürüşdür"
+                            >
+                              <ArrowDown className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const list = (editingTour.stops || []).filter((_: any, i: number) => i !== idx);
+                                setEditingTour({ ...editingTour, stops: list });
+                              }}
+                              className="p-1 hover:bg-rose-100 text-rose-500 rounded cursor-pointer"
+                              title="Sil"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Mini Form to dynamic add Landmark/Stop */}
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl grid grid-cols-1 md:grid-cols-6 gap-3 text-left font-sans">
+                  <div className="md:col-span-3 flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500">Məkan / Stop Adı</label>
+                    <input
+                      type="text"
+                      placeholder="Məs: Əlincə Qalası"
+                      value={auxStopName}
+                      onChange={(e) => setAuxStopName(e.target.value)}
+                      className="p-2 bg-white border rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="md:col-span-1.5 flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500">Sərf Olunan Müddət</label>
+                    <input
+                      type="text"
+                      placeholder="Məs: 3 saat"
+                      value={auxStopDuration}
+                      onChange={(e) => setAuxStopDuration(e.target.value)}
+                      className="p-2 bg-white border rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="md:col-span-1.5 flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500 font-sans">Məkan Şəkil URL-i</label>
+                    <div className="flex items-center gap-1.5 bg-white p-1 border rounded-xl">
+                      {auxStopImg && <img src={auxStopImg} className="w-5 h-5 object-cover rounded" alt="" referrerPolicy="no-referrer" />}
+                      <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-[9px] py-1 px-2.5 rounded cursor-pointer transition-all font-sans font-bold flex-1 text-center select-none">
+                        Foto Yüklə
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleFileUpload(e, setAuxStopImg)}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2 flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500">Xəritə En dairəsi (Lat koordinatı)</label>
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="Məs: 39.2065"
+                      value={auxStopLat}
+                      onChange={(e) => setAuxStopLat(e.target.value ? Number(e.target.value) : '')}
+                      className="p-2 bg-white border rounded-xl text-xs font-mono"
+                    />
+                  </div>
+                  <div className="md:col-span-2 flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500">Xəritə Uzunluq dairəsi (Lng koordinatı)</label>
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="Məs: 45.4111"
+                      value={auxStopLng}
+                      onChange={(e) => setAuxStopLng(e.target.value ? Number(e.target.value) : '')}
+                      className="p-2 bg-white border rounded-xl text-xs font-mono"
+                    />
+                  </div>
+                  <div className="md:col-span-2 flex flex-col gap-1">
+                    <label className="text-[10px] font-mono text-slate-400 select-none">&nbsp;</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!auxStopName.trim()) {
+                          error('Ən azı məkan adı daxil edilməlidir.');
+                          return;
+                        }
+                        const newStops = [...(editingTour.stops || [])];
+                        newStops.push({
+                          placeName: auxStopName.trim(),
+                          duration: auxStopDuration.trim() || '2 saat',
+                          description: auxStopDesc.trim() || 'Naxçıvanın gəzməli guşələri.',
+                          image: auxStopImg || 'https://images.unsplash.com/photo-1541963463532-d68292c34b19',
+                          lat: auxStopLat !== '' ? auxStopLat : undefined,
+                          lng: auxStopLng !== '' ? auxStopLng : undefined
+                        });
+                        setEditingTour({ ...editingTour, stops: newStops });
+                        setAuxStopName('');
+                        setAuxStopDuration('');
+                        setAuxStopDesc('');
+                        setAuxStopImg('');
+                        setAuxStopLat('');
+                        setAuxStopLng('');
+                        success('Gediləcək yer siyahıya əlavə edildi!');
+                      }}
+                      className="p-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-97"
+                    >
+                      <Plus className="w-4 h-4" /> Məkanı Əlavə Et
+                    </button>
+                  </div>
+
+                  <div className="md:col-span-6 flex flex-col gap-1 text-left">
+                    <label className="text-[10px] font-bold text-slate-500">Məkan barədə qısa təsvir (Deskripsiya)</label>
+                    <textarea
+                      rows={1.5}
+                      placeholder="Məs: Naxçıvanın qulaq batan, hündür qayalıqlarda yerləşən əzəmətli qalası..."
+                      value={auxStopDesc}
+                      onChange={(e) => setAuxStopDesc(e.target.value)}
+                      className="p-2 bg-white border rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. DYNAMIC MEALS SECTION (Qidalanma Planı) */}
+              <div className="border-t border-slate-100 pt-6 mt-6">
+                <div className="flex items-center justify-between mb-4 bg-orange-50/50 p-3.5 rounded-2xl border border-orange-100/50 select-none">
+                  <div className="flex items-center gap-2">
+                    <Coffee className="w-5 h-5 text-orange-600 shrink-0" />
+                    <div className="text-left font-sans">
+                      <h4 className="font-serif text-sm font-black text-navy-deep">Admin Qidalanma Planı Sistemi (Yeni)</h4>
+                      <p className="text-[10px] text-slate-400 mt-0.5 font-medium">Turun qidalanma rejiminə istənilən sayda və adda xüsusi yemək saatları əlavə edin.</p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-bold text-orange-850 bg-orange-100/50 px-2.5 py-1 rounded-full font-sans">
+                    {(editingTour.customMeals || []).length} Menu növü
+                  </span>
+                </div>
+
+                {/* List of custom meals */}
+                <div className="space-y-3 mb-4 text-left font-sans">
+                  {(!editingTour.customMeals || editingTour.customMeals.length === 0) ? (
+                    <p className="text-xs text-slate-400 italic py-2">Hələ ki, heç bir xüsusi qidalanma menyusu əlavə olunmayıb.</p>
+                  ) : (
+                    <div className="border border-slate-200/60 rounded-2xl divide-y overflow-hidden max-h-[350px] overflow-y-auto">
+                      {editingTour.customMeals.map((meal: any, idx: number) => (
+                        <div key={idx} className="p-3 bg-slate-50/50 hover:bg-white flex items-center justify-between gap-4 transition-colors">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            {meal.image ? (
+                              <img src={meal.image} className="w-10 h-10 rounded-lg object-cover shrink-0 border" alt="" referrerPolicy="no-referrer" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center shrink-0 border border-dashed"><Coffee className="w-4 h-4 text-slate-400" /></div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-bold text-orange-600 uppercase tracking-wide">
+                                  {meal.typeName}
+                                </span>
+                                {meal.restaurantName && (
+                                  <span className="text-[10px] text-navy-deep font-bold">
+                                    • {meal.restaurantName}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                                Menyu: {Array.isArray(meal.items) ? meal.items.join(', ') : meal.items}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => {
+                                const list = [...(editingTour.customMeals || [])];
+                                const temp = list[idx];
+                                list[idx] = list[idx - 1];
+                                list[idx - 1] = temp;
+                                setEditingTour({ ...editingTour, customMeals: list });
+                              }}
+                              className="p-1 hover:bg-slate-200 text-slate-500 rounded disabled:opacity-30 cursor-pointer"
+                            >
+                              <ArrowUp className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === editingTour.customMeals.length - 1}
+                              onClick={() => {
+                                const list = [...(editingTour.customMeals || [])];
+                                const temp = list[idx];
+                                list[idx] = list[idx + 1];
+                                list[idx + 1] = temp;
+                                setEditingTour({ ...editingTour, customMeals: list });
+                              }}
+                              className="p-1 hover:bg-slate-200 text-slate-500 rounded disabled:opacity-30 cursor-pointer"
+                            >
+                              <ArrowDown className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const list = (editingTour.customMeals || []).filter((_: any, i: number) => i !== idx);
+                                setEditingTour({ ...editingTour, customMeals: list });
+                              }}
+                              className="p-1 hover:bg-rose-100 text-rose-500 rounded cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Mini Form to dynamic add meal */}
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl grid grid-cols-1 md:grid-cols-4 gap-3 text-left font-sans">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500">Qidalanma Növü</label>
+                    <input
+                      type="text"
+                      placeholder="Məs: Səhər Yeməyi, Piknik menyusu, Barbekü"
+                      value={auxMealType}
+                      onChange={(e) => setAuxMealType(e.target.value)}
+                      className="p-2 bg-white border rounded-xl text-xs font-bold"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500">Restoran / Mətbəx adı</label>
+                    <input
+                      type="text"
+                      placeholder="Məs: Kəklikotu Restoranı"
+                      value={auxMealRest}
+                      onChange={(e) => setAuxMealRest(e.target.value)}
+                      className="p-2 bg-white border rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500 font-sans">Süfrə / Yemək Şəkil URL-i</label>
+                    <div className="flex items-center gap-1.5 bg-white p-1 border rounded-xl">
+                      {auxMealImg && <img src={auxMealImg} className="w-5 h-5 object-cover rounded" alt="" referrerPolicy="no-referrer" />}
+                      <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-[9px] py-1 px-2 rounded cursor-pointer transition-all font-sans font-bold flex-1 text-center select-none">
+                        Foto Sechin
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleFileUpload(e, setAuxMealImg)}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500 font-mono">&nbsp;</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!auxMealType.trim() || !auxMealItems.trim()) {
+                          error('Ən azı qidalanma növü və menyu məhsulları daxil edilməlidir.');
+                          return;
+                        }
+                        const list = [...(editingTour.customMeals || [])];
+                        list.push({
+                          typeName: auxMealType.trim(),
+                          restaurantName: auxMealRest.trim() || undefined,
+                          items: auxMealItems.split(',').map(s => s.trim()).filter(Boolean),
+                          image: auxMealImg || undefined
+                        });
+                        setEditingTour({ ...editingTour, customMeals: list });
+                        setAuxMealType('Səhər yeməyi');
+                        setAuxMealRest('');
+                        setAuxMealItems('');
+                        setAuxMealImg('');
+                        success('Yeni qidalanma növü əlavə edildi!');
+                      }}
+                      className="p-2.5 bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-97"
+                    >
+                      <Plus className="w-4 h-4" /> Menyunu Əlavə Et
+                    </button>
+                  </div>
+                  <div className="md:col-span-4 flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500">Menyu Məhsulları (Vergüllə ayıraraq daxil edin)</label>
+                    <input
+                      type="text"
+                      placeholder="Məs: Təndir Kebabı, Şor Qoğalı, Samovar Çayı, Ağ Pendir, Bal, Pomidor-Yumurta..."
+                      value={auxMealItems}
+                      onChange={(e) => setAuxMealItems(e.target.value)}
+                      className="p-2 bg-white border rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. HOTELS SELECTION SECTION (Otellər Bölməsi) */}
+              <div className="border-t border-slate-100 pt-6 mt-6">
+                <div className="flex items-center justify-between mb-4 bg-sky-50/50 p-3.5 rounded-2xl border border-sky-100/50 select-none">
+                  <div className="flex items-center gap-2">
+                    <Building className="w-5 h-5 text-sky-600 shrink-0" />
+                    <div className="text-left font-sans">
+                      <h4 className="font-serif text-sm font-black text-navy-deep">Turun Mehmanxanaları (Yerləşdirmə Otelləri)</h4>
+                      <p className="text-[10px] text-slate-400 mt-0.5 font-medium">Tur çərçivəsində rezervasiya üçün təklif olunan ulduzlu otelləri seçin (Birdən çox oluna bilər).</p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-bold text-sky-850 bg-sky-100/50 px-2.5 py-1 rounded-full font-sans">
+                    {(editingTour.hotelIds || []).length} Otel Seçilib
+                  </span>
+                </div>
+
+                {/* Multiselect checkboxes */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-left font-sans">
+                  {hotels.length === 0 ? (
+                    <p className="md:col-span-2 text-xs text-slate-450 italic py-2">Sistemdə heç bir otel qeydiyyatdan keçməyib. Əvvəlcə Mehmanxanalar bölməsində otel yaradın.</p>
+                  ) : (
+                    hotels.map((hotel: Hotel) => {
+                      const isSelected = (editingTour.hotelIds || []).includes(hotel.id);
+                      return (
+                        <label
+                          key={hotel.id}
+                          className={`p-3 rounded-2xl border-2 flex items-center justify-between gap-3 cursor-pointer transition-all hover:border-sky-300 ${
+                            isSelected ? 'bg-sky-50/20 border-sky-500/80' : 'bg-slate-50/50 border-slate-200/80'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {
+                                const checkedIds = [...(editingTour.hotelIds || [])];
+                                if (checkedIds.includes(hotel.id)) {
+                                  const filtered = checkedIds.filter(id => id !== hotel.id);
+                                  setEditingTour({ ...editingTour, hotelIds: filtered });
+                                } else {
+                                  checkedIds.push(hotel.id);
+                                  setEditingTour({ ...editingTour, hotelIds: checkedIds });
+                                }
+                              }}
+                              className="w-4 h-4 text-sky-600 border-slate-300 rounded focus:ring-sky-500 cursor-pointer"
+                            />
+                            {hotel.images?.[0] ? (
+                              <img src={hotel.images[0]} className="w-9 h-9 object-cover rounded border" alt="" referrerPolicy="no-referrer" />
+                            ) : (
+                              <div className="w-9 h-9 rounded bg-slate-200 flex items-center justify-center shrink-0 border"><Building className="w-4 h-4 text-slate-400" /></div>
+                            )}
+                            <div className="min-w-0">
+                              <span className="text-xs font-bold text-navy-deep block truncate">{hotel.name}</span>
+                              <span className="text-[10px] text-amber-500 font-bold block">
+                                {'★'.repeat(hotel.stars)}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-semibold">{hotel.address}</span>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* 4. DYNAMIC TRANSPORT SECTION (Nəqliyyat Bölməsi) */}
+              <div className="border-t border-slate-100 pt-6 mt-6">
+                <div className="flex items-center justify-between mb-4 bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/50 select-none">
+                  <div className="flex items-center gap-2">
+                    <Car className="w-5 h-5 text-indigo-600 shrink-0" />
+                    <div className="text-left font-sans">
+                      <h4 className="font-serif text-sm font-black text-navy-deep">Turun Nəqliyyat Vasitələrinin Siyahısı</h4>
+                      <p className="text-[10px] text-slate-400 mt-0.5 font-medium font-sans">Ekskursiyada istifadə olunacaq qonaq daşıma nəqliyyat modellərini və üstünlüklərini idarə edin.</p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-bold text-indigo-850 bg-indigo-100/50 px-2.5 py-1 rounded-full font-sans">
+                    {(editingTour.customTransports || []).length} Avtomobil
+                  </span>
+                </div>
+
+                {/* List of custom transports */}
+                <div className="space-y-3 mb-4 text-left font-sans">
+                  {(!editingTour.customTransports || editingTour.customTransports.length === 0) ? (
+                    <p className="text-xs text-slate-400 italic py-2">Tur üçün ayrıca heç bir xüsusi nəqliyyat profilə daxil edilməyib.</p>
+                  ) : (
+                    <div className="border border-slate-200/60 rounded-2xl divide-y overflow-hidden max-h-[300px] overflow-y-auto">
+                      {editingTour.customTransports.map((trans: any, idx: number) => (
+                        <div key={idx} className="p-3 bg-slate-50/50 hover:bg-white flex items-center justify-between gap-4 transition-colors">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            {trans.image ? (
+                              <img src={trans.image} className="w-10 h-10 rounded-lg object-cover shrink-0 border" alt="" referrerPolicy="no-referrer" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center shrink-0 border border-dashed"><Car className="w-4 h-4 text-slate-400" /></div>
+                            )}
+                            <div className="min-w-0 flex-1 bg-white p-2 border rounded-xl shadow-sm">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-xs font-bold text-indigo-700 uppercase tracking-dense">
+                                  {trans.type}
+                                </span>
+                                <span className="text-xs text-navy-deep font-bold font-sans">
+                                  — {trans.model}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-400 mt-0.5 font-medium line-clamp-1">
+                                Özəllikləri: {Array.isArray(trans.features) ? trans.features.join(', ') : trans.features}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => {
+                                const list = [...(editingTour.customTransports || [])];
+                                const temp = list[idx];
+                                list[idx] = list[idx - 1];
+                                list[idx - 1] = temp;
+                                setEditingTour({ ...editingTour, customTransports: list });
+                              }}
+                              className="p-1 hover:bg-slate-200 text-slate-500 rounded disabled:opacity-30 cursor-pointer"
+                            >
+                              <ArrowUp className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === editingTour.customTransports.length - 1}
+                              onClick={() => {
+                                const list = [...(editingTour.customTransports || [])];
+                                const temp = list[idx];
+                                list[idx] = list[idx + 1];
+                                list[idx + 1] = temp;
+                                setEditingTour({ ...editingTour, customTransports: list });
+                              }}
+                              className="p-1 hover:bg-slate-200 text-slate-500 rounded disabled:opacity-30 cursor-pointer"
+                            >
+                              <ArrowDown className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const list = (editingTour.customTransports || []).filter((_: any, i: number) => i !== idx);
+                                setEditingTour({ ...editingTour, customTransports: list });
+                              }}
+                              className="p-1 hover:bg-rose-100 text-rose-500 rounded cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Addition Form */}
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl grid grid-cols-1 md:grid-cols-4 gap-3 text-left font-sans">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500">Nəqliyyat Növü</label>
+                    <select
+                      value={auxTransType}
+                      onChange={(e) => setAuxTransType(e.target.value as any)}
+                      className="p-2 bg-white border rounded-xl text-xs font-bold"
+                    >
+                      <option value="Mikroavtobus">Mikroavtobus</option>
+                      <option value="Avtobus">Avtobus</option>
+                      <option value="Minivan">Minivan</option>
+                      <option value="VIP Avtomobil">VIP Avtomobil</option>
+                      <option value="Offroad">Offroad SUV 4x4</option>
+                      <option value="Digər">Digər</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500 font-sans">Avtomobilin Modeli</label>
+                    <input
+                      type="text"
+                      placeholder="Məs: Mercedes Vito 2024"
+                      value={auxTransModel}
+                      onChange={(e) => setAuxTransModel(e.target.value)}
+                      className="p-2 bg-white border rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500 font-sans font-sans font-sans">Nəqliyyat Şəkli</label>
+                    <div className="flex items-center gap-1.5 bg-white p-1 border rounded-xl">
+                      {auxTransImg && <img src={auxTransImg} className="w-5 h-5 object-cover rounded" alt="" referrerPolicy="no-referrer" />}
+                      <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-[9px] py-1 px-2 rounded cursor-pointer transition-all font-sans font-bold flex-1 text-center select-none">
+                        Foto Yüklə
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleFileUpload(e, setAuxTransImg)}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500 font-mono">&nbsp;</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!auxTransModel.trim()) {
+                          error('Nəqliyyat vasitəsinin modeli boş ola bilməz.');
+                          return;
+                        }
+                        const list = [...(editingTour.customTransports || [])];
+                        list.push({
+                          type: auxTransType,
+                          model: auxTransModel.trim(),
+                          features: auxTransFeatures ? auxTransFeatures.split(',').map(f => f.trim()).filter(Boolean) : ['Kondisioner', 'Yeni model', 'Təmiz salon'],
+                          image: auxTransImg || undefined
+                        });
+                        setEditingTour({ ...editingTour, customTransports: list });
+                        setAuxTransModel('');
+                        setAuxTransFeatures('');
+                        setAuxTransImg('');
+                        success('Xüsusi nəqliyyat tura daxil edildi!');
+                      }}
+                      className="p-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-97"
+                    >
+                      <Plus className="w-4 h-4" /> Nəqliyyat Əlavə Et
+                    </button>
+                  </div>
+                  <div className="md:col-span-4 flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500 font-sans">Nəqliyyatın Üstünlükləri & Konseptləri (Vergüllə ayıraraq daxil edin)</label>
+                    <input
+                      type="text"
+                      placeholder="Məs: Kondisioner, Sürətli WiFi, Dəri Oturacaqlar, USB Şarj Portu, Soyuq İçkilər, Peşəkar Sürücü..."
+                      value={auxTransFeatures}
+                      onChange={(e) => setAuxTransFeatures(e.target.value)}
+                      className="p-2 bg-white border rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. SEO SETTINGS SECTION */}
+              <div className="border-t border-slate-100 pt-6 mt-6">
+                <div className="flex items-center justify-start gap-2 mb-4 bg-slate-50 p-3.5 rounded-2xl border border-slate-100 select-none">
+                  <Compass className="w-5 h-5 text-gold-primary shrink-0" />
+                  <div className="text-left font-sans">
+                    <h4 className="font-serif text-sm font-black text-navy-deep">SEO Optimizasiyası və Parametrləri (SEO Axtarış)</h4>
+                    <p className="text-[10px] text-slate-400 mt-0.5 font-medium">Tur səhifəsinin Google axtarış motorlarında yüksək yerlərdə çıxması üçün metadata başlıqlarını doldurun.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left font-sans">
+                  <div className="flex flex-col gap-1 md:col-span-3">
+                    <label className="text-[11px] font-bold text-slate-500">Axtarış Başlığı (SEO Title)</label>
+                    <input
+                      type="text"
+                      placeholder="Məsələn: Premium Naxçıvan Turları 2026 - Ən yaxşı qiymətlərlə"
+                      value={editingTour.seoSettings?.title || ''}
+                      onChange={(e) => {
+                        const seo = { ...(editingTour.seoSettings || {}) };
+                        seo.title = e.target.value;
+                        setEditingTour({ ...editingTour, seoSettings: seo });
+                      }}
+                      className="p-2.5 bg-slate-50 border rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1 md:col-span-3">
+                    <label className="text-[11px] font-bold text-slate-500">Axtarış Təsviri (SEO Description)</label>
+                    <textarea
+                      rows={2}
+                      placeholder="Məsələn: Batabat gölü, Əlincə Qalası və Möminə Xatun daxil olan 3 günlük möhtəşəm Naxçıvan səyahəti. Otel və bələdçi daxildir, dərhal çat et!"
+                      value={editingTour.seoSettings?.description || ''}
+                      onChange={(e) => {
+                        const seo = { ...(editingTour.seoSettings || {}) };
+                        seo.description = e.target.value;
+                        setEditingTour({ ...editingTour, seoSettings: seo });
+                      }}
+                      className="p-2.5 bg-slate-50 border rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1 md:col-span-3 font-sans">
+                    <label className="text-[11px] font-bold text-slate-500">Axtarış Açar Sözləri (SEO Keywords - Vergüllə ayırın)</label>
+                    <input
+                      type="text"
+                      placeholder="Məsələn: naxcivan turlari, elince qalasi, batabat turu, naxcivanda oteller"
+                      value={editingTour.seoSettings?.keywords || ''}
+                      onChange={(e) => {
+                        const seo = { ...(editingTour.seoSettings || {}) };
+                        seo.keywords = e.target.value;
+                        setEditingTour({ ...editingTour, seoSettings: seo });
+                      }}
+                      className="p-2.5 bg-slate-50 border rounded-xl text-xs"
+                    />
+                  </div>
                 </div>
               </div>
 
