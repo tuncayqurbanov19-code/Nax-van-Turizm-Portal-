@@ -11,7 +11,7 @@ interface AdminProps {
   onNavigate: (path: string) => void;
 }
 
-type AdminTab = 'reservations' | 'tours' | 'hotels' | 'places' | 'comments' | 'users' | 'restaurants' | 'blogs' | 'settings' | 'companies';
+type AdminTab = 'reservations' | 'tours' | 'hotels' | 'places' | 'comments' | 'users' | 'restaurants' | 'blogs' | 'settings' | 'companies' | 'media';
 
 export default function Admin({ onNavigate }: AdminProps) {
   const { user } = useAuth();
@@ -207,6 +207,11 @@ export default function Admin({ onNavigate }: AdminProps) {
   const [newSliderSubtitle, setNewSliderSubtitle] = useState('');
   const [newSliderImg, setNewSliderImg] = useState('');
 
+  const [editingSliderIdx, setEditingSliderIdx] = useState<number | null>(null);
+  const [editingSliderTitle, setEditingSliderTitle] = useState('');
+  const [editingSliderSubtitle, setEditingSliderSubtitle] = useState('');
+  const [editingSliderImg, setEditingSliderImg] = useState('');
+
   const [newTestiName, setNewTestiName] = useState('');
   const [newTestiText, setNewTestiText] = useState('');
   const [newTestiRole, setNewTestiRole] = useState('Ziyarətçi');
@@ -217,6 +222,12 @@ export default function Admin({ onNavigate }: AdminProps) {
   const [newVideoDesc, setNewVideoDesc] = useState('');
 
   const [newGalleryUrl, setNewGalleryUrl] = useState('');
+
+  // Welcome settings inputs
+  const [cfgWelcomeBadge, setCfgWelcomeBadge] = useState('Naxçıvanı Kəşf Et');
+  const [cfgWelcomeTitle, setCfgWelcomeTitle] = useState('Naxçıvanın Gözəlliklərini Kəşf Et');
+  const [cfgWelcomeDesc, setCfgWelcomeDesc] = useState('Qədim sivilizasiya beşiyi olan Naxçıvanda tarixi abidələr, möhtəşəm mənzərələr və unudulmaz mənəvi turlar sizi gözləyir.');
+  const [cfgWelcomeBgImg, setCfgWelcomeBgImg] = useState('https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1920&auto=format&fit=crop');
 
   const [newPromoTitle, setNewPromoTitle] = useState('');
   const [newPromoText, setNewPromoText] = useState('');
@@ -270,6 +281,12 @@ export default function Admin({ onNavigate }: AdminProps) {
         setCfgVideos(cfg.videos || []);
         setCfgGalleries(cfg.photoGalleries || []);
         setCfgPromoBanners(cfg.promoBanners || []);
+
+        const welcome = cfg.welcomeSettings || {};
+        setCfgWelcomeBadge(welcome.badgeText || 'Naxçıvanı Kəşf Et');
+        setCfgWelcomeTitle(welcome.titleText || 'Naxçıvanın Gözəlliklərini Kəşf Et');
+        setCfgWelcomeDesc(welcome.descriptionText || 'Qədim sivilizasiya beşiyi olan Naxçıvanda tarixi abidələr, möhtəşəm mənzərələr və unudulmaz mənəvi turlar sizi gözləyir.');
+        setCfgWelcomeBgImg(welcome.backgroundImageUrl || 'https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1920&auto=format&fit=crop');
 
         // Load logo settings safely with beautiful defaults
         setCfgLogoLightUrl(cfg.logoSettings?.logoLightUrl || 'https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=150');
@@ -938,6 +955,12 @@ export default function Admin({ onNavigate }: AdminProps) {
           verifyToken: waVerifyToken,
           messageTemplate: waMessageTemplate,
           isRealMode: waIsRealMode
+        },
+        welcomeSettings: {
+          badgeText: cfgWelcomeBadge,
+          titleText: cfgWelcomeTitle,
+          descriptionText: cfgWelcomeDesc,
+          backgroundImageUrl: cfgWelcomeBgImg
         }
       };
 
@@ -1315,7 +1338,7 @@ export default function Admin({ onNavigate }: AdminProps) {
                    </div>
  
                    <div className="flex flex-col gap-1 md:col-span-3">
-                     <label className="text-xs font-semibold text-slate-705">Ana Şəkil (Fayl Yükləyin və ya URL daxil edin)</label>
+                     <label className="text-xs font-semibold text-slate-705">Ana Şəkil (Yalnız Şəkil Yükləyin)</label>
                      <div className="flex items-center gap-4 bg-slate-50 p-3 border rounded-2xl w-full">
                        {newTourImg ? (
                          <div className="relative w-16 h-16 rounded-xl overflow-hidden border bg-white shrink-0">
@@ -1923,7 +1946,7 @@ export default function Admin({ onNavigate }: AdminProps) {
                   </div>
 
                   <div className="flex flex-col gap-1 md:col-span-2">
-                    <label className="text-xs text-slate-500">Şirkət Loqosu (URL və ya Fayl Yükləyin)</label>
+                    <label className="text-xs text-slate-500">Şirkət Loqosu (Yalnız Loqo Yükləyin)</label>
                     <div className="flex items-center gap-4 bg-slate-50 p-3 border rounded-2xl w-full">
                       {newCompLogo ? (
                         <div className="relative w-16 h-16 rounded-xl overflow-hidden border bg-white shrink-0">
@@ -3166,6 +3189,146 @@ export default function Admin({ onNavigate }: AdminProps) {
                 </div>
               </div>
 
+              {/* SECTION D.4: Interactive Welcome Screen Setup */}
+              <div className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm">
+                <h4 className="font-serif text-base font-bold text-navy-deep border-b pb-2 mb-4 flex items-center gap-2">
+                  <Compass className="w-4 h-4 text-amber-500 animate-spin" style={{ animationDuration: '20s' }} />
+                  Giriş (Qarşılama) Ekranı / Welcome Banner
+                </h4>
+                <p className="text-xs text-slate-500 mb-6 font-sans">
+                  Ana Səhifənin giriş hissəsində yer alan mətni (Naxçıvanı Kəşf Et), əsas başlığı, alt başlığı və arxa plan şəklini buradan idarə edə bilərsiniz.
+                </p>
+
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                  {/* Left Side: Inputs */}
+                  <div className="lg:col-span-3 flex flex-col gap-5 text-left text-xs md:text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-slate-700">Qarşılama Nişanı (Kiçik Tagline)</label>
+                        <input
+                          type="text"
+                          value={cfgWelcomeBadge}
+                          onChange={(e) => setCfgWelcomeBadge(e.target.value)}
+                          placeholder="Məs: Naxçıvanı Kəşf Et"
+                          className="p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-gold-primary transition-all text-xs"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-slate-705">Qarşılama Başlığı (Headline)</label>
+                        <input
+                          type="text"
+                          value={cfgWelcomeTitle}
+                          onChange={(e) => setCfgWelcomeTitle(e.target.value)}
+                          placeholder="Məs: Naxçıvanın Gözəlliklərini Kəşf Et"
+                          className="p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-gold-primary transition-all text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-slate-707">Alt Başlıq (Subtitle / Açıqlama Mətni)</label>
+                      <textarea
+                        rows={3}
+                        value={cfgWelcomeDesc}
+                        onChange={(e) => setCfgWelcomeDesc(e.target.value)}
+                        placeholder="Qədim sivilizasiya beşiyi olan Naxçıvanda..."
+                        className="p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-gold-primary transition-all text-xs resize-none leading-relaxed"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-slate-700">Giriş Ekranı Arxa Plan Şəkli (Background Image)</label>
+                      <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50 p-4 border border-slate-100 rounded-2xl w-full">
+                        {cfgWelcomeBgImg ? (
+                          <div className="relative w-32 h-20 rounded-xl overflow-hidden border bg-white shrink-0 shadow-sm flex items-center justify-center">
+                            <img src={cfgWelcomeBgImg} className="w-full h-full object-cover" alt="Welcome Background Preview" referrerPolicy="no-referrer" />
+                          </div>
+                        ) : (
+                          <div className="w-32 h-20 rounded-xl border border-dashed bg-slate-100 flex items-center justify-center text-xs text-slate-400 font-sans shrink-0">Şəkil yoxdur</div>
+                        )}
+                        
+                        <div className="flex-1 text-left flex flex-wrap gap-2.5 items-center">
+                          <label className="bg-navy-deep text-gold-primary hover:bg-navy-mid px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-gold-primary/20 select-none shadow-sm">
+                            <Upload className="w-3.5 h-3.5 text-gold-primary" /> Kompüterdən Şəkil Yüklə
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileUpload(e, setCfgWelcomeBgImg)}
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => openMediaPicker(setCfgWelcomeBgImg)}
+                            className="bg-white border border-slate-205 text-navy-deep hover:bg-slate-100 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer select-none shadow-sm"
+                          >
+                            <Compass className="w-3.5 h-3.5 text-gold-primary" /> Media Kitabxanasından Seç
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Side: Interactive Live Preview Block */}
+                  <div className="lg:col-span-2 flex flex-col gap-2">
+                    <label className="text-xs font-bold text-slate-700 tracking-wider uppercase flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Canlı Önizləmə (İnteraktiv)
+                    </label>
+                    <div className="relative w-full aspect-[16/11] rounded-2.5xl overflow-hidden shadow-md border border-slate-100 bg-slate-900 group">
+                      {/* Live background image with elegant soft blur and dark overlay */}
+                      <div 
+                        className="absolute inset-0 bg-cover bg-center transition-all duration-500 scale-100 group-hover:scale-102"
+                        style={{ 
+                          backgroundImage: `url("${cfgWelcomeBgImg || 'https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1200'}")` 
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/45 to-slate-950/20" />
+                      
+                      {/* Top mockup chrome bar */}
+                      <div className="absolute top-0 inset-x-0 p-2.5 flex justify-between items-center bg-black/10 backdrop-blur-[2px] border-b border-white/5 text-[9px] text-white/50 font-mono font-bold">
+                        <div className="flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                          <span>NAXÇIVAN PORTAL</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[8px]">
+                          <span>12:00</span>
+                          <span>WiFi 100%</span>
+                        </div>
+                      </div>
+
+                      {/* Content representation */}
+                      <div className="absolute inset-x-0 bottom-0 p-4.5 flex flex-col items-center text-center select-none">
+                        {/* Live Badge */}
+                        <div className="inline-block border border-gold-primary/30 bg-gold-primary/10 text-gold-primary text-[8px] font-bold tracking-widest px-2.5 py-1 rounded-full mb-2 uppercase scale-95 origin-center">
+                          🌍 {cfgWelcomeBadge || 'Naxçıvanı Kəşf Et'}
+                        </div>
+
+                        {/* Live Title */}
+                        <h2 className="font-serif text-white text-xs sm:text-sm md:text-base font-black leading-tight tracking-tight mb-1.5 max-w-[90%] text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-205 drop-shadow">
+                          {cfgWelcomeTitle || 'Naxçıvanın Gözəlliklərini Kəşf Et'}
+                        </h2>
+
+                        {/* Live Subtitle */}
+                        <p className="text-[9px] text-slate-300 leading-normal max-w-[92%] mb-3 font-sans line-clamp-2">
+                          {cfgWelcomeDesc || 'Qədim sivilizasiya beşiyi olan Naxçıvanda...' }
+                        </p>
+
+                        {/* Simulated action buttons */}
+                        <div className="flex gap-2 scale-90 origin-bottom">
+                          <div className="bg-gold-primary text-navy-deep font-bold text-[8px] px-3.5 py-1.5 rounded-lg border border-gold-primary shadow">
+                            Tarixi Məkanlar
+                          </div>
+                          <div className="border border-white/20 bg-white/5 text-white font-bold text-[8px] px-3.5 py-1.5 rounded-lg backdrop-blur-[1px]">
+                            Əlaqə
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* SECTION D: Hero Sliders Control */}
               <div className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm">
                 <h4 className="font-serif text-base font-bold text-navy-deep border-b pb-2 mb-4 flex items-center gap-2">
@@ -3174,20 +3337,118 @@ export default function Admin({ onNavigate }: AdminProps) {
                 </h4>
                 <div className="flex flex-col gap-3 mb-6">
                   {cfgSliders.map((slider, idx) => (
-                    <div key={idx} className="p-3 bg-slate-50 border rounded-2xl flex justify-between items-center gap-4 text-xs">
-                      <div className="flex items-center gap-3">
-                        <img src={slider.image} alt="" className="w-10 h-10 object-cover rounded-lg" />
-                        <div className="text-left">
-                          <p className="font-bold text-navy-deep">{slider.title}</p>
-                          <p className="text-[10px] text-slate-400">{slider.subtitle}</p>
+                    <div key={idx} className="p-3 bg-slate-50 border rounded-2xl flex flex-col gap-3 text-xs">
+                      {editingSliderIdx === idx ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-left">
+                          <p className="md:col-span-2 font-bold text-xs text-navy-mid border-b pb-1">Slayderi Redaktə Et</p>
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-slate-400 uppercase">Slayder başlığı</label>
+                            <input
+                              type="text"
+                              value={editingSliderTitle}
+                              onChange={(e) => setEditingSliderTitle(e.target.value)}
+                              className="p-2 bg-white border rounded-lg text-xs"
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-slate-400">Alt başlıq / Şüar</label>
+                            <input
+                              type="text"
+                              value={editingSliderSubtitle}
+                              onChange={(e) => setEditingSliderSubtitle(e.target.value)}
+                              className="p-2 bg-white border rounded-lg text-xs"
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1 md:col-span-2">
+                            <label className="text-[10px] text-slate-400">Arxa fon şəkli</label>
+                            <div className="flex items-center gap-3 bg-white p-2 border rounded-lg">
+                              {editingSliderImg ? (
+                                <div className="relative w-10 h-10 rounded-md overflow-hidden border bg-slate-50 shrink-0">
+                                  <img src={editingSliderImg} className="w-full h-full object-cover" alt="Preview" referrerPolicy="no-referrer" />
+                                </div>
+                              ) : (
+                                <div className="w-10 h-10 rounded-md border border-dashed bg-slate-100 flex items-center justify-center text-[10px] text-slate-400 font-sans shrink-0">Yoxdur</div>
+                              )}
+                              <div className="flex-1 flex gap-2 items-center">
+                                <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary text-[10px] font-bold px-3 py-1.5 rounded-md cursor-pointer border border-gold-primary/20 transition-all select-none">
+                                  Şəkil Yüklə
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => handleFileUpload(e, setEditingSliderImg)}
+                                  />
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => openMediaPicker(setEditingSliderImg)}
+                                  className="text-[10px] text-gold-primary hover:underline font-sans cursor-pointer"
+                                >
+                                  Kitabxanadan seç
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="md:col-span-2 flex justify-end gap-2 mt-1">
+                            <button
+                              type="button"
+                              onClick={() => setEditingSliderIdx(null)}
+                              className="px-3 py-1.5 bg-white border hover:bg-slate-50 rounded-lg text-xs font-bold shrink-0 cursor-pointer text-slate-700"
+                            >
+                              Ləğv et
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = [...cfgSliders];
+                                updated[idx] = {
+                                  title: editingSliderTitle,
+                                  subtitle: editingSliderSubtitle,
+                                  image: editingSliderImg || 'https://images.unsplash.com/photo-1542332213-9b5a5a3fad35'
+                                };
+                                setCfgSliders(updated);
+                                setEditingSliderIdx(null);
+                              }}
+                              className="px-3 py-1.5 bg-gold-primary hover:bg-gold-dark text-navy-deep rounded-lg text-xs font-bold shrink-0 cursor-pointer"
+                            >
+                              Yadda Saxla
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                      <button
-                        onClick={() => setCfgSliders(cfgSliders.filter((_, i) => i !== idx))}
-                        className="text-rose-500 hover:text-white hover:bg-rose-500 p-1.5 rounded-lg border border-rose-100 cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      ) : (
+                        <div className="flex justify-between items-center gap-4">
+                          <div className="flex items-center gap-3">
+                            <img src={slider.image} alt="" className="w-10 h-10 object-cover rounded-lg" />
+                            <div className="text-left">
+                              <p className="font-bold text-navy-deep">{slider.title}</p>
+                              <p className="text-[10px] text-slate-400">{slider.subtitle}</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingSliderIdx(idx);
+                                setEditingSliderTitle(slider.title);
+                                setEditingSliderSubtitle(slider.subtitle);
+                                setEditingSliderImg(slider.image);
+                              }}
+                              className="p-1.5 bg-sky-50 text-sky-600 hover:bg-sky-550 hover:text-white rounded-lg border border-sky-100 cursor-pointer flex items-center justify-center"
+                              title="Düzəliş Et"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCfgSliders(cfgSliders.filter((_, i) => i !== idx))}
+                              className="text-rose-500 hover:text-white hover:bg-rose-500 p-1.5 rounded-lg border border-rose-100 cursor-pointer flex items-center justify-center"
+                              title="Sil"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -3374,24 +3635,22 @@ export default function Admin({ onNavigate }: AdminProps) {
                     </div>
                   ))}
                 </div>
-                <div className="flex gap-2 text-xs md:text-sm">
-                  <input
-                    type="url"
-                    placeholder="Yeni fotoşəkil URL daxil edin"
-                    value={newGalleryUrl}
-                    onChange={(e) => setNewGalleryUrl(e.target.value)}
-                    className="flex-1 p-2.5 bg-slate-50 border rounded-xl"
-                  />
+                 <div className="flex flex-wrap gap-3 text-xs md:text-sm">
+                  <label className="bg-navy-deep text-gold-primary hover:bg-navy-mid px-5 py-3 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-gold-primary/30 shadow-sm">
+                    <Upload className="w-4 h-4 text-gold-primary" /> Kompüterdən Şəkil Yüklə (JPG, PNG, WEBP)
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => handleFileUpload(e, (url) => setCfgGalleries([...cfgGalleries, url]))}
+                    />
+                  </label>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (!newGalleryUrl) return;
-                      setCfgGalleries([...cfgGalleries, newGalleryUrl]);
-                      setNewGalleryUrl('');
-                    }}
-                    className="bg-navy-deep text-gold-primary hover:bg-navy-mid px-5 py-2.5 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                    onClick={() => openMediaPicker((url) => setCfgGalleries([...cfgGalleries, url]))}
+                    className="bg-white border border-slate-200 text-navy-deep hover:bg-slate-50 px-5 py-3 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer select-none"
                   >
-                    <Plus className="w-4 h-4" /> Əlavə et
+                    <Compass className="w-4 h-4 text-gold-primary" /> Media Kitabxanasından Seç
                   </button>
                 </div>
               </div>

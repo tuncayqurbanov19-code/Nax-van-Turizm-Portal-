@@ -293,6 +293,12 @@ export interface SettingsSchema {
     desktopHeight?: number;
   };
   whatsappSettings?: WhatsAppSettings;
+  welcomeSettings?: {
+    badgeText: string;
+    titleText: string;
+    descriptionText: string;
+    backgroundImageUrl: string;
+  };
 }
 
 export interface MediaItem {

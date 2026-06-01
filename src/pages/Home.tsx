@@ -85,7 +85,7 @@ export default function Home({ onNavigate }: HomeProps) {
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
             style={{
-              backgroundImage: 'url("https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1920&auto=format&fit=crop")',
+              backgroundImage: `url("${settings?.welcomeSettings?.backgroundImageUrl || 'https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1920&auto=format&fit=crop'}")`,
             }}
           />
         )}
@@ -99,21 +99,21 @@ export default function Home({ onNavigate }: HomeProps) {
           
           {/* Tagline Badge */}
           <div className="border border-gold-primary/40 bg-gold-primary/10 text-gold-primary text-xs font-bold tracking-widest px-4 py-2 rounded-full mb-6 uppercase inline-flex items-center gap-2">
-            <span>🌍</span> Naxçıvanı Kəşf Et
+            <span>🌍</span> {settings?.welcomeSettings?.badgeText || 'Naxçıvanı Kəşf Et'}
           </div>
 
           {/* Main Headline */}
           <h1 className="text-4xl md:text-6xl font-serif font-bold text-white tracking-tight leading-tight max-w-4xl text-balance">
             {settings?.heroSliders && settings.heroSliders.length > 0
               ? settings.heroSliders[activeSliderIndex].title
-              : 'Naxçıvanın Gözəlliklərini Kəşf Et'}
+              : (settings?.welcomeSettings?.titleText || 'Naxçıvanın Gözəlliklərini Kəşf Et')}
           </h1>
 
           {/* Subtitle */}
           <p className="text-base md:text-xl font-sans text-slate-300 font-medium max-w-2xl mt-6 leading-relaxed">
             {settings?.heroSliders && settings.heroSliders.length > 0
               ? settings.heroSliders[activeSliderIndex].subtitle
-              : 'Qədim sivilizasiya beşiyi olan Naxçıvanda tarixi abidələr, möhtəşəm mənzərələr və unudulmaz mənəvi turlar sizi gözləyir.'}
+              : (settings?.welcomeSettings?.descriptionText || 'Qədim sivilizasiya beşiyi olan Naxçıvanda tarixi abidələr, möhtəşəm mənzərələr və unudulmaz mənəvi turlar sizi gözləyir.')}
           </p>
 
           {/* CTA Action Buttons */}

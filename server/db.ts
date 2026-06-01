@@ -311,6 +311,12 @@ export interface SettingsSchema {
     desktopHeight?: number;
   };
   whatsappSettings?: WhatsAppSettings;
+  welcomeSettings?: {
+    badgeText: string;
+    titleText: string;
+    descriptionText: string;
+    backgroundImageUrl: string;
+  };
 }
 
 interface DatabaseSchema {
@@ -911,6 +917,12 @@ function getSeedData(): DatabaseSchema {
       verifyToken: "naxcivan_verify_token_2026",
       messageTemplate: "Hörmətli {Müştəri Adı},\n\nSifarişiniz uğurla qəbul edildi.\n\nTurunuz {Tur Tarixi} tarixində, saat {Tur Başlama Saatı}-da başlayacaq.\n\nSizə xoş və unudulmaz səyahət arzulayırıq. Bizi seçdiyiniz üçün təşəkkür edirik.\n\nHər hansı sualınız yaranarsa, bizimlə əlaqə saxlaya bilərsiniz.\n\nƏlaqə:\n📧 tourist@tourism.naxcivan\n📞 +994 60 237 71 37",
       isRealMode: false
+    },
+    welcomeSettings: {
+      badgeText: "Naxçıvanı Kəşf Et",
+      titleText: "Naxçıvanın Gözəlliklərini Kəşf Et",
+      descriptionText: "Qədim sivilizasiya beşiyi olan Naxçıvanda tarixi abidələr, möhtəşəm mənzərələr və unudulmaz mənəvi turlar sizi gözləyir.",
+      backgroundImageUrl: "https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1920&auto=format&fit=crop"
     }
   };
 

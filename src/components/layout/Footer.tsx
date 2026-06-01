@@ -44,12 +44,18 @@ export default function Footer({ onNavigate, settings }: FooterProps) {
               />
             ) : (
               <>
-                <svg className="w-6 h-6 fill-gold-primary" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.5 6c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5z" />
-                </svg>
-                <span className="text-xl font-serif tracking-widest font-bold text-gold-primary">
-                  {settings?.headerFooter?.headerTitle || 'NAXÇIVAN'}
-                </span>
+                <div className="relative w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-tr from-amber-500/10 to-amber-500/30 border border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.2)] mr-1.5 shrink-0">
+                  <Compass className="w-5 h-5 text-gold-primary" />
+                  <div className="absolute inset-0 border border-dashed border-gold-primary/30 rounded-full animate-[spin_40s_linear_infinite]" />
+                </div>
+                <div className="flex flex-col text-left leading-none gap-0.5">
+                  <span className="text-base font-serif font-black tracking-[0.18em] text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 uppercase">
+                    {settings?.headerFooter?.headerTitle || 'NAXÇIVAN'}
+                  </span>
+                  <span className="text-[7px] font-mono tracking-[0.32em] text-slate-450 font-bold select-none whitespace-nowrap">
+                    PREMIUM TRAVELS
+                  </span>
+                </div>
               </>
             )}
           </div>

@@ -108,14 +108,18 @@ export default function Navbar({ currentPath, onNavigate }: NavbarProps) {
                 />
               ) : (
                 <>
-                  <div className="w-9 h-9 bg-gold-primary/20 hover:scale-105 active:scale-95 text-gold-primary flex items-center justify-center rounded-lg border border-gold-primary/30 transition-all mr-2">
-                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c1.82 0 3.53-.49 5-1.35-1.85-.3-3.51-1.15-4.82-2.46-1.74-1.74-2.68-4.07-2.68-6.54 0-2.43.91-4.73 2.57-6.4 1.34-1.35 3.03-2.22 4.93-2.5C15.53 2.49 13.82 2 12 2zm3.5 6c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5zm2.5 2c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5zm-1 3.5c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5z" />
-                    </svg>
+                  <div className="relative w-11 h-11 flex items-center justify-center rounded-full bg-gradient-to-tr from-amber-500/10 to-amber-500/30 border border-amber-550/40 shadow-[0_0_20px_rgba(245,158,11,0.2)] group-hover:scale-105 transition-transform duration-300 mr-1.5">
+                    <Compass className="w-5.5 h-5.5 text-gold-primary" />
+                    <div className="absolute inset-0 border border-dashed border-gold-primary/30 rounded-full animate-[spin_40s_linear_infinite]" />
                   </div>
-                  <span className="text-xl md:text-2xl font-serif tracking-widest font-bold text-gold-primary group-hover:text-gold-dark transition-colors">
-                    {siteTitle}
-                  </span>
+                  <div className="flex flex-col text-left leading-none gap-1">
+                    <span className="text-lg md:text-xl font-serif font-black tracking-[0.18em] text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 uppercase">
+                      {siteTitle}
+                    </span>
+                    <span className="text-[8px] font-mono tracking-[0.32em] text-slate-450 font-bold select-none whitespace-nowrap">
+                      PREMIUM TRAVELS
+                    </span>
+                  </div>
                 </>
               )}
             </div>
@@ -209,14 +213,18 @@ export default function Navbar({ currentPath, onNavigate }: NavbarProps) {
                 />
               ) : (
                 <>
-                  <div className="w-9 h-9 bg-gold-primary/20 hover:scale-105 active:scale-95 text-gold-primary flex items-center justify-center rounded-lg border border-gold-primary/30 transition-all">
-                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c1.82 0 3.53-.49 5-1.35-1.85-.3-3.51-1.15-4.82-2.46-1.74-1.74-2.68-4.07-2.68-6.54 0-2.43.91-4.73 2.57-6.4 1.34-1.35 3.03-2.22 4.93-2.5C15.53 2.49 13.82 2 12 2zm3.5 6c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5zm2.5 2c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5zm-1 3.5c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5z" />
-                    </svg>
+                  <div className="relative w-11 h-11 flex items-center justify-center rounded-full bg-gradient-to-tr from-amber-500/10 to-amber-500/30 border border-amber-550/40 shadow-[0_0_20px_rgba(245,158,11,0.2)] group-hover:scale-105 transition-transform duration-300 mr-1.5">
+                    <Compass className="w-5.5 h-5.5 text-gold-primary" />
+                    <div className="absolute inset-0 border border-dashed border-gold-primary/30 rounded-full animate-[spin_40s_linear_infinite]" />
                   </div>
-                  <span className="text-xl md:text-2xl font-serif tracking-widest font-bold text-gold-primary group-hover:text-gold-dark transition-colors">
-                    {siteTitle}
-                  </span>
+                  <div className="flex flex-col text-left leading-none gap-1">
+                    <span className="text-lg md:text-xl font-serif font-black tracking-[0.18em] text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 uppercase">
+                      {siteTitle}
+                    </span>
+                    <span className="text-[8px] font-mono tracking-[0.32em] text-slate-450 font-bold select-none whitespace-nowrap">
+                      PREMIUM TRAVELS
+                    </span>
+                  </div>
                 </>
               )}
             </div>
