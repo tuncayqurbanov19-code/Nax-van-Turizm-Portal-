@@ -149,6 +149,7 @@ export interface TourismCompany {
   logo: string;
   description: string;
   phone: string;
+  whatsapp?: string;
   email: string;
   address: string;
   website: string;
@@ -971,6 +972,7 @@ function getSeedData(): DatabaseSchema {
       logo: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=150',
       description: 'Naxçıvan Muxtar Respublikasının aparıcı turizm agentliyi. 20 ildən artıq təcrübə ilə Batabat, Əlincəqala və Əshabi-Kəhf turlarının peşəkar təşkili.',
       phone: '+994 36 544 11 22',
+      whatsapp: '+994501112233',
       email: 'cahan@naxcivan.travel',
       address: 'Naxçıvan şəhəri, Heydər Əliyev prospekti 15',
       website: 'https://cahan.naxcivan.travel',
@@ -989,6 +991,7 @@ function getSeedData(): DatabaseSchema {
       logo: 'https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=150',
       description: 'Azərbaycan üzrə geniş şəbəkəyə malik premium səyahət şirkəti. Naxçıvan filialımız qonaqlara ən yüksək səviyyədə nəqliyyat, bələdçi və otel rezervasiya xidmətləri göstərir.',
       phone: '+994 12 400 90 90',
+      whatsapp: '+994551234567',
       email: 'baku@naxcivan.travel',
       address: 'Bakı şəhəri, Nizami küçəsi 44 / Naxçıvan şəhər ofisi',
       website: 'https://bakutravel.az',

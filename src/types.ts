@@ -166,6 +166,7 @@ export interface TourismCompany {
   logo: string;
   description: string;
   phone: string;
+  whatsapp?: string;
   email: string;
   address: string;
   website: string;

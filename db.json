@@ -17,6 +17,15 @@
       "role": "user",
       "isBlocked": false,
       "createdAt": "2026-05-15T00:00:00.000Z"
+    },
+    {
+      "id": "usr_tuncay_qurbanov",
+      "fullName": "Tuncay Qurbanov",
+      "email": "tuncayqurbanov19@gmail.com",
+      "passwordHash": "a1160022314399568c6ffd29e3e9da83f6543863c36b071c3bf252719291b019",
+      "role": "admin",
+      "isBlocked": false,
+      "createdAt": "2026-06-03T18:56:48.388Z"
     }
   ],
   "places": [
@@ -766,6 +775,7 @@
       "logo": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=150",
       "description": "Naxçıvan Muxtar Respublikasının aparıcı turizm agentliyi. 20 ildən artıq təcrübə ilə Batabat, Əlincəqala və Əshabi-Kəhf turlarının peşəkar təşkili.",
       "phone": "+994 36 544 11 22",
+      "whatsapp": "+994501112233",
       "email": "cahan@naxcivan.travel",
       "address": "Naxçıvan şəhəri, Heydər Əliyev prospekti 15",
       "website": "https://cahan.naxcivan.travel",
@@ -783,6 +793,7 @@
       "logo": "https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=150",
       "description": "Azərbaycan üzrə geniş şəbəkəyə malik premium səyahət şirkəti. Naxçıvan filialımız qonaqlara ən yüksək səviyyədə nəqliyyat, bələdçi və otel rezervasiya xidmətləri göstərir.",
       "phone": "+994 12 400 90 90",
+      "whatsapp": "+994551234567",
       "email": "baku@naxcivan.travel",
       "address": "Bakı şəhəri, Nizami küçəsi 44 / Naxçıvan şəhər ofisi",
       "website": "https://bakutravel.az",

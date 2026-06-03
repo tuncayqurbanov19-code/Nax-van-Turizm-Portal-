@@ -15,6 +15,7 @@ interface TourDetailProps {
 export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
   const [tour, setTour] = useState<Tour | null>(null);
   const [hotelsList, setHotelsList] = useState<any[]>([]);
+  const [companiesList, setCompaniesList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'stops' | 'meals' | 'hotel' | 'transport'>('stops');
   const { user } = useAuth();
@@ -53,6 +54,15 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
           }
         } catch (hotelErr) {
           console.error("Hotels could not be loaded in detail view:", hotelErr);
+        }
+
+        try {
+          const fetchedCompanies = await api.companies.getList();
+          if (Array.isArray(fetchedCompanies)) {
+            setCompaniesList(fetchedCompanies);
+          }
+        } catch (companyErr) {
+          console.error("Companies could not be loaded in detail view:", companyErr);
         }
 
         if (data) {
@@ -351,6 +361,13 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
       });
 
       if (res && res.id) {
+        // Resolve company's WhatsApp number dynamically
+        const targetCompany = companiesList.find(c => c.id === tour?.companyId);
+        let whatsappNumber = targetCompany?.whatsapp || '994703538283';
+        
+        // Clean special characters like '+' or spacing from the WhatsApp phone number
+        whatsappNumber = whatsappNumber.replace(/[+\s\-()]/g, '');
+
         const text = `Salam! Mən Naxçıvan Rəqəmsal Turizm Bələdçisi üzərindən yeni tur rezervasiyası etmək istəyirəm.\n\n` +
           `📋 Sifariş Məlumatları:\n` +
           `• Tur: ${tour?.name || ''}\n` +
@@ -363,7 +380,7 @@ export default function TourDetail({ tourId, onNavigate }: TourDetailProps) {
           (bookingNotes.trim() ? `• Qeyd: ${bookingNotes}\n` : '');
 
         const encodedText = encodeURIComponent(text);
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=994703538283&text=${encodedText}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodedText}`;
         
         success('Sizin sifarişiniz qeydə alındı! WhatsApp-a yönləndirilirsiniz...', 'Sifariş qəbul olundu');
         setIsBookingModalOpen(false);

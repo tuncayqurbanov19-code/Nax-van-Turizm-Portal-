@@ -118,6 +118,7 @@ export default function Admin({ onNavigate }: AdminProps) {
   const [newCompLogo, setNewCompLogo] = useState('');
   const [newCompDesc, setNewCompDesc] = useState('');
   const [newCompPhone, setNewCompPhone] = useState('');
+  const [newCompWhatsapp, setNewCompWhatsapp] = useState('');
   const [newCompEmail, setNewCompEmail] = useState('');
   const [newCompAddress, setNewCompAddress] = useState('');
   const [newCompWebsite, setNewCompWebsite] = useState('');
@@ -126,6 +127,17 @@ export default function Admin({ onNavigate }: AdminProps) {
   const [newCompTg, setNewCompTg] = useState('');
   const [newCompCommission, setNewCompCommission] = useState(10);
   const [editingRates, setEditingRates] = useState<Record<string, string>>({});
+  
+  // Company Editing states
+  const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
+  const [editCompName, setEditCompName] = useState('');
+  const [editCompPhone, setEditCompPhone] = useState('');
+  const [editCompWhatsapp, setEditCompWhatsapp] = useState('');
+  const [editCompEmail, setEditCompEmail] = useState('');
+  const [editCompAddress, setEditCompAddress] = useState('');
+  const [editCompWebsite, setEditCompWebsite] = useState('');
+  const [editCompDesc, setEditCompDesc] = useState('');
+  const [editCompLogo, setEditCompLogo] = useState('');
 
   // New Place Form
   const [newPlaceName, setNewPlaceName] = useState('');
@@ -597,6 +609,11 @@ export default function Admin({ onNavigate }: AdminProps) {
 
     if (!newTourName.trim() || !newTourDesc.trim()) {
       error('Ad və təsvir bölməsi boş qala bilməz.');
+      return;
+    }
+
+    if (!newTourCompanyId) {
+      error('Zəhmət olmasa bu turun məxsus olduğu Tur Şirkətini seçin.');
       return;
     }
 
@@ -1087,6 +1104,7 @@ export default function Admin({ onNavigate }: AdminProps) {
         logo: newCompLogo || 'https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=150',
         description: newCompDesc || 'Premium Travel Company in Nakhchivan.',
         phone: newCompPhone,
+        whatsapp: newCompWhatsapp,
         email: newCompEmail,
         address: newCompAddress,
         website: newCompWebsite,
@@ -1104,6 +1122,7 @@ export default function Admin({ onNavigate }: AdminProps) {
       setNewCompLogo('');
       setNewCompDesc('');
       setNewCompPhone('');
+      setNewCompWhatsapp('');
       setNewCompEmail('');
       setNewCompAddress('');
       setNewCompWebsite('');
@@ -1139,6 +1158,30 @@ export default function Admin({ onNavigate }: AdminProps) {
       loadData();
     } catch (err: any) {
       error(err.message || 'Komissiya faizini yeniləmək mümkün olmadı.');
+    }
+  };
+
+  const handleUpdateCompanySubmit = async (id: string) => {
+    if (!editCompName.trim()) {
+      error('Şirkət adı boş qala bilməz.');
+      return;
+    }
+    try {
+      await api.companies.update(id, {
+        name: editCompName,
+        phone: editCompPhone,
+        whatsapp: editCompWhatsapp,
+        email: editCompEmail,
+        address: editCompAddress,
+        website: editCompWebsite,
+        description: editCompDesc,
+        logo: editCompLogo
+      });
+      success('Şirkət məlumatları uğurla yeniləndi!');
+      setEditingCompanyId(null);
+      loadData();
+    } catch (err: any) {
+      error(err.message || 'Şirkət məlumatlarını yeniləmək mümkün olmadı.');
     }
   };
 
@@ -3188,13 +3231,27 @@ export default function Admin({ onNavigate }: AdminProps) {
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs text-slate-500">Telefon nömrəsi</label>
+                    <label className="text-xs text-slate-550 font-semibold text-amber-600">Telefon Nömrəsi</label>
                     <input
                       type="text"
                       placeholder="+994 36 544 00 00"
                       value={newCompPhone}
                       onChange={(e) => setNewCompPhone(e.target.value)}
                       className="p-2.5 bg-slate-50 border rounded-xl"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-amber-600 flex items-center gap-1">
+                      <span>WhatsApp Nömrəsi * (Routing)</span>
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      placeholder="Məs: +994501112233"
+                      value={newCompWhatsapp}
+                      onChange={(e) => setNewCompWhatsapp(e.target.value)}
+                      className="p-2.5 bg-amber-50/20 border border-amber-500/20 rounded-xl focus:border-amber-500 focus:bg-white text-navy-deep font-bold"
                     />
                   </div>
 
@@ -3374,28 +3431,159 @@ export default function Admin({ onNavigate }: AdminProps) {
                       return (
                         <div key={comp.id} className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col gap-6 font-sans">
                           {/* Header section of company card */}
-                          <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                            <div className="flex items-start gap-4 flex-1">
-                              <img src={comp.logo || 'https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=150'} alt="" className="w-16 h-16 object-cover rounded-2xl bg-slate-100 border p-1" />
-                              <div className="flex-1">
-                                <h4 className="font-bold text-lg text-navy-deep">{comp.name}</h4>
-                                <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{comp.description}</p>
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5 text-[11px] text-slate-400 font-mono">
-                                  <span>Tel: <strong className="text-slate-600 font-sans">{comp.phone || 'Daxil edilməyib'}</strong></span>
-                                  <span>E-poçt: <strong className="text-slate-600 font-sans">{comp.email || 'Daxil edilməyib'}</strong></span>
-                                  <span>Veb: {comp.website ? <a href={comp.website} target="_blank" rel="noreferrer" className="text-gold-primary hover:underline">{comp.website}</a> : 'Yoxdur'}</span>
+                          {editingCompanyId === comp.id ? (
+                            <div className="bg-slate-50/50 p-4 border border-slate-200/60 rounded-2xl space-y-4 text-left w-full">
+                              <h5 className="font-bold text-navy-deep text-sm flex items-center gap-2">
+                                <Edit3 className="w-4 h-4 text-amber-500" />
+                                <span>Şirkət Məlumatlarını Redaktə Et</span>
+                              </h5>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] uppercase font-bold text-slate-400">Şirkət Adı</label>
+                                  <input 
+                                    type="text" 
+                                    value={editCompName} 
+                                    onChange={e => setEditCompName(e.target.value)} 
+                                    className="p-2 border bg-white rounded-xl text-xs font-bold text-navy-deep" 
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] uppercase font-bold text-slate-400">Telefon</label>
+                                  <input 
+                                    type="text" 
+                                    value={editCompPhone} 
+                                    onChange={e => setEditCompPhone(e.target.value)} 
+                                    className="p-2 border bg-white rounded-xl text-xs" 
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] uppercase font-bold text-emerald-600">WhatsApp Nömrəsi (For routing)</label>
+                                  <input 
+                                    type="text" 
+                                    value={editCompWhatsapp} 
+                                    onChange={e => setEditCompWhatsapp(e.target.value)} 
+                                    className="p-2 border border-emerald-300 rounded-xl bg-emerald-50/20 text-xs font-bold text-navy-deep" 
+                                    placeholder="+994501112233"
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] uppercase font-bold text-slate-400">E-poçt</label>
+                                  <input 
+                                    type="email" 
+                                    value={editCompEmail} 
+                                    onChange={e => setEditCompEmail(e.target.value)} 
+                                    className="p-2 border bg-white rounded-xl text-xs" 
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1 md:col-span-2">
+                                  <label className="text-[10px] uppercase font-bold text-slate-400">Təsvir (Description)</label>
+                                  <textarea 
+                                    rows={2} 
+                                    value={editCompDesc} 
+                                    onChange={e => setEditCompDesc(e.target.value)} 
+                                    className="p-2 border bg-white rounded-xl text-xs leading-normal" 
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] uppercase font-bold text-slate-400">Ofis Ünvanı</label>
+                                  <input 
+                                    type="text" 
+                                    value={editCompAddress} 
+                                    onChange={e => setEditCompAddress(e.target.value)} 
+                                    className="p-2 border bg-white rounded-xl text-xs" 
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] uppercase font-bold text-slate-400">Veb Sayt URL</label>
+                                  <input 
+                                    type="url" 
+                                    value={editCompWebsite} 
+                                    onChange={e => setEditCompWebsite(e.target.value)} 
+                                    className="p-2 border bg-white rounded-xl text-xs font-mono" 
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1 md:col-span-2">
+                                  <label className="text-[10px] uppercase font-bold text-slate-400">Loqo Şəkil URL</label>
+                                  <div className="flex gap-2">
+                                    <input 
+                                      type="text" 
+                                      value={editCompLogo} 
+                                      onChange={e => setEditCompLogo(e.target.value)} 
+                                      className="flex-1 p-2 border bg-white rounded-xl text-xs font-mono" 
+                                    />
+                                    <label className="bg-navy-mid hover:bg-navy-deep text-gold-primary border border-gold-primary/30 px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all inline-flex items-center">
+                                      Yüklə
+                                      <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        className="hidden" 
+                                        onChange={(e) => handleFileUpload(e, setEditCompLogo)} 
+                                      />
+                                    </label>
+                                  </div>
                                 </div>
                               </div>
+                              <div className="flex gap-2 justify-end pt-2 border-t">
+                                <button 
+                                  type="button" 
+                                  onClick={() => setEditingCompanyId(null)} 
+                                  className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                >
+                                  Ləğv Et
+                                </button>
+                                <button 
+                                  type="button" 
+                                  onClick={() => handleUpdateCompanySubmit(comp.id)} 
+                                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                >
+                                  Yadda Saxla
+                                </button>
+                              </div>
                             </div>
-                            
-                            <button
-                              onClick={() => handleDeleteCompany(comp.id)}
-                              className="p-2 bg-rose-50 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl border border-rose-100 transition-all cursor-pointer shrink-0 self-end md:self-start"
-                              title="Şirkəti Sil"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
+                          ) : (
+                            <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                              <div className="flex items-start gap-4 flex-1">
+                                <img src={comp.logo || 'https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=150'} alt="" className="w-16 h-16 object-cover rounded-2xl bg-slate-100 border p-1" referrerPolicy="no-referrer" />
+                                <div className="flex-1">
+                                  <h4 className="font-bold text-lg text-navy-deep">{comp.name}</h4>
+                                  <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{comp.description}</p>
+                                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2.5 text-[11px] text-slate-400 font-mono">
+                                    <span>Tel: <strong className="text-slate-600 font-sans">{comp.phone || 'Daxil edilməyib'}</strong></span>
+                                    <span>WhatsApp: <strong className="text-emerald-600 bg-emerald-55/10 border border-emerald-500/20 px-1.5 py-0.5 rounded font-sans">{comp.whatsapp || 'Müəyyən edilməyib'}</strong></span>
+                                    <span>E-poçt: <strong className="text-slate-600 font-sans">{comp.email || 'Daxil edilməyib'}</strong></span>
+                                    <span>Veb: {comp.website ? <a href={comp.website} target="_blank" rel="noreferrer" className="text-gold-primary hover:underline">{comp.website}</a> : 'Yoxdur'}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-1.5 shrink-0 self-end md:self-start">
+                                <button
+                                  onClick={() => {
+                                    setEditingCompanyId(comp.id);
+                                    setEditCompName(comp.name);
+                                    setEditCompPhone(comp.phone || '');
+                                    setEditCompWhatsapp(comp.whatsapp || '');
+                                    setEditCompEmail(comp.email || '');
+                                    setEditCompAddress(comp.address || '');
+                                    setEditCompWebsite(comp.website || '');
+                                    setEditCompDesc(comp.description || '');
+                                    setEditCompLogo(comp.logo || '');
+                                  }}
+                                  className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl border border-slate-200 transition-all cursor-pointer"
+                                  title="Şirkət Məlumatlarını Düsturla Redaktə Et"
+                                >
+                                  <Edit3 className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteCompany(comp.id)}
+                                  className="p-2 bg-rose-50 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl border border-rose-100 transition-all cursor-pointer"
+                                  title="Şirkəti Sil"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          )}
 
                           {/* Dynamic Statistics Block & Commission Editor */}
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-slate-50/70 p-5 rounded-2xl border border-slate-100/50">
