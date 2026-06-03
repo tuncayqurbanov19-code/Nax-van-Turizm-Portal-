@@ -1045,6 +1045,23 @@ class FileDatabase {
                 createdAt: new Date().toISOString()
               });
             }
+
+            // Elevate or seed tuncayqurbanov19@gmail.com with admin role
+            const tuncayIndex = this.data.users.findIndex(u => u.email.toLowerCase() === 'tuncayqurbanov19@gmail.com');
+            if (tuncayIndex !== -1) {
+              this.data.users[tuncayIndex].role = 'admin';
+            } else {
+              this.data.users.push({
+                id: 'usr_tuncay_qurbanov',
+                fullName: 'Tuncay Qurbanov',
+                email: 'tuncayqurbanov19@gmail.com',
+                passwordHash: hashPassword('tuncay2007@'),
+                role: 'admin',
+                isBlocked: false,
+                createdAt: new Date().toISOString()
+              });
+            }
+            this.write();
           }
           // Ensure new fields are backward compatible and initialized!
           const defaults = getSeedData();
