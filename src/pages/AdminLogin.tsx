@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShieldCheck, ArrowRight, Eye, EyeOff, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ui/Toast';
+import Logo from '../components/ui/Logo';
 
 interface AdminLoginProps {
   onNavigate: (path: string) => void;
@@ -54,9 +55,9 @@ export default function AdminLogin({ onNavigate }: AdminLoginProps) {
         {/* Subtle top indicator bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600" />
 
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center mx-auto mb-4 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
-            <Lock className="w-6 h-6" />
+        <div className="text-center mb-8 flex flex-col items-center">
+          <div className="mb-4 cursor-pointer scale-110" onClick={() => onNavigate('/')}>
+            <Logo forceLight={true} />
           </div>
           
           <h2 className="text-2xl font-serif font-extrabold tracking-tight text-white select-none">

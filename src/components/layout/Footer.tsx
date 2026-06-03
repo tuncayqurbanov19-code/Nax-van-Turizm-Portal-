@@ -1,6 +1,7 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Compass, Landmark, ShieldCheck } from 'lucide-react';
 import { SettingsSchema } from '../../types';
+import Logo from '../ui/Logo';
 
 interface FooterProps {
   onNavigate: (path: string) => void;
@@ -34,30 +35,8 @@ export default function Footer({ onNavigate, settings }: FooterProps) {
         
         {/* Column 1: Brand & Historical Description */}
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2 select-none">
-            {settings?.logoSettings?.logoFooterUrl ? (
-              <img 
-                src={settings.logoSettings.logoFooterUrl} 
-                alt="Footer Logo" 
-                className="max-h-12 w-auto object-contain"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <>
-                <div className="relative w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-tr from-amber-500/10 to-amber-500/30 border border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.2)] mr-1.5 shrink-0">
-                  <Compass className="w-5 h-5 text-gold-primary" />
-                  <div className="absolute inset-0 border border-dashed border-gold-primary/30 rounded-full animate-[spin_40s_linear_infinite]" />
-                </div>
-                <div className="flex flex-col text-left leading-none gap-0.5">
-                  <span className="text-base font-serif font-black tracking-[0.18em] text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 uppercase">
-                    {settings?.headerFooter?.headerTitle || 'NAXÇIVAN'}
-                  </span>
-                  <span className="text-[7px] font-mono tracking-[0.32em] text-slate-450 font-bold select-none whitespace-nowrap">
-                    PREMIUM TRAVELS
-                  </span>
-                </div>
-              </>
-            )}
+          <div className="flex items-center gap-2 select-none" onClick={() => onNavigate('/')}>
+            <Logo settings={settings} forceLight={true} />
           </div>
           <p className="text-sm text-slate-400 font-sans leading-relaxed mt-2">
             Naxçıvan Muxtar Respublikasının rəsmi rəqəmsal turizm portalı. 

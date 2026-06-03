@@ -13,6 +13,7 @@ export default function Tours({ onNavigate }: ToursProps) {
   const [filteredTours, setFilteredTours] = useState<Tour[]>([]);
   const [companies, setCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bgUrl, setBgUrl] = useState('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1920');
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,6 +45,17 @@ export default function Tours({ onNavigate }: ToursProps) {
 
   useEffect(() => {
     fetchTours();
+    async function loadBg() {
+      try {
+        const cfg = await api.settings.get();
+        if (cfg?.backgroundSettings?.toursUrl) {
+          setBgUrl(cfg.backgroundSettings.toursUrl);
+        }
+      } catch (err) {
+        // Fallback
+      }
+    }
+    loadBg();
   }, []);
 
   // Filter application helper
@@ -84,20 +96,27 @@ export default function Tours({ onNavigate }: ToursProps) {
   }, [searchQuery, selectedCategory, selectedVehicle, selectedCompanyId, selectedDuration, maxPrice, tours]);
 
   return (
-    <div className="min-h-screen pt-28 pb-16 relative z-10 max-w-7xl mx-auto px-4 md:px-12" id="tours-page">
+    <div className="min-h-screen pt-28 pb-16 relative z-10 max-w-7xl mx-auto px-4 md:px-12 font-sans antialiased" id="tours-page">
       
-      {/* Page Title Block */}
-      <div className="text-center mb-16 select-none">
-        <div className="flex justify-center mb-3">
-          <span className="bg-gold-primary/10 border border-gold-primary/30 text-gold-primary text-[10px] font-bold tracking-widest px-3 py-1.5 rounded-full uppercase">
+      {/* Dynamic Header Banner */}
+      <div className="relative overflow-hidden rounded-3xl min-h-[220px] md:min-h-[280px] p-8 md:p-12 mb-10 flex flex-col justify-center text-white select-none shadow-xl border border-white/10" id="tours-banner">
+        <div className="absolute inset-0 z-0">
+          <div 
+            className="absolute inset-0 bg-cover bg-center transition-all duration-700 hover:scale-[1.01]" 
+            style={{ backgroundImage: `url("${bgUrl}")` }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-navy-deep/95 via-navy-deep/80 to-navy-mid/45 backdrop-blur-[1px]" />
+        </div>
+        
+        <div className="relative z-10 text-left max-w-2xl">
+          <span className="bg-gold-primary/20 text-gold-primary border border-gold-primary/30 text-[10px] font-black tracking-widest px-3 py-1.5 rounded-full uppercase">
             Xüsusi Marşrutlar
           </span>
+          <h1 className="text-3xl md:text-5xl font-serif font-black text-white mt-3 leading-tight drop-shadow-md">Tur Paketləri</h1>
+          <p className="text-xs md:text-sm text-slate-200 mt-2.5 leading-relaxed">
+            Naxçıvanın fərqli guşələrinə peşəkar bələdçi ilə bütöv təşkilatçılıq xidmətindən yararlanın.
+          </p>
         </div>
-        <h2 className="text-3xl md:text-5xl font-serif font-bold text-navy-deep leading-tight">Tur Paketləri</h2>
-        <div className="w-20 h-1 bg-gold-primary mx-auto mt-4 rounded-full" />
-        <p className="text-sm md:text-base text-slate-500 font-sans mt-3 max-w-lg mx-auto">
-          Naxçıvanın fərqli guşələrinə peşəkar bələdçi ilə bütöv təşkilatçılıq xidmətindən yararlanın.
-        </p>
       </div>
 
       {/* Filter and Search Bar Section */}

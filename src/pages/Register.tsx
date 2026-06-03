@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Mail, Lock, User, ArrowRight, UserCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ui/Toast';
+import Logo from '../components/ui/Logo';
 
 interface RegisterProps {
   onNavigate: (path: string) => void;
@@ -58,7 +59,10 @@ export default function Register({ onNavigate }: RegisterProps) {
         {/* Abstract Gold Header Decorator */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-gold-primary to-gold-dark" />
 
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 flex flex-col items-center">
+          <div className="mb-4 cursor-pointer scale-110" onClick={() => onNavigate('/')}>
+            <Logo />
+          </div>
           <h2 className="text-3xl font-serif font-bold text-navy-deep leading-tight">Qeydiyyat</h2>
           <p className="text-sm font-sans text-slate-400 mt-2">
             Naxçıvan Muxtar Respublikasının rəqəmsal vətəndaşı olun

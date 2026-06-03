@@ -3,6 +3,7 @@ import { Menu, X, Landmark, Compass, User as UserIcon, ShieldAlert, LogOut } fro
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { SettingsSchema } from '../../types';
+import Logo from '../ui/Logo';
 
 interface NavbarProps {
   currentPath: string;
@@ -38,7 +39,12 @@ export default function Navbar({ currentPath, onNavigate }: NavbarProps) {
     { name: 'Ana Səhifə', path: '/' },
     { name: 'Turlar', path: '/tours' },
     { name: 'Otellər', path: '/hotels' },
-    { name: 'Tarixi Yerlər', path: '/places' }
+    { name: 'Məkanlar', path: '/places' },
+    { name: 'Muzeylər', path: '/museums' },
+    { name: 'Nəqliyyat', path: '/transport' },
+    { name: 'Hava', path: '/weather' },
+    { name: 'Haqqımızda', path: '/about' },
+    { name: 'Əlaqə', path: '/contact' }
   ];
 
   const handleLinkClick = (path: string) => {
@@ -94,34 +100,11 @@ export default function Navbar({ currentPath, onNavigate }: NavbarProps) {
             {/* Row 1: Large Center Format Logo */}
             <div 
               onClick={() => handleLinkClick('/')}
-              className="flex items-center justify-center cursor-pointer shrink-0 group select-none hover:opacity-95 transition-opacity"
+              className="flex items-center justify-center cursor-pointer shrink-0 group select-none hover:opacity-95 transition-all"
               id="navbar-logo"
               style={{ transform: `translate(${posX}px, ${posY}px)` }}
             >
-              {currentLogo ? (
-                <img 
-                  src={currentLogo} 
-                  alt="Website Logo" 
-                  style={{ width: `${logoWidth}px`, height: `${logoHeight}px` }} 
-                  className="object-contain"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <>
-                  <div className="relative w-11 h-11 flex items-center justify-center rounded-full bg-gradient-to-tr from-amber-500/10 to-amber-500/30 border border-amber-550/40 shadow-[0_0_20px_rgba(245,158,11,0.2)] group-hover:scale-105 transition-transform duration-300 mr-1.5">
-                    <Compass className="w-5.5 h-5.5 text-gold-primary" />
-                    <div className="absolute inset-0 border border-dashed border-gold-primary/30 rounded-full animate-[spin_40s_linear_infinite]" />
-                  </div>
-                  <div className="flex flex-col text-left leading-none gap-1">
-                    <span className="text-lg md:text-xl font-serif font-black tracking-[0.18em] text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 uppercase">
-                      {siteTitle}
-                    </span>
-                    <span className="text-[8px] font-mono tracking-[0.32em] text-slate-450 font-bold select-none whitespace-nowrap">
-                      PREMIUM TRAVELS
-                    </span>
-                  </div>
-                </>
-              )}
+              <Logo settings={settings} forceLight={true} />
             </div>
 
             {/* Row 2: Separated aligned Navigation Elements */}
@@ -199,34 +182,11 @@ export default function Navbar({ currentPath, onNavigate }: NavbarProps) {
             {/* Logo area */}
             <div 
               onClick={() => handleLinkClick('/')}
-              className="flex items-center gap-3 cursor-pointer shrink-0 group select-none"
+              className="flex items-center gap-3 cursor-pointer shrink-0 group select-none hover:opacity-95 transition-all"
               id="navbar-logo"
               style={{ transform: `translate(${posX}px, ${posY}px)` }}
             >
-              {currentLogo ? (
-                <img 
-                  src={currentLogo} 
-                  alt="Website Logo" 
-                  style={{ width: `${logoWidth}px`, height: `${logoHeight}px` }} 
-                  className="object-contain"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <>
-                  <div className="relative w-11 h-11 flex items-center justify-center rounded-full bg-gradient-to-tr from-amber-500/10 to-amber-500/30 border border-amber-550/40 shadow-[0_0_20px_rgba(245,158,11,0.2)] group-hover:scale-105 transition-transform duration-300 mr-1.5">
-                    <Compass className="w-5.5 h-5.5 text-gold-primary" />
-                    <div className="absolute inset-0 border border-dashed border-gold-primary/30 rounded-full animate-[spin_40s_linear_infinite]" />
-                  </div>
-                  <div className="flex flex-col text-left leading-none gap-1">
-                    <span className="text-lg md:text-xl font-serif font-black tracking-[0.18em] text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 uppercase">
-                      {siteTitle}
-                    </span>
-                    <span className="text-[8px] font-mono tracking-[0.32em] text-slate-450 font-bold select-none whitespace-nowrap">
-                      PREMIUM TRAVELS
-                    </span>
-                  </div>
-                </>
-              )}
+              <Logo settings={settings} forceLight={true} />
             </div>
 
             {/* Desktop Navigation Link row */}
@@ -325,7 +285,9 @@ export default function Navbar({ currentPath, onNavigate }: NavbarProps) {
         >
           {/* Drawer Title header */}
           <div className="flex items-center justify-between border-b border-white/5 pb-4">
-            <span className="font-serif text-lg tracking-wider font-bold text-gold-primary">MENU</span>
+            <div onClick={() => handleLinkClick('/')} className="cursor-pointer max-w-[150px]">
+              <Logo settings={settings} forceLight={true} />
+            </div>
             <button 
               onClick={() => setIsDrawerOpen(false)}
               className="text-slate-400 hover:text-white p-1"

@@ -1,17 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, Calendar, Compass, Building, Landmark, MessageSquare, Users, Edit3, Trash2, Plus, PlusCircle, Check, X, ShieldAlert, Award, TrendingUp, Utensils, BookOpen, Settings, Image, Video, Heart, Globe, FileText, Copy, ExternalLink, Search, Sliders, RotateCw, ZoomIn, Upload, QrCode, Printer, MapPin, ArrowUp, ArrowDown, Coffee, Car, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShieldCheck, Calendar, Compass, Building, Landmark, MessageSquare, Users, Edit3, Trash2, Plus, PlusCircle, Check, X, ShieldAlert, Award, TrendingUp, Utensils, BookOpen, Settings, Image, Video, Heart, Globe, FileText, Copy, ExternalLink, Search, Sliders, RotateCw, ZoomIn, Upload, QrCode, Printer, MapPin, ArrowUp, ArrowDown, Coffee, Car, ChevronLeft, ChevronRight, Bell } from 'lucide-react';
 import { api } from '../services/api';
 import QRCode from 'qrcode';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ui/Toast';
 import { Tour, Hotel, Place, Comment, Reservation, User, Restaurant, Blog, SettingsSchema, HeroSlider, Testimonial, VideoItem, PromoBanner, TourismCompany, CustomMeal, CustomTransport } from '../types';
 import StarRating from '../components/ui/StarRating';
+import Logo from '../components/ui/Logo';
 
 interface AdminProps {
   onNavigate: (path: string) => void;
 }
 
-type AdminTab = 'reservations' | 'tours' | 'hotels' | 'places' | 'comments' | 'users' | 'restaurants' | 'blogs' | 'settings' | 'companies' | 'media';
+type AdminTab = 'reservations' | 'tours' | 'hotels' | 'places' | 'comments' | 'users' | 'restaurants' | 'blogs' | 'settings' | 'companies' | 'media' | 'backgrounds';
+
+export interface AdminNotification {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  isUnread: boolean;
+  refId: string;
+  type: 'tour' | 'hotel';
+  price: number;
+}
 
 export default function Admin({ onNavigate }: AdminProps) {
   const { user } = useAuth();
@@ -30,6 +42,8 @@ export default function Admin({ onNavigate }: AdminProps) {
   const [blogsList, setBlogsList] = useState<Blog[]>([]);
   const [settingsSchema, setSettingsSchema] = useState<SettingsSchema | null>(null);
   const [companies, setCompanies] = useState<TourismCompany[]>([]);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   // NEW Forms state
   // New Tour Form
@@ -189,7 +203,14 @@ export default function Admin({ onNavigate }: AdminProps) {
   const [cfgDesktopHeight, setCfgDesktopHeight] = useState(40);
   const [cfgLogoPositionX, setCfgLogoPositionX] = useState(0);
   const [cfgLogoPositionY, setCfgLogoPositionY] = useState(0);
-  const [cfgLogoVariant, setCfgLogoVariant] = useState<'variant1' | 'variant2'>('variant2');
+  const [cfgLogoVariant, setCfgLogoVariant] = useState<'variant1' | 'variant2' | 'variant3'>('variant2');
+  const [cfgLogoText, setCfgLogoText] = useState('NAXÇIVAN');
+  const [cfgLogoFontSize, setCfgLogoFontSize] = useState(28);
+  const [cfgLogoFontWeight, setCfgLogoFontWeight] = useState('font-black');
+  const [cfgLogoFontFamily, setCfgLogoFontFamily] = useState('Space Grotesk');
+  const [cfgLogoTextColor, setCfgLogoTextColor] = useState('#0F172A');
+  const [cfgLogoAccentColor, setCfgLogoAccentColor] = useState('#F59E0B');
+  const [cfgLogoSubtitle, setCfgLogoSubtitle] = useState('TURİZM PORTALI');
 
   const [mediaList, setMediaList] = useState<any[]>([]);
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
@@ -302,6 +323,19 @@ export default function Admin({ onNavigate }: AdminProps) {
       ]);
 
       setReservations(resList || []);
+      if (resList) {
+        const initialNotifs: AdminNotification[] = resList.map((r: any) => ({
+          id: `notif_${r.id}`,
+          title: r.type === 'tour' ? 'Yeni Tur' : 'Yeni Otel Sifarişi',
+          message: `${r.fullName} • ${r.guests} nəfər • ${r.totalPrice} AZN`,
+          time: new Date(r.createdAt || Date.now()).toLocaleDateString('az', { hour: '2-digit', minute: '2-digit' }),
+          isUnread: r.status === 'pending',
+          refId: r.id,
+          type: r.type,
+          price: r.totalPrice
+        }));
+        setNotifications(initialNotifs);
+      }
       setTours(toursList || []);
       setHotels(hotelsList || []);
       setPlaces(placesList || []);
@@ -354,6 +388,13 @@ export default function Admin({ onNavigate }: AdminProps) {
         setCfgLogoPositionX(cfg.logoSettings?.logoPositionX || 0);
         setCfgLogoPositionY(cfg.logoSettings?.logoPositionY || 0);
         setCfgLogoVariant(cfg.logoSettings?.logoVariant || 'variant2');
+        setCfgLogoText(cfg.logoSettings?.logoText || 'NAXÇIVAN');
+        setCfgLogoFontSize(cfg.logoSettings?.logoFontSize || 28);
+        setCfgLogoFontWeight(cfg.logoSettings?.logoFontWeight || 'font-black');
+        setCfgLogoFontFamily(cfg.logoSettings?.logoFontFamily || 'Space Grotesk');
+        setCfgLogoTextColor(cfg.logoSettings?.logoTextColor || '#0F172A');
+        setCfgLogoAccentColor(cfg.logoSettings?.logoAccentColor || '#F59E0B');
+        setCfgLogoSubtitle(cfg.logoSettings?.logoSubtitle || 'TURİZM PORTALI');
 
         // Hydrate WhatsApp configs
         if (cfg.whatsappSettings) {
@@ -393,25 +434,35 @@ export default function Admin({ onNavigate }: AdminProps) {
       
       const osc1 = audioCtx.createOscillator();
       const gain1 = audioCtx.createGain();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(880, now);
-      gain1.gain.setValueAtTime(0.08, now);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+      osc1.type = 'triangle';
+      osc1.frequency.setValueAtTime(523.25, now); // C5
+      gain1.gain.setValueAtTime(0.12, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
       osc1.connect(gain1);
       gain1.connect(audioCtx.destination);
       osc1.start(now);
-      osc1.stop(now + 0.2);
+      osc1.stop(now + 0.5);
       
       const osc2 = audioCtx.createOscillator();
       const gain2 = audioCtx.createGain();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(1318.51, now + 0.08);
-      gain2.gain.setValueAtTime(0.08, now + 0.08);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(659.25, now + 0.08); // E5
+      gain2.gain.setValueAtTime(0.12, now + 0.08);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
       osc2.connect(gain2);
       gain2.connect(audioCtx.destination);
       osc2.start(now + 0.08);
-      osc2.stop(now + 0.4);
+      osc2.stop(now + 0.6);
+
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance("Yeni rezervasiya daxil olub");
+        utterance.lang = 'az-AZ';
+        utterance.pitch = 1.05;
+        utterance.rate = 1.0;
+        setTimeout(() => {
+          window.speechSynthesis.speak(utterance);
+        }, 300);
+      }
     } catch (err) {
       console.warn("Audio Context alert could not be played:", err);
     }
@@ -443,6 +494,19 @@ export default function Admin({ onNavigate }: AdminProps) {
                 if (prev.some((r) => r.id === newRes.id)) return prev;
                 return [newRes, ...prev];
               });
+
+              // Add notification item
+              const newNotif: AdminNotification = {
+                id: `notif_${newRes.id}`,
+                title: newRes.type === 'tour' ? 'Yeni Tur' : 'Yeni Otel Sifarişi',
+                message: `${newRes.fullName} • ${newRes.guests} nəfər • ${newRes.totalPrice} AZN`,
+                time: new Date(newRes.createdAt || Date.now()).toLocaleDateString('az', { hour: '2-digit', minute: '2-digit' }),
+                isUnread: true,
+                refId: newRes.id,
+                type: newRes.type,
+                price: newRes.totalPrice
+              };
+              setNotifications((prev) => [newNotif, ...prev]);
 
               success(`Yeni Rezervasiya daxil oldu! Qonaq: ${newRes.fullName}`, 'Yeni Sifariş');
               playChime();
@@ -927,6 +991,89 @@ export default function Admin({ onNavigate }: AdminProps) {
     reader.readAsDataURL(file);
   };
 
+  const compressToWebP = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = document.createElement('img');
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          const maxDim = 1920;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            canvas.toBlob((blob) => {
+              if (blob) {
+                const reader2 = new FileReader();
+                reader2.onloadend = () => {
+                  resolve(reader2.result as string);
+                };
+                reader2.onerror = reject;
+                reader2.readAsDataURL(blob);
+              } else {
+                resolve(event.target?.result as string);
+              }
+            }, 'image/webp', 0.85);
+          } else {
+            resolve(event.target?.result as string);
+          }
+        };
+        img.onerror = reject;
+        img.src = event.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleBackgroundUpload = async (sectionKey: string, file: File) => {
+    try {
+      success('Təsvir sıxılır və sürətli WebP formatına çevrilir...', 'Sıxılma Prosesi');
+      const base64Webp = await compressToWebP(file);
+      
+      const payload = {
+        fileName: `bg_section_${sectionKey}.webp`,
+        fileData: base64Webp
+      };
+      
+      const res = await api.uploads.uploadFile(payload.fileName, payload.fileData);
+      
+      if (res && res.url) {
+        const originalSettings = settingsSchema || {};
+        const bgSettings = originalSettings.backgroundSettings || {};
+        const updatedBgSettings = {
+          ...bgSettings,
+          [`${sectionKey}Url`]: res.url
+        };
+        
+        await api.settings.update({
+          ...originalSettings,
+          backgroundSettings: updatedBgSettings
+        });
+        
+        success('Arxa fon şəkli uğurla sıxıldı, WebP-ə çevrildi və yükləndi!', 'Uğurlu Əməliyyat');
+        loadData();
+      }
+    } catch (e: any) {
+      error(e.message || 'Arxa fon yüklənərkən xəta baş verdi.');
+    }
+  };
+
   const handleAddCompanySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCompName.trim()) {
@@ -1040,7 +1187,14 @@ export default function Admin({ onNavigate }: AdminProps) {
           mobileWidth: Number(cfgMobileWidth) || 120,
           mobileHeight: Number(cfgMobileHeight) || 30,
           desktopWidth: Number(cfgDesktopWidth) || 150,
-          desktopHeight: Number(cfgDesktopHeight) || 40
+          desktopHeight: Number(cfgDesktopHeight) || 40,
+          logoText: cfgLogoText,
+          logoFontSize: Number(cfgLogoFontSize) || 28,
+          logoFontWeight: cfgLogoFontWeight,
+          logoFontFamily: cfgLogoFontFamily,
+          logoTextColor: cfgLogoTextColor,
+          logoAccentColor: cfgLogoAccentColor,
+          logoSubtitle: cfgLogoSubtitle
         },
         whatsappSettings: {
           phoneId: waPhoneId,
@@ -1107,13 +1261,102 @@ export default function Admin({ onNavigate }: AdminProps) {
           </span>
           <h1 className="text-3xl md:text-4xl font-serif font-bold text-navy-deep mt-2">Naxçıvan Turizm Rəsmi İdarə Masası</h1>
         </div>
-        <div className="bg-gold-primary/10 border border-gold-primary/30 p-3 rounded-2xl flex items-center gap-2 font-sans">
-          <ShieldCheck className="w-5 h-5 text-gold-primary shrink-0" />
-          <div className="text-left text-xs leading-none">
-            <p className="font-bold text-navy-deep">{user?.fullName}</p>
-            <p className="text-slate-500 font-mono mt-1 text-[10px]">{user?.email}</p>
+        
+        <div className="flex items-center gap-3.5 self-end md:self-center relative">
+          
+          {/* Notification Bell Dropdown Panel */}
+          <div className="relative">
+            <button
+              onClick={() => setIsNotifOpen((prev) => !prev)}
+              className="relative p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer transition-all flex items-center justify-center text-slate-600 hover:text-navy-deep hover:border-gold-primary shadow-sm"
+              style={{ minHeight: '46px' }}
+              title="Reservasiya Bildirişləri"
+            >
+              <Bell className="w-5 h-5 text-slate-550" />
+              {notifications.filter(n => n.isUnread).length > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-4.5 w-4.5 bg-rose-500 text-[8px] font-mono font-black text-white items-center justify-center">
+                    {notifications.filter(n => n.isUnread).length}
+                  </span>
+                </span>
+              )}
+            </button>
+
+            {isNotifOpen && (
+              <div 
+                className="absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-slate-100 rounded-3xl shadow-xl z-50 p-4 flex flex-col gap-3 font-sans"
+                id="admin-notification-dropdown"
+              >
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100 select-none">
+                  <div className="text-left">
+                    <h4 className="font-bold text-navy-deep text-xs uppercase tracking-wider">Canlı Rezervasiyalar</h4>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Səyahət və otel rezervasiya axını</p>
+                  </div>
+                  {notifications.filter(n => n.isUnread).length > 0 && (
+                    <button
+                      onClick={() => {
+                        setNotifications(prev => prev.map(n => ({ ...n, isUnread: false })));
+                        success("Bütün bildirişlər oxunmuş kimi qeyd edildi.");
+                      }}
+                      className="text-[9px] font-bold text-gold-primary hover:text-gold-dark cursor-pointer transition-colors"
+                    >
+                      Oxunmuş et
+                    </button>
+                  )}
+                </div>
+
+                <div className="max-h-[300px] overflow-y-auto flex flex-col gap-2 p-0.5 scrollbar-thin">
+                  {notifications.length === 0 ? (
+                    <div className="p-8 text-center text-slate-400 text-xs font-medium">
+                      📱 Yeni rezervasiya daxil olduqda bildiriş səslənəcək!
+                    </div>
+                  ) : (
+                    notifications.map((notif) => (
+                      <div
+                        key={notif.id}
+                        onClick={() => {
+                          setNotifications(p => p.map(n => n.id === notif.id ? { ...n, isUnread: false } : n));
+                          setActiveTab('reservations');
+                          setIsNotifOpen(false);
+                        }}
+                        className={`p-3 rounded-2xl border text-left cursor-pointer transition-all flex items-start gap-2.5 ${
+                          notif.isUnread 
+                            ? 'bg-amber-50/20 border-amber-200 hover:bg-amber-50/30' 
+                            : 'bg-slate-50/50 border-slate-100 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${notif.isUnread ? 'bg-gold-primary animate-pulse' : 'bg-slate-300'}`} />
+                        <div className="flex-1 leading-tight">
+                          <div className="flex justify-between items-start gap-1.5">
+                            <span className="text-xs font-black text-navy-deep block truncate">{notif.title}</span>
+                            <span className="text-[9px] text-slate-400 font-mono tracking-tight shrink-0">{notif.time}</span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1 font-semibold">{notif.message}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="text-center pt-2 border-t border-slate-50 select-none text-[9px] text-slate-400">
+                  ⚡ Socket.io real-vaxt bildiriş mərkəzi
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* User Profile Card */}
+          <div className="bg-gold-primary/10 border border-gold-primary/30 p-2.5 rounded-2xl flex items-center gap-2.5 font-sans">
+            <ShieldCheck className="w-5 h-5 text-gold-primary shrink-0" />
+            <div className="text-left text-xs leading-none">
+              <p className="font-bold text-navy-deep">{user?.fullName}</p>
+              <p className="text-slate-500 font-mono mt-1 text-[10px]">{user?.email}</p>
+            </div>
+          </div>
+
         </div>
+
       </div>
 
       {/* Main Split Layout: Left vertical navigation tab sidebar, Right content panels */}
@@ -1121,6 +1364,9 @@ export default function Admin({ onNavigate }: AdminProps) {
         
         {/* Left Side Sidebar Tab Buttons (3 spans) */}
         <div className="lg:col-span-3 bg-white border border-slate-100 p-4 rounded-3xl shadow-sm flex flex-col gap-1.5 sticky top-24 z-10 select-none">
+          <div className="px-3 pb-4 mb-2 border-b border-slate-100 flex justify-center items-center cursor-pointer overflow-hidden max-w-full" onClick={() => onNavigate('/')}>
+            <Logo forceDark={true} />
+          </div>
           {[
             { id: 'reservations', label: 'Rezervasiyalar', icon: <Calendar className="w-4 h-4" />, count: reservations.length },
             { id: 'tours', label: 'Turlar (Aktiv)', icon: <Compass className="w-4 h-4" />, count: tours.length },
@@ -1132,6 +1378,7 @@ export default function Admin({ onNavigate }: AdminProps) {
             { id: 'comments', label: 'Rəylər / Şərhlər', icon: <MessageSquare className="w-4 h-4" />, count: comments.length },
             { id: 'users', label: 'İstifadəçilər', icon: <Users className="w-4 h-4" />, count: usersList.length },
             { id: 'media', label: 'Media Kitabxanası', icon: <Image className="w-4 h-4" />, count: mediaList.length },
+            { id: 'backgrounds', label: 'Arxa Fon İdarəetməsi', icon: <Sliders className="w-4 h-4" />, count: undefined },
             { id: 'settings', label: 'Ümumi Parametrlər', icon: <Settings className="w-4 h-4" />, count: undefined }
           ].map((tab) => {
             const active = activeTab === tab.id;
@@ -4072,37 +4319,205 @@ export default function Admin({ onNavigate }: AdminProps) {
                     {/* Header Logo Variants */}
                     <div className="flex flex-col gap-1.5 bg-white border p-3 rounded-xl">
                       <label className="text-xs font-bold text-slate-600 block">Başlıq (Header) Loqo Variantı</label>
-                      <div className="grid grid-cols-2 gap-2 mt-1">
+                      <div className="grid grid-cols-3 gap-2 mt-1">
                         <button
                           type="button"
                           onClick={() => setCfgLogoVariant('variant1')}
-                          className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer font-bold ${
+                          className={`p-2 rounded-xl border text-center transition-all cursor-pointer font-bold ${
                             cfgLogoVariant === 'variant1' 
                               ? 'border-gold-primary bg-gold-primary/10 text-navy-deep shadow-sm' 
                               : 'border-slate-200 hover:bg-slate-50 text-slate-500'
                           }`}
                         >
-                          <div className="text-sm font-semibold">Variant 1</div>
-                          <div className="text-[10px] font-medium mt-0.5 opacity-80">Geniş Mərkəzlənmiş Format</div>
+                          <div className="text-xs font-bold">Variant 1</div>
+                          <div className="text-[8px] font-medium mt-0.5 opacity-80 leading-none">Mərkəzi Geniş</div>
                         </button>
                         <button
                           type="button"
                           onClick={() => setCfgLogoVariant('variant2')}
-                          className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer font-bold ${
+                          className={`p-2 rounded-xl border text-center transition-all cursor-pointer font-bold ${
                             cfgLogoVariant === 'variant2' 
                               ? 'border-gold-primary bg-gold-primary/10 text-navy-deep shadow-sm' 
                               : 'border-slate-200 hover:bg-slate-50 text-slate-500'
                           }`}
                         >
-                          <div className="text-sm font-semibold">Variant 2</div>
-                          <div className="text-[10px] font-medium mt-0.5 opacity-80">Kiçik Sol Format (Default)</div>
+                          <div className="text-xs font-bold">Variant 2</div>
+                          <div className="text-[8px] font-medium mt-0.5 opacity-80 leading-none">Sol Yığcam</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCfgLogoVariant('variant3')}
+                          className={`p-2 rounded-xl border text-center transition-all cursor-pointer font-bold ${
+                            cfgLogoVariant === 'variant3' 
+                              ? 'border-gold-primary bg-gold-primary/10 text-navy-deep shadow-sm' 
+                              : 'border-slate-200 hover:bg-slate-50 text-slate-500'
+                          }`}
+                        >
+                          <div className="text-xs font-bold">Variant 3</div>
+                          <div className="text-[8px] font-medium mt-0.5 opacity-80 leading-none">Mətn Loqo Only</div>
                         </button>
                       </div>
                       <p className="text-[10px] text-slate-400 mt-1 leading-normal">
-                        Variant 1: Loqo bütöv ekranın üst hissəsində mərkəzdə geniş formada dayanır və menyu aşağı sətirə sürüşür.
-                        Variant 2: Klassik sol tərəfdə yığcam şəkildə yerləşir.
+                        Variant 1: Loqo bütöv ekranın üst hissəsində mərkəzdə geniş formada dayanır və menyu aşağı sətirə sürüşür.<br />
+                        Variant 2: Klassik sol tərəfdə yığcam şəkildə yerləşir.<br />
+                        Variant 3: Booking.com, Airbnb və Expedia üslubunda yalnız premium mətndən ibarət loqo sistemi.
                       </p>
                     </div>
+
+                    {/* Variant 3 (Text Logo Only) Configurator Panel */}
+                    {cfgLogoVariant === 'variant3' && (
+                      <div className="border border-amber-500/30 p-4 rounded-xl bg-amber-500/5 space-y-4">
+                        <span className="block font-bold text-slate-800 text-[11px] uppercase tracking-wider">Mətn Loqosu Redaktoru</span>
+                        
+                        {/* Live Previews */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-white border rounded-xl p-4 flex flex-col justify-center items-center h-24 relative overflow-hidden">
+                            <span className="absolute top-1 left-2 text-[8px] font-mono font-bold text-slate-400 uppercase tracking-widest select-none">Açıq Fon (Light)</span>
+                            <Logo 
+                              customLogoVariant="variant3"
+                              customLogoText={cfgLogoText}
+                              customFontSize={cfgLogoFontSize}
+                              customFontWeight={cfgLogoFontWeight}
+                              customFontFamily={cfgLogoFontFamily}
+                              customTextColor={cfgLogoTextColor}
+                              customAccentColor={cfgLogoAccentColor}
+                              customSubtitle={cfgLogoSubtitle}
+                            />
+                          </div>
+                          <div className="bg-navy-deep border border-navy-light rounded-xl p-4 flex flex-col justify-center items-center h-24 relative overflow-hidden">
+                            <span className="absolute top-1 left-2 text-[8px] font-mono font-bold text-slate-500 uppercase tracking-widest select-none">Tünd Fon (Dark)</span>
+                            <Logo 
+                              customLogoVariant="variant3"
+                              customLogoText={cfgLogoText}
+                              customFontSize={cfgLogoFontSize}
+                              customFontWeight={cfgLogoFontWeight}
+                              customFontFamily={cfgLogoFontFamily}
+                              customTextColor={cfgLogoTextColor}
+                              customAccentColor={cfgLogoAccentColor}
+                              customSubtitle={cfgLogoSubtitle}
+                              forceLight={true}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Text Inputs */}
+                        <div className="grid grid-cols-2 gap-3 text-[11px]">
+                          <div>
+                            <label className="block text-slate-600 font-semibold mb-1">Loqo Mətni</label>
+                            <input 
+                              type="text"
+                              value={cfgLogoText}
+                              onChange={(e) => setCfgLogoText(e.target.value)}
+                              className="w-full px-3 py-2 bg-white border border-slate-250 rounded-lg text-slate-800 font-bold uppercase tracking-wider text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                              placeholder="NAXÇIVAN"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-600 font-semibold mb-1">Loqo Altbaşlığı (Köməkçi Mətn)</label>
+                            <input 
+                              type="text"
+                              value={cfgLogoSubtitle}
+                              onChange={(e) => setCfgLogoSubtitle(e.target.value)}
+                              className="w-full px-3 py-2 bg-white border border-slate-250 rounded-lg text-slate-800 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                              placeholder="TURİZM PORTALI"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Font Family / Font Weight controls */}
+                        <div className="grid grid-cols-2 gap-3 text-[11px]">
+                          <div>
+                            <label className="block text-slate-600 font-semibold mb-1">Şrift Ailəsi (Font Family)</label>
+                            <select
+                              value={cfgLogoFontFamily}
+                              onChange={(e) => setCfgLogoFontFamily(e.target.value)}
+                              className="w-full px-3 py-2 bg-white border border-slate-250 rounded-lg text-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500 font-sans"
+                            >
+                              <option value="Space Grotesk">Space Grotesk (Modern, Bold)</option>
+                              <option value="Plus Jakarta Sans">Plus Jakarta Sans (Sleek Sans)</option>
+                              <option value="Playfair Display">Playfair Display (Luxury Serif)</option>
+                              <option value="Inter">Inter (Swiss Neutral)</option>
+                              <option value="Montserrat">Montserrat (Expedia Geometric)</option>
+                              <option value="Outfit">Outfit (High-tech Modern)</option>
+                              <option value="JetBrains Mono">JetBrains Mono (Technical Mono)</option>
+                              <option value="Syne">Syne (Creative Avant-garde)</option>
+                              <option value="Cabinet Grotesk">Cabinet Grotesk (Display, Editorial)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-slate-600 font-semibold mb-1">Şrift Qalınlığı (Font Weight)</label>
+                            <select
+                              value={cfgLogoFontWeight}
+                              onChange={(e) => setCfgLogoFontWeight(e.target.value)}
+                              className="w-full px-3 py-2 bg-white border border-slate-250 rounded-lg text-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500 font-sans"
+                            >
+                              <option value="font-black">900 (Black)</option>
+                              <option value="font-extrabold">800 (Extra Bold)</option>
+                              <option value="font-bold">700 (Bold)</option>
+                              <option value="font-semibold">600 (Semi Bold)</option>
+                              <option value="font-medium">500 (Medium)</option>
+                              <option value="font-normal">400 (Regular)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Sizes range */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-[11px]">
+                            <span className="text-slate-500">Mətn Şrift Ölçüsü (Font Size):</span>
+                            <span className="font-mono font-bold text-navy-deep">{cfgLogoFontSize}px</span>
+                          </div>
+                          <input 
+                            type="range"
+                            min="14"
+                            max="54"
+                            step="1"
+                            value={cfgLogoFontSize}
+                            onChange={(e) => setCfgLogoFontSize(Number(e.target.value))}
+                            className="w-full accent-gold-primary cursor-pointer bg-slate-200 h-1 rounded-lg"
+                          />
+                        </div>
+
+                        {/* Color Pickers */}
+                        <div className="grid grid-cols-2 gap-3 text-[11px]">
+                          <div>
+                            <label className="block text-slate-600 font-semibold mb-1">Əsas Rəng (Primary Color)</label>
+                            <div className="flex gap-2 items-center">
+                              <input 
+                                type="color"
+                                value={cfgLogoTextColor}
+                                onChange={(e) => setCfgLogoTextColor(e.target.value)}
+                                className="w-8 h-8 rounded border bg-transparent cursor-pointer shadow-sm"
+                              />
+                              <input 
+                                type="text"
+                                value={cfgLogoTextColor}
+                                onChange={(e) => setCfgLogoTextColor(e.target.value)}
+                                className="flex-1 px-2 py-1 border rounded bg-white text-[11px] font-mono text-center"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-slate-600 font-semibold mb-1">Vurğu Rəngi (Accent Dot)</label>
+                            <div className="flex gap-2 items-center">
+                              <input 
+                                type="color"
+                                value={cfgLogoAccentColor}
+                                onChange={(e) => setCfgLogoAccentColor(e.target.value)}
+                                className="w-8 h-8 rounded border bg-transparent cursor-pointer shadow-sm"
+                              />
+                              <input 
+                                type="text"
+                                value={cfgLogoAccentColor}
+                                onChange={(e) => setCfgLogoAccentColor(e.target.value)}
+                                className="flex-1 px-2 py-1 border rounded bg-white text-[11px] font-mono text-center"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                    )}
 
                     {/* Desktop dimensions */}
                     <div className="border border-slate-200/60 p-3 rounded-xl bg-white space-y-3">
@@ -5383,6 +5798,135 @@ export default function Admin({ onNavigate }: AdminProps) {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* TAB 12: Arxa Fon İdarəetməsi */}
+          {activeTab === 'backgrounds' && (
+            <div className="flex flex-col gap-8 text-left animate-fadeIn" id="panel-backgrounds">
+              <div>
+                <h3 className="font-serif text-2xl font-bold text-navy-deep">Portal Bölmələrinin Arxa Fon Şəkilləri</h3>
+                <p className="text-xs text-slate-500 mt-1 font-sans leading-relaxed">
+                  Ana səhifə, turlar, otellər və digər bütün əsas səhifələrin arxa plan mənzərələrini fərdi şəkildə dəyişdirin. 
+                  Yüklənən şəkillər kompüterinizdə avtomatik sıxılıb, yüksək keyfiyyətli WebP formatına çevrilərək bulud mühitində sürətli yükləməni təmin edir!
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="background-sections-grid">
+                {[
+                  { key: 'home', label: 'Ana Səhifə (Home)', defaultUrl: 'https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1920' },
+                  { key: 'tours', label: 'Tur Paketləri (Tours)', defaultUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1920' },
+                  { key: 'hotels', label: 'Lüks Otellər (Hotels)', defaultUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1920' },
+                  { key: 'places', label: 'Gəzməli Yerlər (Places)', defaultUrl: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1920' },
+                  { key: 'museums', label: 'Muzeylər (Museums)', defaultUrl: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=1920' },
+                  { key: 'transport', label: 'Nəqliyyat & Komfort (Transport)', defaultUrl: 'https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=1920' },
+                  { key: 'about', label: 'Haqqımızda (About Us)', defaultUrl: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=1920' },
+                  { key: 'contact', label: 'Əlaqə & Dəstək (Contact)', defaultUrl: 'https://images.unsplash.com/photo-1423666639041-f56000c27a9a?q=80&w=1920' },
+                  { key: 'weather', label: 'Hava Durumu (Weather)', defaultUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1920' }
+                ].map((sec) => {
+                  const currentUrl = (settingsSchema?.backgroundSettings as any)?.[`${sec.key}Url`] || sec.defaultUrl;
+                  return (
+                    <div key={sec.key} className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col gap-4 font-sans justify-between">
+                      <div className="flex flex-col gap-1">
+                        <h4 className="font-bold text-navy-deep text-sm">{sec.label}</h4>
+                        <span className="text-[10px] text-slate-400 font-mono tracking-wide">key: bg_{sec.key}.webp</span>
+                      </div>
+
+                      {/* Cover Thumbnail view */}
+                      <div className="h-32 bg-slate-100 border rounded-2xl overflow-hidden relative group">
+                        <img 
+                          src={currentUrl} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300 lazy-load" 
+                          alt={sec.label} 
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-2">
+                          <a href={currentUrl} target="_blank" rel="noreferrer" className="p-2 bg-white/95 rounded-lg text-slate-700 hover:text-navy-deep cursor-pointer transition-colors" title="Böyüt">
+                            <ZoomIn className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Manual Image URL Input */}
+                      <div className="flex flex-col gap-1.5 text-xs">
+                        <label className="font-bold text-slate-700">Şəkil Linki (URL):</label>
+                        <input 
+                          type="text" 
+                          value={currentUrl}
+                          onChange={async (e) => {
+                            const val = e.target.value;
+                            const originalSettings = settingsSchema || {};
+                            const bgSettings = originalSettings.backgroundSettings || {};
+                            const updatedBgSettings = {
+                              ...bgSettings,
+                              [`${sec.key}Url`]: val
+                            };
+                            
+                            setSettingsSchema({
+                              ...originalSettings,
+                              backgroundSettings: updatedBgSettings
+                            } as any);
+
+                            await api.settings.update({
+                              ...originalSettings,
+                              backgroundSettings: updatedBgSettings
+                            });
+                          }}
+                          className="w-full bg-slate-50 border p-2.5 rounded-xl text-xs text-slate-650"
+                          placeholder="https://images.unsplash.com/..."
+                        />
+                      </div>
+
+                      {/* Upload and Reset buttons */}
+                      <div className="grid grid-cols-2 gap-2 text-[11px] font-bold pt-2 border-t border-slate-50">
+                        <label className="bg-navy-deep hover:bg-navy-mid text-gold-primary p-2.5 rounded-xl cursor-pointer transition-all text-center flex items-center justify-center gap-1.5 select-none">
+                          <Upload className="w-3.5 h-3.5 shrink-0" />
+                          Yüklə (WebP)
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleBackgroundUpload(sec.key, file);
+                            }}
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!window.confirm("Bu bölmənin arxa fonunu rəsmi zavod sıfırlamasına qaytarmaq istəyirsiniz?")) return;
+                            const originalSettings = settingsSchema || {};
+                            const bgSettings = originalSettings.backgroundSettings || {};
+                            const updatedBgSettings = {
+                              ...bgSettings,
+                              [`${sec.key}Url`]: sec.defaultUrl
+                            };
+                            
+                            setSettingsSchema({
+                              ...originalSettings,
+                              backgroundSettings: updatedBgSettings
+                            } as any);
+
+                            await api.settings.update({
+                              ...originalSettings,
+                              backgroundSettings: updatedBgSettings
+                            });
+                            success(`${sec.label} Fon mənzərəsi ilkin vəziyyətinə qaytarıldı!`);
+                            loadData();
+                          }}
+                          className="bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-rose-600 p-2.5 rounded-xl cursor-pointer transition-all text-center flex items-center justify-center gap-1.5"
+                        >
+                          Zavod Fonu
+                        </button>
+                      </div>
+
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

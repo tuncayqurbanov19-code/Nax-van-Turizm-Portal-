@@ -13,6 +13,11 @@ import Register from './pages/Register';
 import Admin from './pages/Admin';
 import AdminLogin from './pages/AdminLogin';
 import NotFound from './pages/NotFound';
+import Museums from './pages/Museums';
+import Transport from './pages/Transport';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import WeatherPage from './pages/WeatherPage';
 import PWAInstallPrompt from './components/ui/PWAInstallPrompt';
 import QuickContact from './components/ui/QuickContact';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -78,6 +83,11 @@ function AppContent() {
     if (currentPath === '/login') return <Login onNavigate={handleNavigate} />;
     if (currentPath === '/register') return <Register onNavigate={handleNavigate} />;
     if (currentPath === '/__secure_admin_login__') return <AdminLogin onNavigate={handleNavigate} />;
+    if (currentPath === '/museums') return <Museums onNavigate={handleNavigate} />;
+    if (currentPath === '/transport') return <Transport onNavigate={handleNavigate} />;
+    if (currentPath === '/about') return <About onNavigate={handleNavigate} />;
+    if (currentPath === '/contact') return <Contact onNavigate={handleNavigate} />;
+    if (currentPath === '/weather') return <WeatherPage />;
     
     if (currentPath === '/admin') {
       if (loading) {

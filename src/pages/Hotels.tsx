@@ -12,6 +12,7 @@ export default function Hotels({ onNavigate }: HotelsProps) {
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [filteredHotels, setFilteredHotels] = useState<Hotel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bgUrl, setBgUrl] = useState('https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1920');
 
   // Search form states
   const [checkInDate, setCheckInDate] = useState('');
@@ -50,6 +51,17 @@ export default function Hotels({ onNavigate }: HotelsProps) {
 
   useEffect(() => {
     fetchHotels();
+    async function loadBg() {
+      try {
+        const cfg = await api.settings.get();
+        if (cfg?.backgroundSettings?.hotelsUrl) {
+          setBgUrl(cfg.backgroundSettings.hotelsUrl);
+        }
+      } catch (err) {
+        // Fallback
+      }
+    }
+    loadBg();
   }, []);
 
   // Filter actions logic
@@ -97,18 +109,27 @@ export default function Hotels({ onNavigate }: HotelsProps) {
   };
 
   return (
-    <div className="min-h-screen pt-28 pb-16 relative z-10 max-w-7xl mx-auto px-4 md:px-12" id="hotels-page">
+    <div className="min-h-screen pt-28 pb-16 relative z-10 max-w-7xl mx-auto px-4 md:px-12 font-sans antialiased" id="hotels-page">
       
-      {/* Header title */}
-      <div className="text-center mb-16 select-none">
-        <span className="bg-gold-primary/10 border border-gold-primary/30 text-gold-primary text-[10px] font-bold tracking-widest px-3 py-1.5 rounded-full uppercase">
-          Lüks Qonaqlama
-        </span>
-        <h2 className="text-3xl md:text-5xl font-serif font-bold text-navy-deep mt-3">Otellər və İstirahət Mərkəzləri</h2>
-        <div className="w-20 h-1 bg-gold-primary mx-auto mt-4 rounded-full" />
-        <p className="text-sm md:text-base text-slate-500 font-sans mt-3 max-w-lg mx-auto">
-          Arzularınızdakı premium Naxçıvan tətilini təminatlı otaq bronlaşdırma qiymətləri ilə planlaşdırın.
-        </p>
+      {/* Dynamic Header Banner */}
+      <div className="relative overflow-hidden rounded-3xl min-h-[220px] md:min-h-[280px] p-8 md:p-12 mb-10 flex flex-col justify-center text-white select-none shadow-xl border border-white/10" id="hotels-banner">
+        <div className="absolute inset-0 z-0">
+          <div 
+            className="absolute inset-0 bg-cover bg-center transition-all duration-700 hover:scale-[1.01]" 
+            style={{ backgroundImage: `url("${bgUrl}")` }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-navy-deep/95 via-navy-deep/80 to-navy-mid/45 backdrop-blur-[1px]" />
+        </div>
+        
+        <div className="relative z-10 text-left max-w-2xl">
+          <span className="bg-gold-primary/20 text-gold-primary border border-gold-primary/30 text-[10px] font-black tracking-widest px-3 py-1.5 rounded-full uppercase leading-none">
+            Lüks Qonaqlama
+          </span>
+          <h1 className="text-3xl md:text-5xl font-serif font-black text-white mt-3 leading-tight drop-shadow-md">Otellər və İstirahət Mərkəzləri</h1>
+          <p className="text-xs md:text-sm text-slate-200 mt-2.5 leading-relaxed">
+            Arzularınızdakı premium Naxçıvan tətilini təminatlı otaq bronlaşdırma qiymətləri ilə planlaşdırın.
+          </p>
+        </div>
       </div>
 
       {/* Top horizontal calendar scheduling bar */}

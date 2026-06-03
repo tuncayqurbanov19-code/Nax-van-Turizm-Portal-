@@ -313,11 +313,18 @@ export interface SettingsSchema {
     logoHeight: number;
     logoPositionX: number;
     logoPositionY: number;
-    logoVariant?: 'variant1' | 'variant2';
+    logoVariant?: 'variant1' | 'variant2' | 'variant3';
     mobileWidth?: number;
     mobileHeight?: number;
     desktopWidth?: number;
     desktopHeight?: number;
+    logoText?: string;
+    logoFontSize?: number;
+    logoFontWeight?: string;
+    logoFontFamily?: string;
+    logoTextColor?: string;
+    logoAccentColor?: string;
+    logoSubtitle?: string;
   };
   whatsappSettings?: WhatsAppSettings;
   welcomeSettings?: {
@@ -325,6 +332,17 @@ export interface SettingsSchema {
     titleText: string;
     descriptionText: string;
     backgroundImageUrl: string;
+  };
+  backgroundSettings?: {
+    homeUrl?: string;
+    toursUrl?: string;
+    hotelsUrl?: string;
+    placesUrl?: string;
+    museumsUrl?: string;
+    transportUrl?: string;
+    aboutUrl?: string;
+    contactUrl?: string;
+    weatherUrl?: string;
   };
 }
 

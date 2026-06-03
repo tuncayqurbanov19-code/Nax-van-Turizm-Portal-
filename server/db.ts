@@ -305,11 +305,18 @@ export interface SettingsSchema {
     logoHeight: number;
     logoPositionX: number;
     logoPositionY: number;
-    logoVariant?: 'variant1' | 'variant2';
+    logoVariant?: 'variant1' | 'variant2' | 'variant3';
     mobileWidth?: number;
     mobileHeight?: number;
     desktopWidth?: number;
     desktopHeight?: number;
+    logoText?: string;
+    logoFontSize?: number;
+    logoFontWeight?: string;
+    logoFontFamily?: string;
+    logoTextColor?: string;
+    logoAccentColor?: string;
+    logoSubtitle?: string;
   };
   whatsappSettings?: WhatsAppSettings;
   welcomeSettings?: {
@@ -317,6 +324,17 @@ export interface SettingsSchema {
     titleText: string;
     descriptionText: string;
     backgroundImageUrl: string;
+  };
+  backgroundSettings?: {
+    homeUrl?: string;
+    toursUrl?: string;
+    hotelsUrl?: string;
+    placesUrl?: string;
+    museumsUrl?: string;
+    transportUrl?: string;
+    aboutUrl?: string;
+    contactUrl?: string;
+    weatherUrl?: string;
   };
 }
 
@@ -910,7 +928,15 @@ function getSeedData(): DatabaseSchema {
       logoWidth: 150,
       logoHeight: 40,
       logoPositionX: 0,
-      logoPositionY: 0
+      logoPositionY: 0,
+      logoVariant: 'variant2',
+      logoText: "NAXÇIVAN",
+      logoFontSize: 28,
+      logoFontWeight: "font-black",
+      logoFontFamily: "Space Grotesk",
+      logoTextColor: "#0F172A",
+      logoAccentColor: "#F59E0B",
+      logoSubtitle: "TURİZM PORTALI"
     },
     whatsappSettings: {
       phoneId: "1234567890",
@@ -924,6 +950,17 @@ function getSeedData(): DatabaseSchema {
       titleText: "Naxçıvanın Gözəlliklərini Kəşf Et",
       descriptionText: "Qədim sivilizasiya beşiyi olan Naxçıvanda tarixi abidələr, möhtəşəm mənzərələr və unudulmaz mənəvi turlar sizi gözləyir.",
       backgroundImageUrl: "https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1920&auto=format&fit=crop"
+    },
+    backgroundSettings: {
+      homeUrl: "https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1920",
+      toursUrl: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1920",
+      hotelsUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1920",
+      placesUrl: "https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1920",
+      museumsUrl: "https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=1920",
+      transportUrl: "https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=1920",
+      aboutUrl: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=1920",
+      contactUrl: "https://images.unsplash.com/photo-1423666639041-f56000c27a9a?q=80&w=1920",
+      weatherUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1920"
     }
   };
 
@@ -1014,6 +1051,9 @@ class FileDatabase {
           if (!this.data.restaurants) this.data.restaurants = defaults.restaurants;
           if (!this.data.blogs) this.data.blogs = defaults.blogs;
           if (!this.data.settings) this.data.settings = defaults.settings;
+          if (!this.data.settings.backgroundSettings) {
+            this.data.settings.backgroundSettings = defaults.settings.backgroundSettings;
+          }
           if (!this.data.companies) this.data.companies = defaults.companies || [];
           if (!this.data.media) this.data.media = [];
 

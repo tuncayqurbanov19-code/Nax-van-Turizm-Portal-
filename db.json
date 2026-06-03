@@ -2,9 +2,9 @@
   "users": [
     {
       "id": "usr_admin",
-      "fullName": "Tuncay Qurbanov",
-      "email": "tuncayqurbanov19@gmail.com",
-      "passwordHash": "919b7ea344bc818b2be6f1b90f41ce0fff28d4f481fd429793419d10e5753eca",
+      "fullName": "Tuncay Admin",
+      "email": "tuncayadmin@gmail.com",
+      "passwordHash": "a1160022314399568c6ffd29e3e9da83f6543863c36b071c3bf252719291b019",
       "role": "admin",
       "isBlocked": false,
       "createdAt": "2026-05-01T00:00:00.000Z"
@@ -579,6 +579,23 @@
       "status": "confirmed",
       "totalPrice": 320,
       "createdAt": "2026-05-30T21:04:59.717Z"
+    },
+    {
+      "userId": "usr_admin",
+      "type": "tour",
+      "refId": "tour_1",
+      "fullName": "Tuncay Admin",
+      "email": "tuncayadmin@gmail.com",
+      "phone": "+994 ",
+      "checkIn": "2026-06-05",
+      "checkOut": "2026-06-05",
+      "guests": 1,
+      "notes": "",
+      "status": "confirmed",
+      "viaWhatsapp": true,
+      "totalPrice": 250,
+      "id": "res_mpy4y7ez",
+      "createdAt": "2026-06-03T14:02:12.875Z"
     }
   ],
   "comments": [
@@ -713,7 +730,15 @@
       "logoWidth": 150,
       "logoHeight": 40,
       "logoPositionX": 0,
-      "logoPositionY": 0
+      "logoPositionY": 0,
+      "logoVariant": "variant2",
+      "logoText": "NAXÇIVAN",
+      "logoFontSize": 28,
+      "logoFontWeight": "font-black",
+      "logoFontFamily": "Space Grotesk",
+      "logoTextColor": "#0F172A",
+      "logoAccentColor": "#F59E0B",
+      "logoSubtitle": "TURİZM PORTALI"
     },
     "whatsappSettings": {
       "phoneId": "1234567890",
@@ -721,6 +746,17 @@
       "verifyToken": "naxcivan_verify_token_2026",
       "messageTemplate": "Hörmətli {Müştəri Adı},\n\nSifarişiniz uğurla qəbul edildi.\n\nTurunuz {Tur Tarixi} tarixində, saat {Tur Başlama Saatı}-da başlayacaq.\n\nSizə xoş və unudulmaz səyahət arzulayırıq. Bizi seçdiyiniz üçün təşəkkür edirik.\n\nHər hansı sualınız yaranarsa, bizimlə əlaqə saxlaya bilərsiniz.\n\nƏlaqə:\n📧 tourist@tourism.naxcivan\n📞 +994 60 237 71 37",
       "isRealMode": false
+    },
+    "backgroundSettings": {
+      "homeUrl": "https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1920",
+      "toursUrl": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1920",
+      "hotelsUrl": "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1920",
+      "placesUrl": "https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1920",
+      "museumsUrl": "https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=1920",
+      "transportUrl": "https://images.unsplash.com/photo-1549643276-fdf2fab574f5?q=80&w=1920",
+      "aboutUrl": "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=1920",
+      "contactUrl": "https://images.unsplash.com/photo-1423666639041-f56000c27a9a?q=80&w=1920",
+      "weatherUrl": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1920"
     }
   },
   "companies": [

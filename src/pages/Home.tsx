@@ -7,6 +7,7 @@ import PlaceCard from '../components/ui/PlaceCard';
 import { api } from '../services/api';
 import { Tour, Hotel, Place, Restaurant, Blog, HeroSlider, SettingsSchema, Testimonial } from '../types';
 import StarRating from '../components/ui/StarRating';
+import WeatherWidget from '../components/ui/WeatherWidget';
 
 interface HomeProps {
   onNavigate: (path: string) => void;
@@ -85,7 +86,7 @@ export default function Home({ onNavigate }: HomeProps) {
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
             style={{
-              backgroundImage: `url("${settings?.welcomeSettings?.backgroundImageUrl || 'https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1920&auto=format&fit=crop'}")`,
+              backgroundImage: `url("${settings?.backgroundSettings?.homeUrl || settings?.welcomeSettings?.backgroundImageUrl || 'https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1920&auto=format&fit=crop'} ")`,
             }}
           />
         )}
@@ -174,6 +175,11 @@ export default function Home({ onNavigate }: HomeProps) {
 
       {/* Renders other silhouettes overlay on page backgrounds */}
       <BackgroundSilhouettes />
+
+      {/* Weather Display Section */}
+      <section id="naxcivan-weather-widget" className="pt-16 pb-4 relative z-10 max-w-7xl mx-auto px-4 md:px-12">
+        <WeatherWidget />
+      </section>
 
       {/* 3. Featured Tours Section */}
       <section id="featured-tours" className="py-24 relative z-10 max-w-7xl mx-auto px-4 md:px-12">
